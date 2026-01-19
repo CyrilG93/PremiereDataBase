@@ -720,7 +720,7 @@ function renderFiles() {
             html += renderFolderItem(folder);
 
             // If folder is expanded, show its contents (LIST VIEW ONLY)
-            if (currentView === 'list' && expandedFolders.has(folder.relativePath)) {
+            if (currentViewMode === 'list' && expandedFolders.has(folder.relativePath)) {
                 html += renderExpandedFolderContents(folder.relativePath);
             }
         }
@@ -772,7 +772,7 @@ function renderFolderItem(folder, indent = 0) {
     const isExpanded = expandedFolders.has(folder.relativePath);
     const expandIcon = isExpanded ? '▼' : '▶';
     // Hide expand icon in Grid view
-    const expandIconHtml = currentView === 'list'
+    const expandIconHtml = currentViewMode === 'list'
         ? `<span class="folder-expand" data-folder="${escapeHtml(folder.relativePath)}">${expandIcon}</span>`
         : '';
 
@@ -894,7 +894,7 @@ function attachFileEventListeners() {
 
             const path = el.getAttribute('data-path');
 
-            if (currentView === 'grid') {
+            if (currentViewMode === 'grid') {
                 // In Grid View, single click navigates into folder
                 navigateToFolder(path);
             } else {
