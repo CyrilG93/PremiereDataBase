@@ -349,7 +349,7 @@ function closeNewFolderModal() {
 // ============================================================================
 // DATABASE SCANNING
 // ============================================================================
-function scanDatabase() {
+function scanDatabaseFiles() {
     if (!settings.databasePath) {
         showStatus(t('empty.configureDatabase'), 'warning');
         openSettings();
@@ -360,7 +360,7 @@ function scanDatabase() {
     updateProgress(0);
 
     try {
-        const result = scanDatabaseFolder(settings.databasePath, {
+        const result = performDatabaseScan(settings.databasePath, {
             bannedExtensions: settings.bannedExtensions,
             excludedFolderNames: settings.excludedFolderNames
         });
@@ -381,9 +381,99 @@ function scanDatabase() {
     }
 }
 
-// Node.js file scanning (from fileOperations.js)
-function scanDatabaseFolder(rootPath, options) {
-    return scanDatabase(rootPath, options);
+// Node.js file scanning - uses the scanDatabase function from fileOperations.js
+function performDatabaseScan(rootPath, options) {
+    // The scanDatabase function is defined in fileOperations.js
+    // and is available in the global scope when loaded
+    if (typeof scanDatabase === 'function') {
+        return scanDatabase(rootPath, options);
+    }
+
+    // Fallback: direct implementation if module not loaded properly
+    return scanDatabaseDirect(rootPath, options);
+}
+
+// Direct scanning implementation using Node.js fs
+function scanDatabaseDirect(rootPath, options = {}) {
+    const fs = require('fs');
+    const path = require('path');
+
+    const {
+        bannedExtensions = [],
+        excludedFolderNames = ['.git', 'node_modules', '__MACOSX', '.DS_Store']
+    } = options;
+
+    const FILE_TYPES = {
+        video: ['.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv', '.webm', '.m4v', '.mpeg', '.mpg', '.3gp', '.mxf', '.r3d', '.braw', '.prores'],
+        audio: ['.mp3', '.wav', '.aiff', '.aif', '.m4a', '.aac', '.ogg', '.flac', '.wma', '.opus'],
+        image: ['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.tif', '.psd', '.ai', '.eps', '.bmp', '.webp', '.svg', '.raw', '.cr2', '.nef', '.arw']
+    };
+
+    function getFileType(filePath) {
+        const ext = path.extname(filePath).toLowerCase();
+        if (FILE_TYPES.video.includes(ext)) return 'video';
+        if (FILE_TYPES.audio.includes(ext)) return 'audio';
+        if (FILE_TYPES.image.includes(ext)) return 'image';
+        return 'other';
+    }
+
+    function toForwardSlashes(p) {
+        return p ? p.replace(/\\/g, '/') : '';
+    }
+
+    const results = { files: [], folders: [] };
+
+    function scan(currentPath, relativePath) {
+        try {
+            const fullPath = currentPath;
+            if (!fs.existsSync(fullPath)) return;
+
+            const items = fs.readdirSync(fullPath);
+
+            for (const item of items) {
+                if (item.startsWith('.') || excludedFolderNames.includes(item)) continue;
+
+                const itemPath = path.join(fullPath, item);
+                const itemRelative = relativePath ? path.join(relativePath, item) : item;
+
+                try {
+                    const stats = fs.statSync(itemPath);
+
+                    if (stats.isDirectory()) {
+                        results.folders.push({
+                            name: item,
+                            path: toForwardSlashes(itemPath),
+                            relativePath: toForwardSlashes(itemRelative)
+                        });
+                        scan(itemPath, itemRelative);
+                    } else if (stats.isFile()) {
+                        const ext = path.extname(item).toLowerCase();
+                        if (bannedExtensions.includes(ext)) continue;
+
+                        const fileType = getFileType(item);
+                        if (fileType !== 'other') {
+                            results.files.push({
+                                name: item,
+                                path: toForwardSlashes(itemPath),
+                                relativePath: toForwardSlashes(itemRelative),
+                                folderPath: toForwardSlashes(relativePath || ''),
+                                type: fileType,
+                                size: stats.size,
+                                modified: stats.mtime.getTime()
+                            });
+                        }
+                    }
+                } catch (itemError) {
+                    console.warn('Error accessing:', itemPath);
+                }
+            }
+        } catch (e) {
+            console.error('Scan error at:', currentPath, e);
+        }
+    }
+
+    scan(rootPath, '');
+    return results;
 }
 
 // ============================================================================
@@ -713,28 +803,11 @@ function navigateToFolder(path) {
 
 function renderBreadcrumb() {
     const breadcrumb = document.getElementById('breadcrumb');
-    let html = '<span class="breadcrumb-item" data-path="">🏠</span>';
-
-    if (currentPath) {
-        const parts = currentPath.split('/');
-        let accPath = '';
-
-        for (const part of parts) {
-            accPath = accPath ? accPath + '/' + part : part;
-            html += `<span class="breadcrumb-separator">›</span>`;
-            html += `<span class="breadcrumb-item" data-path="${escapeHtml(accPath)}">${escapeHtml(part)}</span>`;
-        }
+    // The home button is static in HTML, just attach click handler
+    const homeBtn = breadcrumb.querySelector('.home-btn, .breadcrumb-item');
+    if (homeBtn) {
+        homeBtn.onclick = () => navigateToFolder('');
     }
-
-    breadcrumb.innerHTML = html;
-
-    // Attach click handlers
-    breadcrumb.querySelectorAll('.breadcrumb-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const path = item.getAttribute('data-path');
-            navigateToFolder(path);
-        });
-    });
 }
 
 // ============================================================================
@@ -773,7 +846,7 @@ function createFolder() {
     if (result.success) {
         closeNewFolderModal();
         showStatus(t('status.folderCreated'), 'success');
-        scanDatabase(); // Refresh
+        scanDatabaseFiles(); // Refresh
     } else {
         showStatus(result.error, 'error');
     }
@@ -928,7 +1001,7 @@ function init() {
     document.getElementById('saveSettingsBtn').addEventListener('click', () => {
         saveSettings();
         closeSettings();
-        scanDatabase();
+        scanDatabaseFiles();
     });
     document.getElementById('browseDatabaseBtn').addEventListener('click', browseForDatabase);
 
@@ -967,7 +1040,7 @@ function init() {
 
     // Folder actions
     document.getElementById('newFolderBtn').addEventListener('click', openNewFolderModal);
-    document.getElementById('refreshBtn').addEventListener('click', scanDatabase);
+    document.getElementById('refreshBtn').addEventListener('click', scanDatabaseFiles);
     document.getElementById('closeNewFolderModal').addEventListener('click', closeNewFolderModal);
     document.getElementById('cancelNewFolder').addEventListener('click', closeNewFolderModal);
     document.getElementById('confirmNewFolder').addEventListener('click', createFolder);
@@ -1004,7 +1077,7 @@ function init() {
             const result = deletePath(path);
             if (result.success) {
                 showStatus(t('status.folderDeleted'), 'success');
-                scanDatabase();
+                scanDatabaseFiles();
             } else {
                 showStatus(result.error, 'error');
             }
@@ -1021,7 +1094,7 @@ function init() {
 
     // Initial scan if database path is set
     if (settings.databasePath) {
-        setTimeout(scanDatabase, 100);
+        setTimeout(scanDatabaseFiles, 100);
     }
 
     console.log('Data Base extension initialized');

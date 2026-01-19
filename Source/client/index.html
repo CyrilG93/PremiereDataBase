@@ -46,13 +46,9 @@
         </header>
 
         <main>
-            <!-- Database Path Display -->
-            <div class="database-info" id="databaseInfo">
-                <div class="info-item">
-                    <span class="info-label" data-i18n="labels.database">Database:</span>
-                    <span class="info-value" id="databasePath" data-i18n="labels.notConfigured">Not configured</span>
-                </div>
-            </div>
+            <!-- Hidden elements for JS references -->
+            <span id="databasePath" class="hidden"></span>
+            <span id="fileCount" class="hidden">0</span>
 
             <!-- Search & Filter Bar -->
             <div class="search-section">
@@ -79,44 +75,46 @@
                 </button>
             </div>
 
-            <!-- File Type Filters -->
-            <div class="type-filters">
-                <button class="type-filter-btn active" id="filterAll" data-type="all">
-                    <span data-i18n="filters.all">All</span>
-                </button>
-                <button class="type-filter-btn" id="filterVideo" data-type="video">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2" />
-                        <polygon points="10 9 16 12 10 15" fill="currentColor" />
-                    </svg>
-                    <span data-i18n="filters.video">Video</span>
-                </button>
-                <button class="type-filter-btn" id="filterAudio" data-type="audio">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                        <circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="2" />
-                        <circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="2" />
-                    </svg>
-                    <span data-i18n="filters.audio">Audio</span>
-                </button>
-                <button class="type-filter-btn" id="filterImage" data-type="image">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
-                        <path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                    <span data-i18n="filters.image">Image</span>
-                </button>
-            </div>
-
-            <!-- View Toggle & Info -->
+            <!-- Toolbar: Type Filters + Home + View Toggle -->
             <div class="toolbar">
-                <div class="file-count">
-                    <span id="fileCount">0</span>
-                    <span data-i18n="labels.files">files</span>
+                <!-- Type Filters (left) -->
+                <div class="type-filters">
+                    <button class="type-filter-btn active" id="filterAll" data-type="all">
+                        <span data-i18n="filters.all">All</span>
+                    </button>
+                    <button class="type-filter-btn" id="filterVideo" data-type="video">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2" />
+                            <polygon points="10 9 16 12 10 15" fill="currentColor" />
+                        </svg>
+                        <span data-i18n="filters.video">Video</span>
+                    </button>
+                    <button class="type-filter-btn" id="filterAudio" data-type="audio">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="2" />
+                            <circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                        <span data-i18n="filters.audio">Audio</span>
+                    </button>
+                    <button class="type-filter-btn" id="filterImage" data-type="image">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
+                            <path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                        <span data-i18n="filters.image">Image</span>
+                    </button>
                 </div>
+
+                <!-- Home Button (center) -->
+                <div class="breadcrumb-home" id="breadcrumb">
+                    <span class="breadcrumb-item home-btn" data-path="" title="Home">🏠</span>
+                </div>
+
+                <!-- View Toggle (right) -->
                 <div class="view-toggle">
                     <button class="view-btn active" id="listViewBtn" title="List view">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -140,11 +138,6 @@
                         </svg>
                     </button>
                 </div>
-            </div>
-
-            <!-- Breadcrumb Navigation -->
-            <div class="breadcrumb" id="breadcrumb">
-                <span class="breadcrumb-item" data-path="">🏠</span>
             </div>
 
             <!-- File Browser -->
