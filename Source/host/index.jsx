@@ -310,7 +310,13 @@ function getSelectedProjectItems() {
             return JSON.stringify([]);
         }
 
-        var selection = app.project.getSelection();
+        var selection = [];
+
+        if (app.project && typeof app.project.getSelection === 'function') {
+            selection = app.project.getSelection();
+        } else if (typeof app.getCurrentProjectViewSelection === 'function') {
+            selection = app.getCurrentProjectViewSelection();
+        }
 
         if (!selection || selection.length === 0) {
             return JSON.stringify([]);

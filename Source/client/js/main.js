@@ -932,10 +932,10 @@ function attachFileEventListeners() {
     });
 
     // Context menu
-    document.querySelectorAll('.file-item[data-type="file"]').forEach(el => {
+    document.querySelectorAll('.file-item').forEach(el => {
         el.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            showContextMenu(e, el.getAttribute('data-path'));
+            showContextMenu(e, el.getAttribute('data-path'), el.getAttribute('data-type'));
         });
     });
 }
@@ -1178,18 +1178,31 @@ function getProjectPath() {
 // ============================================================================
 // CONTEXT MENU
 // ============================================================================
-function showContextMenu(event, filePath) {
+// ============================================================================
+function showContextMenu(event, filePath, type) {
     const menu = document.getElementById('contextMenu');
-    const isFavorite = favorites.has(filePath);
 
-    // Show/hide appropriate favorite option
-    document.getElementById('contextAddFavorite').classList.toggle('hidden', isFavorite);
-    document.getElementById('contextRemoveFavorite').classList.toggle('hidden', !isFavorite);
+    // Manage Favorites options
+    const addFavBtn = document.getElementById('contextAddFavorite');
+    const removeFavBtn = document.getElementById('contextRemoveFavorite');
+
+    if (type === 'folder') {
+        // Folders cannot be favorited currently
+        addFavBtn.classList.add('hidden');
+        removeFavBtn.classList.add('hidden');
+    } else {
+        const isFavorite = favorites.has(filePath);
+        addFavBtn.classList.toggle('hidden', isFavorite);
+        removeFavBtn.classList.toggle('hidden', !isFavorite);
+    }
 
     // Position menu
     menu.style.left = event.clientX + 'px';
     menu.style.top = event.clientY + 'px';
     menu.classList.add('visible');
+
+    // Store current file path for actions
+    contextMenuFile = filePath;
     menu.dataset.filePath = filePath;
 }
 
