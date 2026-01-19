@@ -323,6 +323,20 @@ function getSelectedProjectItems() {
         }
 
         function getBinPath(item) {
+            // Try treePath first (more reliable)
+            if (item.treePath) {
+                var treePath = item.treePath.replace(/\\/g, '/');
+                if (treePath.indexOf('/') === 0) treePath = treePath.substring(1);
+
+                var parts = treePath.split('/');
+                // parts[0] is ProjectName, parts[last] is ItemName
+                if (parts.length > 2) {
+                    var bins = parts.slice(1, parts.length - 1);
+                    return bins.join('/');
+                }
+                return "";
+            }
+
             var path = "";
             var current = item.parent;
 

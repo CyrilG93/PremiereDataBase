@@ -1204,6 +1204,7 @@ function showContextMenu(event, filePath, type) {
     // Store current file path for actions
     contextMenuFile = filePath;
     menu.dataset.filePath = filePath;
+    menu.dataset.type = type;
 }
 
 function hideContextMenu() {
@@ -1317,7 +1318,14 @@ function init() {
         hideContextMenu();
     });
     document.getElementById('contextDelete').addEventListener('click', () => {
-        const path = document.getElementById('contextMenu').dataset.filePath;
+        let path = document.getElementById('contextMenu').dataset.filePath;
+        const type = document.getElementById('contextMenu').dataset.type;
+
+        // Resolve folder path if relative
+        if (type === 'folder' && path && !path.includes(settings.databasePath)) {
+            path = settings.databasePath + '/' + path;
+        }
+
         if (confirm(t('modal.deleteConfirm'))) {
             const result = deletePath(path);
             if (result.success) {
