@@ -27,7 +27,8 @@ const translations = {
             import: "Import",
             save: "Save",
             cancel: "Cancel",
-            create: "Create"
+            create: "Create",
+            addToDb: "Add to DB"
         },
         settings: {
             title: "Settings",
@@ -39,7 +40,9 @@ const translations = {
             bannedExtensions: "Excluded file extensions",
             bannedExtensionsPlaceholder: "e.g.: .txt, .pdf, .zip (one per line)",
             excludedFolders: "Excluded folder names",
-            excludedFoldersPlaceholder: "e.g.: node_modules, .git (one per line)"
+            excludedFoldersPlaceholder: "e.g.: node_modules, .git (one per line)",
+            consolidationDepth: "Consolidation folder depth",
+            consolidationDepthHint: "0 = project file folder, 1 = one folder up, etc."
         },
         empty: {
             configureDatabase: "Configure your database path in settings",
@@ -89,7 +92,8 @@ const translations = {
             import: "Importer",
             save: "Enregistrer",
             cancel: "Annuler",
-            create: "Créer"
+            create: "Créer",
+            addToDb: "Ajouter à la base"
         },
         settings: {
             title: "Paramètres",
@@ -101,7 +105,9 @@ const translations = {
             bannedExtensions: "Extensions de fichiers exclues",
             bannedExtensionsPlaceholder: "ex: .txt, .pdf, .zip (une par ligne)",
             excludedFolders: "Noms de dossiers exclus",
-            excludedFoldersPlaceholder: "ex: node_modules, .git (une par ligne)"
+            excludedFoldersPlaceholder: "ex: node_modules, .git (un par ligne)",
+            consolidationDepth: "Profondeur du dossier de consolidation",
+            consolidationDepthHint: "0 = dossier du projet, 1 = un dossier au-dessus, etc."
         },
         empty: {
             configureDatabase: "Configurez le chemin de la base de données dans les paramètres",
@@ -223,10 +229,28 @@ function addToDatabase() {
 
     // Get selected items from Premiere
     csInterface.evalScript('getSelectedProjectItems()', async (result) => {
-        try {
-            const items = JSON.parse(result);
+        // Debug logging
+        console.log('Selected items result:', result);
 
-            if (!items || items.length === 0) {
+        let items;
+        try {
+            items = JSON.parse(result);
+        } catch (e) {
+            hideProgress();
+            // Show the raw result if it's not JSON (likely an error message)
+            showStatus('Premiere Error: ' + result, 'error');
+            console.error('Parse error:', e, result);
+            return;
+        }
+
+        if (items && items.error) {
+            hideProgress();
+            showStatus('Premiere Error: ' + items.error, 'error');
+            return;
+        }
+
+        try {
+            if (!items || !Array.isArray(items) || items.length === 0) {
                 hideProgress();
                 showStatus(t('empty.noFilesFound'), 'info'); // Or specific message "No selection"
                 return;

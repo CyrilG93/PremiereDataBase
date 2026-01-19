@@ -304,57 +304,60 @@ function getAllBins() {
 
 // Get selected project items with their source path and bin structure
 function getSelectedProjectItems() {
-    var items = [];
-    var selection = app.project.getSelection();
-
-    if (!selection || selection.length === 0) {
-        return JSON.stringify([]);
-    }
-
-    function getBinPath(item) {
-        var path = "";
-        var current = item.parent;
-
-        // Traverse up until we hit the root item
-        // Note: checking current.treePath against rootItem.treePath or just object comparison
-        while (current) {
-            // If we reached the project root (top level bin), stop
-            if (current == app.project.rootItem) break;
-
-            path = current.name + (path ? "/" + path : "");
-            current = current.parent;
+    try {
+        var items = [];
+        if (!app.project || !app.project.rootItem) {
+            return JSON.stringify([]);
         }
-        return path;
-    }
 
-    function processItem(item) {
-        if (!item) return;
+        var selection = app.project.getSelection();
 
-        if (item.type === ProjectItemType.BIN) {
-            // Recursively process children
-            for (var i = 0; i < item.children.numItems; i++) {
-                processItem(item.children[i]);
+        if (!selection || selection.length === 0) {
+            return JSON.stringify([]);
+        }
+
+        function getBinPath(item) {
+            var path = "";
+            var current = item.parent;
+
+            // Traverse up until we hit the root item
+            while (current) {
+                if (current == app.project.rootItem) break;
+                path = current.name + (path ? "/" + path : "");
+                current = current.parent;
             }
-        } else if (item.type === ProjectItemType.CLIP || item.type === ProjectItemType.FILE) {
-            var mediaPath = item.getMediaPath();
-            if (mediaPath && mediaPath.length > 0) {
-                // Determine bin path relative to project root
-                var binPath = getBinPath(item);
+            return path;
+        }
 
-                items.push({
-                    name: item.name,
-                    path: normalizePath(mediaPath),
-                    binPath: binPath
-                });
+        function processItem(item) {
+            if (!item) return;
+
+            if (item.type === ProjectItemType.BIN) {
+                for (var i = 0; i < item.children.numItems; i++) {
+                    processItem(item.children[i]);
+                }
+            } else if (item.type === ProjectItemType.CLIP || item.type === ProjectItemType.FILE) {
+                var mediaPath = item.getMediaPath();
+                if (mediaPath && mediaPath.length > 0) {
+                    var binPath = getBinPath(item);
+
+                    items.push({
+                        name: item.name,
+                        path: normalizePath(mediaPath),
+                        binPath: binPath
+                    });
+                }
             }
         }
-    }
 
-    for (var i = 0; i < selection.length; i++) {
-        processItem(selection[i]);
-    }
+        for (var i = 0; i < selection.length; i++) {
+            processItem(selection[i]);
+        }
 
-    return JSON.stringify(items);
+        return JSON.stringify(items);
+    } catch (e) {
+        return JSON.stringify({ error: e.toString() });
+    }
 }
 
 // Test function
