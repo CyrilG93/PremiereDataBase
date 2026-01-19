@@ -751,11 +751,23 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
 }
 
 function getFileIcon(type, filePath = null) {
-    if (type === 'image' && filePath) {
-        // Use the actual image as thumbnail if available
-        // Note: we need to handle special characters in path for CSS url
-        const safePath = filePath.replace(/'/g, "\\'");
-        return `<div class="thumbnail-image" style="background-image: url('${safePath}')"></div>`;
+    if (filePath) {
+        if (type === 'image') {
+            // Use the actual image as thumbnail if available
+            const safePath = filePath.replace(/'/g, "\\'");
+            return `<div class="thumbnail-image" style="background-image: url('${safePath}')"></div>`;
+        } else if (type === 'video') {
+            // Try to show video thumbnail/preview for supported browser formats
+            // Common web-supported formats: mp4, webm, mov (h.264)
+            const ext = filePath.split('.').pop().toLowerCase();
+            const supportedVideoExts = ['mp4', 'webm', 'mov', 'm4v'];
+
+            if (supportedVideoExts.includes(ext)) {
+                // Use video tag with preload metadata to show first frame
+                // Muted is required for autoplay (though we don't autoplay)
+                return `<video class="thumbnail-video" src="${filePath}" preload="metadata" muted onmouseover="this.play()" onmouseout="this.pause();this.currentTime=0;"></video>`;
+            }
+        }
     }
 
     switch (type) {
