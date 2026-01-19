@@ -719,8 +719,8 @@ function renderFiles() {
         for (const folder of currentFolders) {
             html += renderFolderItem(folder);
 
-            // If folder is expanded, show its contents
-            if (expandedFolders.has(folder.relativePath)) {
+            // If folder is expanded, show its contents (LIST VIEW ONLY)
+            if (currentView === 'list' && expandedFolders.has(folder.relativePath)) {
                 html += renderExpandedFolderContents(folder.relativePath);
             }
         }
@@ -771,11 +771,16 @@ function renderExpandedFolderContents(folderPath) {
 function renderFolderItem(folder, indent = 0) {
     const isExpanded = expandedFolders.has(folder.relativePath);
     const expandIcon = isExpanded ? '▼' : '▶';
+    // Hide expand icon in Grid view
+    const expandIconHtml = currentView === 'list'
+        ? `<span class="folder-expand" data-folder="${escapeHtml(folder.relativePath)}">${expandIcon}</span>`
+        : '';
+
     const indentStyle = indent > 0 ? `style="margin-left: ${indent}px"` : '';
 
     return `
         <div class="file-item folder" data-path="${escapeHtml(folder.relativePath)}" data-type="folder" ${indentStyle}>
-            <span class="folder-expand" data-folder="${escapeHtml(folder.relativePath)}">${expandIcon}</span>
+            ${expandIconHtml}
             <div class="file-icon">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
@@ -882,13 +887,20 @@ function attachFileEventListeners() {
 
     // Folder clicks - single click to expand, double click to navigate
     document.querySelectorAll('.file-item.folder').forEach(el => {
-        // Single click - toggle expand
+        // Single click behavior
         el.addEventListener('click', (e) => {
             // Ignore if clicking on expand icon (handled above)
             if (e.target.closest('.folder-expand')) return;
 
             const path = el.getAttribute('data-path');
-            toggleFolderExpand(path);
+
+            if (currentView === 'grid') {
+                // In Grid View, single click navigates into folder
+                navigateToFolder(path);
+            } else {
+                // In List View, single click toggles expand
+                toggleFolderExpand(path);
+            }
         });
 
         // Double click - navigate into folder
