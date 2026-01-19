@@ -109,8 +109,14 @@
                     </button>
                 </div>
 
-                <!-- Home Button + Folder Actions (center) -->
+                <!-- Back + Home + Folder Actions (center) -->
                 <div class="toolbar-center">
+                    <button class="toolbar-icon-btn disabled" id="backBtn" title="Back">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
                     <span class="breadcrumb-item home-btn" id="homeBtn" data-path="" title="Home">🏠</span>
                     <button class="toolbar-icon-btn" id="newFolderBtn" title="Create folder">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -263,6 +269,17 @@
                         When enabled, files will be copied to the project folder before importing, preserving the folder
                         structure.
                     </p>
+                </div>
+
+                <!-- Consolidation Depth -->
+                <div class="setting-item" id="consolidationDepthWrapper">
+                    <label for="consolidationDepth" data-i18n="settings.consolidationDepth">Consolidation folder
+                        depth</label>
+                    <div class="depth-input-group">
+                        <input type="number" id="consolidationDepth" min="0" max="10" value="0">
+                        <span class="setting-hint" data-i18n="settings.consolidationDepthHint">0 = project file folder,
+                            1 = one folder up, etc.</span>
+                    </div>
                 </div>
 
                 <!-- Banned Extensions -->

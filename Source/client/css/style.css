@@ -471,6 +471,35 @@ main {
     height: 16px;
 }
 
+.toolbar-icon-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Folder expand arrow */
+.folder-expand {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all var(--transition-fast);
+}
+
+.folder-expand:hover {
+    color: var(--accent-primary);
+}
+
+/* Hidden elements */
+.hidden {
+    display: none !important;
+}
+
 /* File Browser */
 .file-browser {
     flex: 1;
@@ -980,6 +1009,30 @@ main {
 
 .folder-input-group input {
     flex: 1;
+}
+
+/* Depth input */
+.depth-input-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.depth-input-group input[type="number"] {
+    width: 60px;
+    padding: var(--spacing-sm);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 12px;
+    text-align: center;
+}
+
+.setting-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 .browse-btn {

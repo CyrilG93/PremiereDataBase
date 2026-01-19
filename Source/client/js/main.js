@@ -141,6 +141,7 @@ let settings = {
     databasePath: '',
     language: 'en',
     consolidateOnImport: false,
+    consolidationDepth: 0,  // 0 = next to project file, 1 = one folder up, etc.
     bannedExtensions: ['.txt', '.pdf', '.zip', '.rar', '.exe', '.doc', '.docx', '.prproj'],
     excludedFolderNames: ['.git', 'node_modules', '__MACOSX', 'Adobe Premiere Pro Auto-Save']
 };
@@ -156,6 +157,7 @@ let activeTypeFilters = ['all']; // Active type filters
 let showFavoritesOnly = false;
 let searchQuery = '';
 let searchDebounceTimer = null;
+let expandedFolders = new Set(); // Folders that are expanded in list view
 
 // ============================================================================
 // TRANSLATION FUNCTIONS
@@ -238,6 +240,7 @@ function loadSettings() {
     // Update UI with settings
     document.getElementById('databasePathInput').value = settings.databasePath || '';
     document.getElementById('consolidateOnImport').checked = settings.consolidateOnImport || false;
+    document.getElementById('consolidationDepth').value = settings.consolidationDepth || 0;
     document.getElementById('bannedExtensions').value = (settings.bannedExtensions || []).join('\n');
     document.getElementById('excludedFolders').value = (settings.excludedFolderNames || []).join('\n');
 
@@ -255,6 +258,7 @@ function loadSettings() {
 function saveSettings() {
     settings.databasePath = document.getElementById('databasePathInput').value.trim();
     settings.consolidateOnImport = document.getElementById('consolidateOnImport').checked;
+    settings.consolidationDepth = parseInt(document.getElementById('consolidationDepth').value) || 0;
 
     const bannedText = document.getElementById('bannedExtensions').value;
     settings.bannedExtensions = bannedText
@@ -575,7 +579,7 @@ function clearSearch() {
 function renderFiles() {
     const browser = document.getElementById('fileBrowser');
 
-    // Get folders in current path
+    // Get folders in current path (direct children only for navigation)
     const currentFolders = allFolders.filter(folder => {
         if (!currentPath) {
             // Root level: show folders without path separator in relativePath
@@ -586,7 +590,27 @@ function renderFiles() {
         return parentPath === currentPath;
     });
 
-    if (filteredFiles.length === 0 && currentFolders.length === 0) {
+    // When searching, show all matching files from all subfolders
+    // When not searching, show only files in current folder OR expanded folders
+    let filesToShow;
+    if (searchQuery) {
+        // Show all filtered files when searching
+        filesToShow = filteredFiles;
+    } else {
+        // Show files in current folder + files in expanded folders
+        filesToShow = filteredFiles.filter(file => {
+            // In current folder
+            if (file.folderPath === currentPath) return true;
+
+            // In an expanded folder
+            for (const expandedPath of expandedFolders) {
+                if (file.folderPath === expandedPath) return true;
+            }
+            return false;
+        });
+    }
+
+    if (filesToShow.length === 0 && currentFolders.length === 0) {
         // Show empty state
         let emptyMessage = t('empty.noFilesFound');
         if (!settings.databasePath) {
@@ -609,19 +633,30 @@ function renderFiles() {
         return;
     }
 
-
     // Build file list HTML
     let html = '<div class="file-list">';
 
-    // Render folders first
-    for (const folder of currentFolders) {
-        html += renderFolderItem(folder);
-    }
+    if (searchQuery) {
+        // When searching, show flat list of all results with folder path
+        for (const file of filesToShow) {
+            html += renderFileItem(file, true); // true = show full path
+        }
+    } else {
+        // Normal navigation: show folders then files
+        for (const folder of currentFolders) {
+            html += renderFolderItem(folder);
 
-    // Render files in current folder (not in subfolders)
-    const currentFiles = filteredFiles.filter(file => file.folderPath === currentPath);
-    for (const file of currentFiles) {
-        html += renderFileItem(file);
+            // If folder is expanded, show its contents
+            if (expandedFolders.has(folder.relativePath)) {
+                html += renderExpandedFolderContents(folder.relativePath);
+            }
+        }
+
+        // Render files in current folder
+        const currentFiles = filesToShow.filter(file => file.folderPath === currentPath);
+        for (const file of currentFiles) {
+            html += renderFileItem(file, false);
+        }
     }
 
     html += '</div>';
@@ -631,9 +666,43 @@ function renderFiles() {
     attachFileEventListeners();
 }
 
-function renderFolderItem(folder) {
+// Render contents of an expanded folder (recursive)
+function renderExpandedFolderContents(folderPath) {
+    let html = '';
+    const depth = folderPath.split('/').length - (currentPath ? currentPath.split('/').length : 0);
+    const indent = depth * 20; // 20px per level
+
+    // Get subfolders of this folder
+    const subFolders = allFolders.filter(f => {
+        const parentPath = f.relativePath.substring(0, f.relativePath.lastIndexOf('/'));
+        return parentPath === folderPath;
+    });
+
+    // Render subfolders
+    for (const subfolder of subFolders) {
+        html += renderFolderItem(subfolder, indent);
+        if (expandedFolders.has(subfolder.relativePath)) {
+            html += renderExpandedFolderContents(subfolder.relativePath);
+        }
+    }
+
+    // Render files in this folder
+    const files = filteredFiles.filter(f => f.folderPath === folderPath);
+    for (const file of files) {
+        html += renderFileItem(file, false, indent);
+    }
+
+    return html;
+}
+
+function renderFolderItem(folder, indent = 0) {
+    const isExpanded = expandedFolders.has(folder.relativePath);
+    const expandIcon = isExpanded ? '▼' : '▶';
+    const indentStyle = indent > 0 ? `style="margin-left: ${indent}px"` : '';
+
     return `
-        <div class="file-item folder" data-path="${escapeHtml(folder.relativePath)}" data-type="folder">
+        <div class="file-item folder" data-path="${escapeHtml(folder.relativePath)}" data-type="folder" ${indentStyle}>
+            <span class="folder-expand" data-folder="${escapeHtml(folder.relativePath)}">${expandIcon}</span>
             <div class="file-icon">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
@@ -647,16 +716,22 @@ function renderFolderItem(folder) {
     `;
 }
 
-function renderFileItem(file) {
+function renderFileItem(file, showFullPath = false, indent = 0) {
     const isFavorite = favorites.has(file.path);
     const isSelected = selectedFiles.has(file.path);
     const iconHtml = getFileIcon(file.type);
 
-    // Get folder display (relative to database root, excluding database folder name)
-    const folderDisplay = file.folderPath || 'Root';
+    // Get folder display
+    let folderDisplay = file.folderPath || 'Root';
+    if (showFullPath) {
+        // Show full path when searching
+        folderDisplay = file.folderPath || 'Root';
+    }
+
+    const indentStyle = indent > 0 ? `style="margin-left: ${indent}px"` : '';
 
     return `
-        <div class="file-item ${isSelected ? 'selected' : ''}" data-path="${escapeHtml(file.path)}" data-type="file">
+        <div class="file-item ${isSelected ? 'selected' : ''}" data-path="${escapeHtml(file.path)}" data-type="file" ${indentStyle}>
             <input type="checkbox" class="file-checkbox" ${isSelected ? 'checked' : ''}>
             <div class="file-icon ${file.type}">
                 ${iconHtml}
@@ -703,9 +778,28 @@ function getFileIcon(type) {
 }
 
 function attachFileEventListeners() {
-    // Folder clicks
+    // Folder expand/collapse icons
+    document.querySelectorAll('.folder-expand').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const folderPath = el.getAttribute('data-folder');
+            toggleFolderExpand(folderPath);
+        });
+    });
+
+    // Folder clicks - single click to expand, double click to navigate
     document.querySelectorAll('.file-item.folder').forEach(el => {
-        el.addEventListener('click', () => {
+        // Single click - toggle expand
+        el.addEventListener('click', (e) => {
+            // Ignore if clicking on expand icon (handled above)
+            if (e.target.closest('.folder-expand')) return;
+
+            const path = el.getAttribute('data-path');
+            toggleFolderExpand(path);
+        });
+
+        // Double click - navigate into folder
+        el.addEventListener('dblclick', () => {
             const path = el.getAttribute('data-path');
             navigateToFolder(path);
         });
@@ -798,9 +892,35 @@ function toggleFavorite(path) {
 function navigateToFolder(path) {
     currentPath = path;
     selectedFiles.clear();
+    expandedFolders.clear(); // Clear expanded state when navigating
     updateSelectionUI();
     applyFilters();
     renderBreadcrumb();
+}
+
+function navigateBack() {
+    if (!currentPath) return; // Already at root
+
+    const lastSlash = currentPath.lastIndexOf('/');
+    if (lastSlash > 0) {
+        currentPath = currentPath.substring(0, lastSlash);
+    } else {
+        currentPath = '';
+    }
+
+    selectedFiles.clear();
+    updateSelectionUI();
+    applyFilters();
+    renderBreadcrumb();
+}
+
+function toggleFolderExpand(folderPath) {
+    if (expandedFolders.has(folderPath)) {
+        expandedFolders.delete(folderPath);
+    } else {
+        expandedFolders.add(folderPath);
+    }
+    renderFiles();
 }
 
 function renderBreadcrumb() {
@@ -808,6 +928,14 @@ function renderBreadcrumb() {
     const homeBtn = document.getElementById('homeBtn');
     if (homeBtn) {
         homeBtn.onclick = () => navigateToFolder('');
+    }
+
+    // Back button
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+        backBtn.onclick = () => navigateBack();
+        backBtn.disabled = !currentPath;
+        backBtn.classList.toggle('disabled', !currentPath);
     }
 }
 
@@ -883,13 +1011,24 @@ async function importSelectedFiles() {
             const projectPath = await getProjectPath();
 
             if (projectPath) {
-                const projectFolder = projectPath.substring(0, projectPath.lastIndexOf('/'));
+                // Determine target folder based on depth
+                let targetRoot = projectPath.substring(0, projectPath.lastIndexOf('/'));
 
-                // Copy files preserving structure
+                // Climb up folders based on depth settings
+                for (let i = 0; i < (settings.consolidationDepth || 0); i++) {
+                    const lastSlash = targetRoot.lastIndexOf('/');
+                    if (lastSlash > 0) {
+                        targetRoot = targetRoot.substring(0, lastSlash);
+                    } else {
+                        break; // Reached root, can't go up further
+                    }
+                }
+
+                // Copy files preserving structure relative to that target root
                 const filesToCopy = filesToImport.map(file => ({
                     name: file.name,
                     source: file.path,
-                    destination: projectFolder + '/' + (file.binPath ? file.binPath + '/' : '') + file.name
+                    destination: targetRoot + '/' + (file.binPath ? file.binPath + '/' : '') + file.name
                 }));
 
                 await copyFiles(filesToCopy, (progress) => {
