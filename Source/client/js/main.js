@@ -719,7 +719,7 @@ function renderFolderItem(folder, indent = 0) {
 function renderFileItem(file, showFullPath = false, indent = 0) {
     const isFavorite = favorites.has(file.path);
     const isSelected = selectedFiles.has(file.path);
-    const iconHtml = getFileIcon(file.type);
+    const iconHtml = getFileIcon(file.type, file.path);
 
     // Get folder display
     let folderDisplay = file.folderPath || 'Root';
@@ -750,7 +750,14 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
     `;
 }
 
-function getFileIcon(type) {
+function getFileIcon(type, filePath = null) {
+    if (type === 'image' && filePath) {
+        // Use the actual image as thumbnail if available
+        // Note: we need to handle special characters in path for CSS url
+        const safePath = filePath.replace(/'/g, "\\'");
+        return `<div class="thumbnail-image" style="background-image: url('${safePath}')"></div>`;
+    }
+
     switch (type) {
         case 'video':
             return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -764,6 +771,7 @@ function getFileIcon(type) {
                 <circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="2" />
             </svg>`;
         case 'image':
+            // Fallback icon if no path provided
             return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
                 <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />

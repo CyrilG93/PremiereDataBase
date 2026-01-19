@@ -30,7 +30,9 @@
         "bannedExtensions": "Extensions de fichiers exclues",
         "bannedExtensionsPlaceholder": "ex: .txt, .pdf, .zip (une par ligne)",
         "excludedFolders": "Noms de dossiers exclus",
-        "excludedFoldersPlaceholder": "ex: node_modules, .git (un par ligne)"
+        "excludedFoldersPlaceholder": "ex: node_modules, .git (un par ligne)",
+        "consolidationDepth": "Profondeur du dossier de consolidation",
+        "consolidationDepthHint": "0 = dossier du projet, 1 = un dossier au-dessus, etc."
     },
     "empty": {
         "configureDatabase": "Configurez le chemin de la base de données dans les paramètres",

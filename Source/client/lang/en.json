@@ -30,7 +30,9 @@
         "bannedExtensions": "Excluded file extensions",
         "bannedExtensionsPlaceholder": "e.g.: .txt, .pdf, .zip (one per line)",
         "excludedFolders": "Excluded folder names",
-        "excludedFoldersPlaceholder": "e.g.: node_modules, .git (one per line)"
+        "excludedFoldersPlaceholder": "e.g.: node_modules, .git (one per line)",
+        "consolidationDepth": "Consolidation folder depth",
+        "consolidationDepthHint": "0 = project file folder, 1 = one folder up, etc."
     },
     "empty": {
         "configureDatabase": "Configure your database path in settings",
