@@ -58,6 +58,7 @@ const translations = {
             addFavorite: "Add to favorites",
             removeFavorite: "Remove from favorites",
             openFolder: "Open in Finder",
+            importFolder: "Import Folder",
             delete: "Delete"
         },
         status: {
@@ -123,6 +124,7 @@ const translations = {
             addFavorite: "Ajouter aux favoris",
             removeFavorite: "Retirer des favoris",
             openFolder: "Ouvrir dans le Finder",
+            importFolder: "Importer le dossier",
             delete: "Supprimer"
         },
         status: {
