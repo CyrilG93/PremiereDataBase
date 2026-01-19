@@ -123,10 +123,8 @@ function importFilesToProject(filesJson) {
                 // Verify file exists before attempting import
                 var filePath = file.path;
 
-                // Handle Windows paths
-                if (IS_WINDOWS) {
-                    filePath = filePath.replace(/\//g, '\\');
-                }
+                // Adobe ExtendScript prefers forward slashes on all platforms
+                // No manual backslash conversion needed here as File() handles it correctly
 
                 var fileObj = new File(filePath);
                 if (!fileObj.exists) {

@@ -294,10 +294,13 @@ function getFileInfo(filePath) {
 function openInExplorer(folderPath) {
     const { exec } = require('child_process');
 
+    const normalizedPath = path.normalize(folderPath); // Handles / vs \ for OS
+
     if (IS_MAC) {
-        exec(`open "${folderPath}"`);
+        exec(`open "${normalizedPath}"`);
     } else if (IS_WINDOWS) {
-        exec(`explorer "${folderPath}"`);
+        // Enforce double quotes and backslashes for Windows
+        exec(`explorer "${normalizedPath}"`);
     }
 }
 
