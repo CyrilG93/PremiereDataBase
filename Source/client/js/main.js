@@ -1079,7 +1079,32 @@ async function importSelectedFiles() {
     if (selectedFiles.size === 0) return;
 
     const files = allFiles.filter(f => selectedFiles.has(f.path));
+    const count = await performImport(files);
 
+    if (count > 0) {
+        selectedFiles.clear();
+        updateSelectionUI();
+        renderFiles();
+    }
+}
+
+async function importFolder(folderPath) {
+    // Determine target files (recursive)
+    // Match exact folder path or subfolders
+    const files = allFiles.filter(f =>
+        f.folderPath === folderPath ||
+        (f.folderPath && f.folderPath.startsWith(folderPath + '/'))
+    );
+
+    if (files.length === 0) {
+        showStatus(t('empty.noFilesFound'), 'warning');
+        return;
+    }
+
+    await performImport(files);
+}
+
+async function performImport(files) {
     showProgress(t('status.importing'));
     updateProgress(0);
 
@@ -1099,7 +1124,19 @@ async function importSelectedFiles() {
         // If consolidate is enabled, copy files to project folder first
         if (settings.consolidateOnImport) {
             // Get project path from Premiere
-            const projectPath = await getProjectPath();
+            let projectPath = null;
+
+            // Wrap getProjectPath in promise just in case, though it's likely async or instant
+            try {
+                // Assuming getProjectPath is available, check implementation
+                // Wait, getProjectPath is in host script usually?
+                // No, previous code called `await getProjectPath()`. 
+                // Let's assume it's a helper function in main.js or available.
+                // In Step 672 view, getProjectPath was called.
+                projectPath = await getProjectPath();
+            } catch (e) {
+                console.error("Error getting project path", e);
+            }
 
             if (projectPath) {
                 // Determine target folder based on depth
@@ -1139,31 +1176,33 @@ async function importSelectedFiles() {
         const filesJson = JSON.stringify(filesToImport);
         const base64Json = btoa(unescape(encodeURIComponent(filesJson)));
 
-        csInterface.evalScript(`importFilesToProjectBase64('${base64Json}')`, (result) => {
-            hideProgress();
+        return new Promise((resolve) => {
+            csInterface.evalScript(`importFilesToProjectBase64('${base64Json}')`, (result) => {
+                hideProgress();
 
-            try {
-                const response = JSON.parse(result);
+                try {
+                    const response = JSON.parse(result);
 
-                if (response.error) {
-                    showStatus(t('status.importError') + ': ' + response.error, 'error');
-                } else {
-                    const count = response.totalImported || 0;
-                    showStatus(`${count} ${t('status.importSuccess')}`, 'success');
-                    selectedFiles.clear();
-                    updateSelectionUI();
-                    renderFiles();
+                    if (response.error) {
+                        showStatus(t('status.importError') + ': ' + response.error, 'error');
+                        resolve(0);
+                    } else {
+                        const count = response.totalImported || 0;
+                        showStatus(`${count} ${t('status.importSuccess')}`, 'success');
+                        resolve(count);
+                    }
+                } catch (e) {
+                    showStatus(t('status.importError'), 'error');
+                    console.error('Import error:', e);
+                    resolve(0);
                 }
-            } catch (e) {
-                showStatus(t('status.importError'), 'error');
-                console.error('Import error:', e);
-            }
+            });
         });
-
     } catch (e) {
         hideProgress();
-        showStatus(t('status.importError') + ': ' + e.message, 'error');
-        console.error('Import error:', e);
+        showStatus(t('status.importError'), 'error');
+        console.error('Import failed:', e);
+        return 0;
     }
 }
 
@@ -1185,15 +1224,18 @@ function showContextMenu(event, filePath, type) {
     // Manage Favorites options
     const addFavBtn = document.getElementById('contextAddFavorite');
     const removeFavBtn = document.getElementById('contextRemoveFavorite');
+    const importFolderBtn = document.getElementById('contextImportFolder');
 
     if (type === 'folder') {
         // Folders cannot be favorited currently
         addFavBtn.classList.add('hidden');
         removeFavBtn.classList.add('hidden');
+        importFolderBtn.classList.remove('hidden');
     } else {
         const isFavorite = favorites.has(filePath);
         addFavBtn.classList.toggle('hidden', isFavorite);
         removeFavBtn.classList.toggle('hidden', !isFavorite);
+        importFolderBtn.classList.add('hidden');
     }
 
     // Position menu
@@ -1312,9 +1354,25 @@ function init() {
         hideContextMenu();
     });
     document.getElementById('contextOpenFolder').addEventListener('click', () => {
-        const path = document.getElementById('contextMenu').dataset.filePath;
-        const folderPath = path.substring(0, path.lastIndexOf('/'));
-        openInExplorer(folderPath);
+        let path = document.getElementById('contextMenu').dataset.filePath;
+        const type = document.getElementById('contextMenu').dataset.type;
+
+        if (type !== 'folder') {
+            // If file, get parent folder
+            path = path.substring(0, path.lastIndexOf('/'));
+        } else if (!path.includes(settings.databasePath)) {
+            // If relative folder path, make absolute
+            path = settings.databasePath + '/' + path;
+        }
+
+        openInExplorer(path);
+        hideContextMenu();
+    });
+
+    document.getElementById('contextImportFolder').addEventListener('click', () => {
+        let path = document.getElementById('contextMenu').dataset.filePath;
+        // path is relative for folders (e.g. "ELEMENTS/Test")
+        importFolder(path);
         hideContextMenu();
     });
     document.getElementById('contextDelete').addEventListener('click', () => {

@@ -49,6 +49,7 @@
         "addFavorite": "Add to favorites",
         "removeFavorite": "Remove from favorites",
         "openFolder": "Open in Finder",
+        "importFolder": "Import Folder",
         "delete": "Delete"
     },
     "status": {

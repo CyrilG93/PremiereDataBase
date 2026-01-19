@@ -340,16 +340,20 @@
                 favorites</button>
             <button class="context-menu-item" id="contextRemoveFavorite" data-i18n="context.removeFavorite">Remove from
                 favorites</button>
-            <div class="context-menu-divider"></div>
-            <button class="context-menu-item" id="contextOpenFolder" data-i18n="context.openFolder">Open in
-                Finder</button>
-            <button class="context-menu-item" id="contextDelete" data-i18n="context.delete">Delete</button>
+            <button class="context-menu-item" id="contextOpenFolder">
+                <span class="context-icon">📂</span> <span data-i18n="context.openFolder">Open in Explorer</span>
+            </button>
+            <button class="context-menu-item" id="contextImportFolder">
+                <span class="context-icon">⬇️</span> <span data-i18n="context.importFolder">Import Folder</span>
+            </button>
+            <button class="context-menu-item delete" id="contextDelete">
+                <span class="context-icon">🗑️</span> <span data-i18n="context.delete">Delete</span>
+            </button>
         </div>
-    </div>
 
-    <script src="js/CSInterface.js"></script>
-    <script src="js/fileOperations.js"></script>
-    <script src="js/main.js"></script>
+        <script src="js/CSInterface.js"></script>
+        <script src="js/fileOperations.js"></script>
+        <script src="js/main.js"></script>
 </body>
 
 </html>

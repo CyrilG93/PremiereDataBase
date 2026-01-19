@@ -49,6 +49,7 @@
         "addFavorite": "Ajouter aux favoris",
         "removeFavorite": "Retirer des favoris",
         "openFolder": "Ouvrir dans le Finder",
+        "importFolder": "Importer le dossier",
         "delete": "Supprimer"
     },
     "status": {
