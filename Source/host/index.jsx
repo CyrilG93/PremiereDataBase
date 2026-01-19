@@ -302,6 +302,61 @@ function getAllBins() {
     return JSON.stringify(bins);
 }
 
+// Get selected project items with their source path and bin structure
+function getSelectedProjectItems() {
+    var items = [];
+    var selection = app.project.getSelection();
+
+    if (!selection || selection.length === 0) {
+        return JSON.stringify([]);
+    }
+
+    function getBinPath(item) {
+        var path = "";
+        var current = item.parent;
+
+        // Traverse up until we hit the root item
+        // Note: checking current.treePath against rootItem.treePath or just object comparison
+        while (current) {
+            // If we reached the project root (top level bin), stop
+            if (current == app.project.rootItem) break;
+
+            path = current.name + (path ? "/" + path : "");
+            current = current.parent;
+        }
+        return path;
+    }
+
+    function processItem(item) {
+        if (!item) return;
+
+        if (item.type === ProjectItemType.BIN) {
+            // Recursively process children
+            for (var i = 0; i < item.children.numItems; i++) {
+                processItem(item.children[i]);
+            }
+        } else if (item.type === ProjectItemType.CLIP || item.type === ProjectItemType.FILE) {
+            var mediaPath = item.getMediaPath();
+            if (mediaPath && mediaPath.length > 0) {
+                // Determine bin path relative to project root
+                var binPath = getBinPath(item);
+
+                items.push({
+                    name: item.name,
+                    path: normalizePath(mediaPath),
+                    binPath: binPath
+                });
+            }
+        }
+    }
+
+    for (var i = 0; i < selection.length; i++) {
+        processItem(selection[i]);
+    }
+
+    return JSON.stringify(items);
+}
+
 // Test function
 function testExtension() {
     return JSON.stringify({

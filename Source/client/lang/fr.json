@@ -18,7 +18,8 @@
         "import": "Importer",
         "save": "Enregistrer",
         "cancel": "Annuler",
-        "create": "Créer"
+        "create": "Créer",
+        "addToDb": "Ajouter à la base"
     },
     "settings": {
         "title": "Paramètres",

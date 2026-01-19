@@ -212,6 +212,53 @@ function changeLanguage(lang) {
     }
 }
 
+function addToDatabase() {
+    // Verify database path is set
+    if (!settings.databasePath) {
+        showStatus(t('empty.configureDatabase'), 'error');
+        return;
+    }
+
+    showProgress(t('status.scanning')); // "Scanning..." or generic loading
+
+    // Get selected items from Premiere
+    csInterface.evalScript('getSelectedProjectItems()', async (result) => {
+        try {
+            const items = JSON.parse(result);
+
+            if (!items || items.length === 0) {
+                hideProgress();
+                showStatus(t('empty.noFilesFound'), 'info'); // Or specific message "No selection"
+                return;
+            }
+
+            showProgress(t('status.importing')); // Reuse importing message or add "Copying..."
+
+            const filesToCopy = items.map(item => ({
+                name: item.name,
+                source: item.path,
+                destination: settings.databasePath + '/' + (item.binPath ? item.binPath + '/' : '') + item.name
+            }));
+
+            // Execute copy
+            await copyFiles(filesToCopy, (progress) => {
+                updateProgress(progress.percent, `Copying ${progress.current}/${progress.total}...`);
+            });
+
+            hideProgress();
+            showStatus(`${items.length} files added to database`, 'success');
+
+            // Refresh database view
+            scanDatabaseFiles();
+
+        } catch (e) {
+            hideProgress();
+            showStatus('Error adding to database: ' + e.message, 'error');
+            console.error(e);
+        }
+    });
+}
+
 // ============================================================================
 // SETTINGS
 // ============================================================================
@@ -1197,6 +1244,7 @@ function init() {
     document.getElementById('selectAllBtn').addEventListener('click', selectAll);
     document.getElementById('deselectAllBtn').addEventListener('click', deselectAll);
     document.getElementById('importBtn').addEventListener('click', importSelectedFiles);
+    document.getElementById('addToDbBtn').addEventListener('click', addToDatabase);
 
     // Folder actions
     document.getElementById('newFolderBtn').addEventListener('click', openNewFolderModal);
