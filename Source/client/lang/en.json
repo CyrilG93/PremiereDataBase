@@ -1,0 +1,62 @@
+{
+    "labels": {
+        "database": "Database:",
+        "notConfigured": "Not configured",
+        "files": "files",
+        "selected": "selected"
+    },
+    "search": {
+        "placeholder": "Search files..."
+    },
+    "filters": {
+        "all": "All",
+        "video": "Video",
+        "audio": "Audio",
+        "image": "Image"
+    },
+    "buttons": {
+        "import": "Import",
+        "save": "Save",
+        "cancel": "Cancel",
+        "create": "Create"
+    },
+    "settings": {
+        "title": "Settings",
+        "databasePath": "Database Path",
+        "databasePathPlaceholder": "Select database folder...",
+        "language": "Language",
+        "consolidateOnImport": "Copy files to project folder on import",
+        "consolidateDescription": "When enabled, files will be copied to the project folder before importing, preserving the folder structure.",
+        "bannedExtensions": "Excluded file extensions",
+        "bannedExtensionsPlaceholder": "e.g.: .txt, .pdf, .zip (one per line)",
+        "excludedFolders": "Excluded folder names",
+        "excludedFoldersPlaceholder": "e.g.: node_modules, .git (one per line)"
+    },
+    "empty": {
+        "configureDatabase": "Configure your database path in settings",
+        "noFilesFound": "No files found",
+        "noFavorites": "No favorites yet"
+    },
+    "modal": {
+        "newFolder": "New Folder",
+        "folderNamePlaceholder": "Folder name",
+        "deleteConfirm": "Are you sure you want to delete this?"
+    },
+    "context": {
+        "addFavorite": "Add to favorites",
+        "removeFavorite": "Remove from favorites",
+        "openFolder": "Open in Finder",
+        "delete": "Delete"
+    },
+    "status": {
+        "loading": "Loading...",
+        "scanning": "Scanning database...",
+        "importing": "Importing files...",
+        "importSuccess": "files imported successfully",
+        "importError": "Import failed",
+        "saved": "Settings saved",
+        "folderCreated": "Folder created",
+        "folderDeleted": "Folder deleted",
+        "copied": "Copied to clipboard"
+    }
+}

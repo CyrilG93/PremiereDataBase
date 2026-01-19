@@ -1,0 +1,62 @@
+{
+    "labels": {
+        "database": "Base de données :",
+        "notConfigured": "Non configuré",
+        "files": "fichiers",
+        "selected": "sélectionné(s)"
+    },
+    "search": {
+        "placeholder": "Rechercher des fichiers..."
+    },
+    "filters": {
+        "all": "Tous",
+        "video": "Vidéo",
+        "audio": "Audio",
+        "image": "Image"
+    },
+    "buttons": {
+        "import": "Importer",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "create": "Créer"
+    },
+    "settings": {
+        "title": "Paramètres",
+        "databasePath": "Chemin de la base de données",
+        "databasePathPlaceholder": "Sélectionner le dossier...",
+        "language": "Langue",
+        "consolidateOnImport": "Copier les fichiers dans le dossier projet lors de l'import",
+        "consolidateDescription": "Lorsque cette option est activée, les fichiers seront copiés dans le dossier du projet avant l'import, en préservant la structure des dossiers.",
+        "bannedExtensions": "Extensions de fichiers exclues",
+        "bannedExtensionsPlaceholder": "ex: .txt, .pdf, .zip (une par ligne)",
+        "excludedFolders": "Noms de dossiers exclus",
+        "excludedFoldersPlaceholder": "ex: node_modules, .git (un par ligne)"
+    },
+    "empty": {
+        "configureDatabase": "Configurez le chemin de la base de données dans les paramètres",
+        "noFilesFound": "Aucun fichier trouvé",
+        "noFavorites": "Aucun favori"
+    },
+    "modal": {
+        "newFolder": "Nouveau dossier",
+        "folderNamePlaceholder": "Nom du dossier",
+        "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ceci ?"
+    },
+    "context": {
+        "addFavorite": "Ajouter aux favoris",
+        "removeFavorite": "Retirer des favoris",
+        "openFolder": "Ouvrir dans le Finder",
+        "delete": "Supprimer"
+    },
+    "status": {
+        "loading": "Chargement...",
+        "scanning": "Analyse de la base de données...",
+        "importing": "Import des fichiers...",
+        "importSuccess": "fichiers importés avec succès",
+        "importError": "Échec de l'import",
+        "saved": "Paramètres enregistrés",
+        "folderCreated": "Dossier créé",
+        "folderDeleted": "Dossier supprimé",
+        "copied": "Copié dans le presse-papiers"
+    }
+}

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Base</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <svg class="logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M3 15h6M3 12l3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                <h1>Data Base</h1>
+            </div>
+            <div class="header-actions">
+                <!-- Language Selector -->
+                <select class="header-lang-select" id="languageSelect" title="Language">
+                    <option value="en">🇬🇧</option>
+                    <option value="fr">🇫🇷</option>
+                </select>
+                <!-- Settings Button -->
+                <button class="settings-btn" id="settingsBtn" title="Settings">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Database Path Display -->
+            <div class="database-info" id="databaseInfo">
+                <div class="info-item">
+                    <span class="info-label" data-i18n="labels.database">Database:</span>
+                    <span class="info-value" id="databasePath" data-i18n="labels.notConfigured">Not configured</span>
+                </div>
+            </div>
+
+            <!-- Search & Filter Bar -->
+            <div class="search-section">
+                <div class="search-bar">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" />
+                        <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder"
+                        placeholder="Search files...">
+                    <button class="clear-search" id="clearSearch" title="Clear">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+                <button class="filter-btn" id="favoritesBtn" title="Show favorites only">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <polygon
+                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- File Type Filters -->
+            <div class="type-filters">
+                <button class="type-filter-btn active" id="filterAll" data-type="all">
+                    <span data-i18n="filters.all">All</span>
+                </button>
+                <button class="type-filter-btn" id="filterVideo" data-type="video">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2" />
+                        <polygon points="10 9 16 12 10 15" fill="currentColor" />
+                    </svg>
+                    <span data-i18n="filters.video">Video</span>
+                </button>
+                <button class="type-filter-btn" id="filterAudio" data-type="audio">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="2" />
+                        <circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    <span data-i18n="filters.audio">Audio</span>
+                </button>
+                <button class="type-filter-btn" id="filterImage" data-type="image">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
+                        <path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    <span data-i18n="filters.image">Image</span>
+                </button>
+            </div>
+
+            <!-- View Toggle & Info -->
+            <div class="toolbar">
+                <div class="file-count">
+                    <span id="fileCount">0</span>
+                    <span data-i18n="labels.files">files</span>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" id="listViewBtn" title="List view">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <line x1="8" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="8" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="8" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <circle cx="4" cy="6" r="1" fill="currentColor" />
+                            <circle cx="4" cy="12" r="1" fill="currentColor" />
+                            <circle cx="4" cy="18" r="1" fill="currentColor" />
+                        </svg>
+                    </button>
+                    <button class="view-btn" id="gridViewBtn" title="Grid view">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Breadcrumb Navigation -->
+            <div class="breadcrumb" id="breadcrumb">
+                <span class="breadcrumb-item" data-path="">🏠</span>
+            </div>
+
+            <!-- File Browser -->
+            <div class="file-browser" id="fileBrowser">
+                <!-- Files will be rendered here -->
+                <div class="empty-state" id="emptyState">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p data-i18n="empty.configureDatabase">Configure your database path in settings</p>
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="action-bar" id="actionBar">
+                <div class="selection-info">
+                    <span id="selectedCount">0</span>
+                    <span data-i18n="labels.selected">selected</span>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn secondary" id="selectAllBtn" title="Select all">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                    <button class="action-btn secondary" id="deselectAllBtn" title="Deselect all">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                    <button class="action-btn primary" id="importBtn" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span data-i18n="buttons.import">Import</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Folder Actions (for folder management) -->
+            <div class="folder-actions" id="folderActions">
+                <button class="folder-action-btn" id="newFolderBtn" title="Create folder">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <line x1="12" y1="11" x2="12" y2="17" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" />
+                        <line x1="9" y1="14" x2="15" y2="14" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" />
+                    </svg>
+                </button>
+                <button class="folder-action-btn" id="refreshBtn" title="Refresh">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M23 4v6h-6M1 20v-6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-section" id="progressSection">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+                <span class="progress-text" id="progressText">Loading...</span>
+            </div>
+
+            <!-- Status Message -->
+            <div class="status-message" id="statusMessage"></div>
+        </main>
+
+        <!-- Settings Panel -->
+        <div class="settings-overlay" id="settingsOverlay"></div>
+        <div class="settings-panel" id="settingsPanel">
+            <div class="settings-header">
+                <h2 data-i18n="settings.title">Settings</h2>
+                <button class="close-btn" id="closeSettingsBtn">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+            <div class="settings-content">
+                <!-- Database Path -->
+                <div class="setting-item">
+                    <label for="databasePathInput" data-i18n="settings.databasePath">Database Path</label>
+                    <div class="folder-input-group">
+                        <input type="text" id="databasePathInput"
+                            data-i18n-placeholder="settings.databasePathPlaceholder"
+                            placeholder="Select database folder...">
+                        <button class="browse-btn" id="browseDatabaseBtn">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Language -->
+                <div class="setting-item">
+                    <label for="settingsLanguageSelect" data-i18n="settings.language">Language</label>
+                    <select id="settingsLanguageSelect" class="setting-select">
+                        <option value="en">🇬🇧 English</option>
+                        <option value="fr">🇫🇷 Français</option>
+                    </select>
+                </div>
+
+                <!-- Consolidate on Import -->
+                <div class="setting-item">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="consolidateOnImport">
+                        <span data-i18n="settings.consolidateOnImport">Copy files to project folder on import</span>
+                    </label>
+                    <p class="setting-description" data-i18n="settings.consolidateDescription">
+                        When enabled, files will be copied to the project folder before importing, preserving the folder
+                        structure.
+                    </p>
+                </div>
+
+                <!-- Banned Extensions -->
+                <div class="setting-item">
+                    <label for="bannedExtensions" data-i18n="settings.bannedExtensions">Excluded file
+                        extensions</label>
+                    <textarea id="bannedExtensions" rows="3"
+                        data-i18n-placeholder="settings.bannedExtensionsPlaceholder"
+                        placeholder="e.g.: .txt, .pdf, .zip"></textarea>
+                </div>
+
+                <!-- Excluded Folder Names -->
+                <div class="setting-item">
+                    <label for="excludedFolders" data-i18n="settings.excludedFolders">Excluded folder names</label>
+                    <textarea id="excludedFolders" rows="2" data-i18n-placeholder="settings.excludedFoldersPlaceholder"
+                        placeholder="e.g.: node_modules, .git"></textarea>
+                </div>
+
+                <button class="save-btn" id="saveSettingsBtn" data-i18n="buttons.save">Save</button>
+            </div>
+        </div>
+
+        <!-- New Folder Modal -->
+        <div class="modal-overlay" id="newFolderModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 data-i18n="modal.newFolder">New Folder</h3>
+                    <button class="close-btn" id="closeNewFolderModal">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-content">
+                    <input type="text" id="newFolderName" data-i18n-placeholder="modal.folderNamePlaceholder"
+                        placeholder="Folder name">
+                </div>
+                <div class="modal-actions">
+                    <button class="modal-btn secondary" id="cancelNewFolder" data-i18n="buttons.cancel">Cancel</button>
+                    <button class="modal-btn primary" id="confirmNewFolder" data-i18n="buttons.create">Create</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Context Menu -->
+        <div class="context-menu" id="contextMenu">
+            <button class="context-menu-item" id="contextAddFavorite" data-i18n="context.addFavorite">Add to
+                favorites</button>
+            <button class="context-menu-item" id="contextRemoveFavorite" data-i18n="context.removeFavorite">Remove from
+                favorites</button>
+            <div class="context-menu-divider"></div>
+            <button class="context-menu-item" id="contextOpenFolder" data-i18n="context.openFolder">Open in
+                Finder</button>
+            <button class="context-menu-item" id="contextDelete" data-i18n="context.delete">Delete</button>
+        </div>
+    </div>
+
+    <script src="js/CSInterface.js"></script>
+    <script src="js/fileOperations.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
