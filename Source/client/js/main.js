@@ -574,7 +574,6 @@ function clearSearch() {
 // ============================================================================
 function renderFiles() {
     const browser = document.getElementById('fileBrowser');
-    const emptyState = document.getElementById('emptyState');
 
     // Get folders in current path
     const currentFolders = allFolders.filter(folder => {
@@ -588,25 +587,28 @@ function renderFiles() {
     });
 
     if (filteredFiles.length === 0 && currentFolders.length === 0) {
-        browser.innerHTML = '';
-        browser.appendChild(emptyState);
-        emptyState.style.display = 'flex';
-
-        // Update empty message based on state
-        const emptyText = emptyState.querySelector('p');
+        // Show empty state
+        let emptyMessage = t('empty.noFilesFound');
         if (!settings.databasePath) {
-            emptyText.textContent = t('empty.configureDatabase');
+            emptyMessage = t('empty.configureDatabase');
         } else if (showFavoritesOnly) {
-            emptyText.textContent = t('empty.noFavorites');
+            emptyMessage = t('empty.noFavorites');
         } else if (searchQuery) {
-            emptyText.textContent = t('empty.noFilesFound');
-        } else {
-            emptyText.textContent = t('empty.noFilesFound');
+            emptyMessage = t('empty.noFilesFound');
         }
+
+        browser.innerHTML = `
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p>${emptyMessage}</p>
+            </div>
+        `;
         return;
     }
 
-    emptyState.style.display = 'none';
 
     // Build file list HTML
     let html = '<div class="file-list">';
@@ -802,9 +804,8 @@ function navigateToFolder(path) {
 }
 
 function renderBreadcrumb() {
-    const breadcrumb = document.getElementById('breadcrumb');
-    // The home button is static in HTML, just attach click handler
-    const homeBtn = breadcrumb.querySelector('.home-btn, .breadcrumb-item');
+    // The home button is now in toolbar-center, attach click handler by ID
+    const homeBtn = document.getElementById('homeBtn');
     if (homeBtn) {
         homeBtn.onclick = () => navigateToFolder('');
     }

@@ -440,6 +440,37 @@ main {
     background: var(--bg-hover);
 }
 
+/* Toolbar center section (home + folder actions) */
+.toolbar-center {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.toolbar-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.toolbar-icon-btn:hover {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+}
+
+.toolbar-icon-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
 /* File Browser */
 .file-browser {
     flex: 1;

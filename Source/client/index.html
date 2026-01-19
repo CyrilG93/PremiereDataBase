@@ -109,9 +109,27 @@
                     </button>
                 </div>
 
-                <!-- Home Button (center) -->
-                <div class="breadcrumb-home" id="breadcrumb">
-                    <span class="breadcrumb-item home-btn" data-path="" title="Home">🏠</span>
+                <!-- Home Button + Folder Actions (center) -->
+                <div class="toolbar-center">
+                    <span class="breadcrumb-item home-btn" id="homeBtn" data-path="" title="Home">🏠</span>
+                    <button class="toolbar-icon-btn" id="newFolderBtn" title="Create folder">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <line x1="12" y1="11" x2="12" y2="17" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="9" y1="14" x2="15" y2="14" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                    <button class="toolbar-icon-btn" id="refreshBtn" title="Refresh">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M23 4v6h-6M1 20v-6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
                 </div>
 
                 <!-- View Toggle (right) -->
@@ -182,27 +200,7 @@
                 </div>
             </div>
 
-            <!-- Folder Actions (for folder management) -->
-            <div class="folder-actions" id="folderActions">
-                <button class="folder-action-btn" id="newFolderBtn" title="Create folder">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        <line x1="12" y1="11" x2="12" y2="17" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" />
-                        <line x1="9" y1="14" x2="15" y2="14" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" />
-                    </svg>
-                </button>
-                <button class="folder-action-btn" id="refreshBtn" title="Refresh">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M23 4v6h-6M1 20v-6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </button>
-            </div>
+
 
             <!-- Progress Bar -->
             <div class="progress-section" id="progressSection">
