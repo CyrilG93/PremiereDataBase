@@ -35,8 +35,26 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - Delete files and folders
 - Refresh database contents
 
+### 📤 Add to Database (Export from Premiere)
+- **Export from Project Panel**: Select bins or items in Premiere Pro and click "Add to DB"
+- **Preserves Bin Structure**: Replicates your Premiere Pro bin hierarchy as folders in your database
+- **Recursive**: Handles nested bins and all contained media
+- **Smart Path Resolution**: Accurately maps `Bin/SubBin/Item` to `Folder/SubFolder/File`
+
+### 📂 Folder Management
+- **Create Folder**: Create new folders within your database
+- **Import Folder**: Right-click any folder to recursively import its content
+- **Delete**: Remove files or folders (with safety checks)
+- **Open in Finder/Explorer**: Quickly access files in your OS
+- **Expandable Folders**: Navigate hierarchy directly in List View
+
+### 🎬 Video Thumbnails
+- **Live Preview**: Hover over video thumbnails in Grid View to play
+- **Supported Formats**: Preview support for web-friendly formats (mp4, webm, mov) using HTML5
+
 ### 🔄 Consolidate Option
 - Optional setting to copy files to project folder on import
+- **Consolidation Depth**: Control how much folder structure is preserved (e.g., 0 = flat, 1 = parent folder, etc.)
 - Preserves folder structure in project folder
 - Disabled by default
 
@@ -92,24 +110,30 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 
 ### Browsing & Searching
 
-- Navigate folders by clicking on them
+- Navigate folders by clicking on them or expanding them (List View)
 - Use the breadcrumb to go back to parent folders
 - Type in the search bar to filter files in real-time
 - Click type buttons (Video/Audio/Image) to filter by file type
 - Click the ⭐ button to show only favorites
+- Switch between **List** and **Grid** views
+- **Grid View**: Hover over video files to preview them
 
-### Importing Files
+### Importing Files & Folders
 
-1. Select files by clicking on them (or use the checkbox)
-2. Use **Select All** / **Deselect All** buttons as needed
-3. Click the **Import** button
-4. Files will be imported with automatic bin creation matching your folder structure
+- **Import Files**: Select files and click **Import**, or double-click a file
+- **Import Folder**: Right-click a folder in the browser and select **Import Folder** to recursively import all its content
+- **Smart Bins**: Files are imported into bins that match their folder structure
 
-### Managing Favorites
+### Adding to Database (from Premiere)
 
-- Click the ⭐ icon on any file to add/remove from favorites
-- Right-click for context menu with favorite options
-- Click the favorites filter (⭐ button in search bar) to show only favorites
+1. Select one or more items (clips or bins) in the Premiere Pro Project Panel
+2. Click the **Add to DB** button in the extension toolbar
+3. The items will be copied to your database, creating folders that match your bin structure
+
+### Managing Mdeia
+
+- **Favorites**: Click the ⭐ icon to mark files. Right-click for context menu options.
+- **Context Menu**: Right-click files/folders to Open in Explorer, Delete, or Import Folder.
 
 ## ⚙️ Settings
 
@@ -118,6 +142,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 | **Database Path** | Root folder containing your media files |
 | **Language** | UI language (English/French) |
 | **Copy on Import** | Copy files to project folder when importing (preserves structure) |
+| **Consolidation Depth** | How many parent folders to keep when copying (0=none, 1=parent, etc.) |
 | **Excluded Extensions** | File extensions to skip during scanning |
 | **Excluded Folders** | Folder names to skip (e.g., .git, node_modules) |
 
@@ -139,24 +164,17 @@ PremiereDataBase/
 ├── README.md
 ├── .gitignore
 ├── Source/
-│   ├── CSXS/
-│   │   └── manifest.xml
-│   ├── client/
-│   │   ├── index.html
-│   │   ├── css/
-│   │   │   └── style.css
-│   │   ├── js/
-│   │   │   ├── CSInterface.js
-│   │   │   ├── fileOperations.js
-│   │   │   └── main.js
-│   │   └── lang/
-│   │       ├── en.json
-│   │       └── fr.json
-│   ├── host/
-│   │   └── index.jsx
-│   ├── install_macos.sh
-│   └── install_windows.bat
-└── Releases/
+├── CSXS/
+│   └── manifest.xml
+├── client/
+│   ├── index.html
+│   ├── css/
+│   ├── js/
+│   └── lang/
+├── host/
+│   └── index.jsx
+├── install_macos.sh
+└── install_windows.bat
 ```
 
 ## 🔧 Troubleshooting
@@ -172,8 +190,7 @@ PremiereDataBase/
 
 1. Check that your database path is correctly set in settings
 2. Verify file extensions are not in the excluded list
-3. Check that folder names are not in the excluded folders list
-4. Click the refresh button to rescan
+3. Click the refresh button to rescan
 
 ### Import fails
 
@@ -192,10 +209,12 @@ Contributions are welcome! Feel free to submit issues or pull requests.
 ## 📝 Changelog
 
 ### v1.0.0 (2025-01-19)
-- Initial release
-- Database browser with search and filters
-- Smart import with automatic bin creation
-- Favorites system
-- Multi-language support (EN/FR)
-- List and grid view modes
-- Consolidate on import option
+- **New Feature**: "Import Folder" context menu to recursively import entire folders
+- **New Feature**: "Add to Database" button to export from Premiere to Database preserving bin structure
+- **New Feature**: Video thumbnail previews (hover to play) in Grid View
+- **New Feature**: Expandable folders in List View
+- **Improvement**: Added "Consolidation Depth" setting for fine-grained control over folder structure preservation
+- **Improvement**: Robust error handling for complex imports and JSON parsing
+- **Improvement**: Enhanced cross-platform path handling for folders
+- **Fix**: Resolved folder deletion issues in context menu
+- **Initial Release**: Database browser, Search, Filters, Favorites, Multi-language support
