@@ -148,6 +148,7 @@ let currentLang = 'en';
 let settings = {
     databasePath: '',
     language: 'en',
+    itemSize: 0, // 0-100 slider value
     consolidateOnImport: false,
     consolidationDepth: 0,  // 0 = next to project file, 1 = one folder up, etc.
     bannedExtensions: ['.txt', '.pdf', '.zip', '.rar', '.exe', '.doc', '.docx', '.prproj'],
@@ -165,6 +166,7 @@ let activeTypeFilters = ['all']; // Active type filters
 let showFavoritesOnly = false;
 let searchQuery = '';
 let searchDebounceTimer = null;
+let saveSettingsTimer = null;
 let expandedFolders = new Set(); // Folders that are expanded in list view
 
 // ============================================================================
@@ -326,6 +328,29 @@ function loadSettings() {
 
     // Update language
     updateUILanguage();
+
+    // Update item size
+    if (settings.itemSize !== undefined) {
+        document.getElementById('sizeSlider').value = settings.itemSize;
+        updateItemSize(settings.itemSize);
+    }
+}
+
+function updateItemSize(percent) {
+    percent = parseInt(percent) || 0;
+
+    // Grid View Limits
+    const gridMin = 100;
+    const gridMax = 300;
+    const gridSize = gridMin + ((gridMax - gridMin) * (percent / 100));
+
+    // List View Limits (Icon size)
+    const listMin = 32;
+    const listMax = 64;
+    const listSize = listMin + ((listMax - listMin) * (percent / 100));
+
+    document.documentElement.style.setProperty('--grid-item-size', Math.round(gridSize) + 'px');
+    document.documentElement.style.setProperty('--list-icon-size', Math.round(listSize) + 'px');
 }
 
 function saveSettings() {
@@ -1333,6 +1358,18 @@ function init() {
     // View toggle
     document.getElementById('listViewBtn').addEventListener('click', () => setViewMode('list'));
     document.getElementById('gridViewBtn').addEventListener('click', () => setViewMode('grid'));
+
+    // Size Slider
+    document.getElementById('sizeSlider').addEventListener('input', (e) => {
+        const val = e.target.value;
+        settings.itemSize = val;
+        updateItemSize(val);
+        // Debounce saving settings
+        clearTimeout(saveSettingsTimer);
+        saveSettingsTimer = setTimeout(() => {
+            localStorage.setItem('databaseSettings', JSON.stringify(settings));
+        }, 500);
+    });
 
     // Selection buttons
     document.getElementById('selectAllBtn').addEventListener('click', selectAll);
