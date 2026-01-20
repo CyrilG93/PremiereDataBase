@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.database.premiere" ExtensionBundleVersion="1.0.0"
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.database.premiere" ExtensionBundleVersion="1.0.1"
                    ExtensionBundleName="Data Base" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Author>
     <![CDATA[Premiere DataBase Extension]]>
@@ -12,7 +12,7 @@
     <![CDATA[Browse and import media files from a local database folder into Premiere Pro projects.]]>
   </Abstract>
   <ExtensionList>
-    <Extension Id="com.database.premiere.panel" Version="1.0.0"/>
+    <Extension Id="com.database.premiere.panel" Version="1.0.1"/>
   </ExtensionList>
   <ExecutionEnvironment>
     <HostList>

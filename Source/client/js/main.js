@@ -1216,7 +1216,7 @@ async function performImport(files) {
         const base64Json = btoa(unescape(encodeURIComponent(filesJson)));
 
         return new Promise((resolve) => {
-            csInterface.evalScript(`importFilesToProjectBase64('${base64Json}')`, (result) => {
+            csInterface.evalScript(`DataBase_importFilesToProjectBase64('${base64Json}')`, (result) => {
                 hideProgress();
 
                 try {
@@ -1247,7 +1247,7 @@ async function performImport(files) {
 
 function getProjectPath() {
     return new Promise((resolve) => {
-        csInterface.evalScript('getProjectPath()', (result) => {
+        csInterface.evalScript('DataBase_getProjectPath()', (result) => {
             resolve(result === 'null' ? null : result);
         });
     });
@@ -1306,7 +1306,7 @@ function escapeHtml(text) {
 // BROWSE FOR FOLDER
 // ============================================================================
 function browseForDatabase() {
-    csInterface.evalScript('selectFolder()', (result) => {
+    csInterface.evalScript('DataBase_selectFolder()', (result) => {
         if (result && result !== 'null') {
             document.getElementById('databasePathInput').value = result;
         }

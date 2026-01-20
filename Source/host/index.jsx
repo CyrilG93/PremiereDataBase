@@ -30,7 +30,7 @@ function normalizePath(path) {
 }
 
 // Get current project path
-function getProjectPath() {
+function DataBase_getProjectPath() {
     try {
         if (app.project && app.project.path) {
             return normalizePath(app.project.path);
@@ -42,8 +42,8 @@ function getProjectPath() {
 }
 
 // Get project folder (directory containing the .prproj file)
-function getProjectFolder() {
-    var projectPath = getProjectPath();
+function DataBase_getProjectFolder() {
+    var projectPath = DataBase_getProjectPath();
     if (projectPath) {
         var lastSlash = projectPath.lastIndexOf('/');
         if (lastSlash > 0) {
@@ -54,7 +54,7 @@ function getProjectFolder() {
 }
 
 // Select folder dialog
-function selectFolder() {
+function DataBase_selectFolder() {
     try {
         var folder = Folder.selectDialog("Select Database Folder");
         if (folder) {
@@ -111,7 +111,7 @@ function getOrCreateBin(binPath) {
 
 // Import files to project
 // filesJson: JSON string with array of {name, path, binPath}
-function importFilesToProject(filesJson) {
+function DataBase_importFilesToProject(filesJson) {
     try {
         var files = JSON.parse(filesJson);
         var results = [];
@@ -246,17 +246,17 @@ function base64Decode(str) {
 }
 
 // Import files using base64 encoded JSON (safer for special characters)
-function importFilesToProjectBase64(base64Json) {
+function DataBase_importFilesToProjectBase64(base64Json) {
     try {
         var filesJson = base64Decode(base64Json);
-        return importFilesToProject(filesJson);
+        return DataBase_importFilesToProject(filesJson);
     } catch (e) {
         return JSON.stringify({ error: 'Base64 decode error: ' + e.toString() });
     }
 }
 
 // Get project info
-function getProjectInfo() {
+function DataBase_getProjectInfo() {
     try {
         if (!app.project) {
             return JSON.stringify({ error: "No project open" });
@@ -265,7 +265,7 @@ function getProjectInfo() {
         return JSON.stringify({
             name: app.project.name,
             path: normalizePath(app.project.path),
-            folder: getProjectFolder()
+            folder: DataBase_getProjectFolder()
         });
     } catch (e) {
         return JSON.stringify({ error: e.toString() });
@@ -383,6 +383,6 @@ function testExtension() {
     return JSON.stringify({
         platform: IS_WINDOWS ? 'Windows' : 'macOS',
         projectOpen: app.project ? true : false,
-        projectPath: getProjectPath()
+        projectPath: DataBase_getProjectPath()
     });
 }
