@@ -42,7 +42,9 @@ const translations = {
             excludedFolders: "Excluded folder names",
             excludedFoldersPlaceholder: "e.g.: node_modules, .git (one per line)",
             consolidationDepth: "Consolidation folder depth",
-            consolidationDepthHint: "0 = project file folder, 1 = one folder up, etc."
+            consolidationDepthHint: "0 = project file folder, 1 = one folder up, etc.",
+            flattenImportPath: "Import to root folder only",
+            flattenImportPathDescription: "When enabled, files are imported into the first-level folder only (e.g., ELEMENTS/IMAGES/file.png → ELEMENTS bin)."
         },
         empty: {
             configureDatabase: "Configure your database path in settings",
@@ -108,7 +110,9 @@ const translations = {
             excludedFolders: "Noms de dossiers exclus",
             excludedFoldersPlaceholder: "ex: node_modules, .git (un par ligne)",
             consolidationDepth: "Profondeur du dossier de consolidation",
-            consolidationDepthHint: "0 = dossier du projet, 1 = un dossier au-dessus, etc."
+            consolidationDepthHint: "0 = dossier du projet, 1 = un dossier au-dessus, etc.",
+            flattenImportPath: "Importer dans le dossier racine uniquement",
+            flattenImportPathDescription: "Lorsque cette option est activée, les fichiers sont importés uniquement dans le dossier de premier niveau (ex: ELEMENTS/IMAGES/fichier.png → bin ELEMENTS)."
         },
         empty: {
             configureDatabase: "Configurez le chemin de la base de données dans les paramètres",
