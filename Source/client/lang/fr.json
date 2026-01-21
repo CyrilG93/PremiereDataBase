@@ -33,7 +33,9 @@
         "excludedFolders": "Noms de dossiers exclus",
         "excludedFoldersPlaceholder": "ex: node_modules, .git (un par ligne)",
         "consolidationDepth": "Profondeur du dossier de consolidation",
-        "consolidationDepthHint": "0 = dossier du projet, 1 = un dossier au-dessus, etc."
+        "consolidationDepthHint": "0 = dossier du projet, 1 = un dossier au-dessus, etc.",
+        "flattenImportPath": "Importer dans le dossier racine uniquement",
+        "flattenImportPathDescription": "Lorsque cette option est activée, les fichiers sont importés uniquement dans le dossier de premier niveau (ex: ELEMENTS/IMAGES/fichier.png → bin ELEMENTS)."
     },
     "empty": {
         "configureDatabase": "Configurez le chemin de la base de données dans les paramètres",

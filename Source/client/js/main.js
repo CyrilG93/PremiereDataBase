@@ -151,6 +151,7 @@ let settings = {
     itemSize: 0, // 0-100 slider value
     consolidateOnImport: false,
     consolidationDepth: 0,  // 0 = next to project file, 1 = one folder up, etc.
+    flattenImportPath: false, // Only use first-level folder for bin path
     bannedExtensions: ['.txt', '.pdf', '.zip', '.rar', '.exe', '.doc', '.docx', '.prproj'],
     excludedFolderNames: ['.git', 'node_modules', '__MACOSX', 'Adobe Premiere Pro Auto-Save']
 };
@@ -316,6 +317,7 @@ function loadSettings() {
     document.getElementById('databasePathInput').value = settings.databasePath || '';
     document.getElementById('consolidateOnImport').checked = settings.consolidateOnImport || false;
     document.getElementById('consolidationDepth').value = settings.consolidationDepth || 0;
+    document.getElementById('flattenImportPath').checked = settings.flattenImportPath || false;
     document.getElementById('bannedExtensions').value = (settings.bannedExtensions || []).join('\n');
     document.getElementById('excludedFolders').value = (settings.excludedFolderNames || []).join('\n');
 
@@ -357,6 +359,7 @@ function saveSettings() {
     settings.databasePath = document.getElementById('databasePathInput').value.trim();
     settings.consolidateOnImport = document.getElementById('consolidateOnImport').checked;
     settings.consolidationDepth = parseInt(document.getElementById('consolidationDepth').value) || 0;
+    settings.flattenImportPath = document.getElementById('flattenImportPath').checked;
 
     const bannedText = document.getElementById('bannedExtensions').value;
     settings.bannedExtensions = bannedText
@@ -1152,6 +1155,12 @@ async function performImport(files) {
         const filesToImport = files.map(file => {
             // Calculate bin path (excluding database root folder name)
             let binPath = file.folderPath || '';
+
+            // If flatten option is enabled, only keep first folder segment
+            if (settings.flattenImportPath && binPath) {
+                const parts = binPath.split('/');
+                binPath = parts[0] || '';
+            }
 
             return {
                 name: file.name,
