@@ -676,6 +676,36 @@ main {
     height: 14px;
 }
 
+/* Audio Play Button */
+.audio-play-btn {
+    width: 28px;
+    height: 28px;
+    background: var(--accent-primary);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.audio-play-btn:hover {
+    background: var(--accent-hover);
+    transform: scale(1.1);
+}
+
+.audio-play-btn.playing {
+    background: var(--warning);
+}
+
+.audio-play-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
 /* Grid View */
 .file-browser.grid-view .file-list {
     display: grid;

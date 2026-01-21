@@ -172,6 +172,7 @@ let showFavoritesOnly = false;
 let searchQuery = '';
 let searchDebounceTimer = null;
 let saveSettingsTimer = null;
+let currentlyPlayingAudio = null; // Path of currently playing audio file
 let expandedFolders = new Set(); // Folders that are expanded in list view
 
 // ============================================================================
@@ -840,6 +841,15 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
 
     const indentStyle = indent > 0 ? `style="margin-left: ${indent}px"` : '';
 
+    // Add play button for audio files
+    const playBtnHtml = file.type === 'audio' ? `
+        <button class="audio-play-btn" data-audio-path="${escapeHtml(file.path)}" title="Play/Pause">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="5 3 19 12 5 21" fill="currentColor" />
+            </svg>
+        </button>
+    ` : '';
+
     return `
         <div class="file-item ${isSelected ? 'selected' : ''}" data-path="${escapeHtml(file.path)}" data-type="file" ${indentStyle}>
             <input type="checkbox" class="file-checkbox" ${isSelected ? 'checked' : ''}>
@@ -850,6 +860,7 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
                 <div class="file-name">${escapeHtml(file.name)}</div>
                 <div class="file-path">📁 ${escapeHtml(folderDisplay)}</div>
             </div>
+            ${playBtnHtml}
             <button class="file-favorite ${isFavorite ? 'active' : ''}" data-path="${escapeHtml(file.path)}">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
@@ -977,6 +988,15 @@ function attachFileEventListeners() {
         });
     });
 
+    // Audio play buttons
+    document.querySelectorAll('.audio-play-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const audioPath = btn.getAttribute('data-audio-path');
+            toggleAudioPlayback(audioPath, btn);
+        });
+    });
+
     // Context menu
     document.querySelectorAll('.file-item').forEach(el => {
         el.addEventListener('contextmenu', (e) => {
@@ -999,6 +1019,61 @@ function toggleFileSelection(path) {
 function updateSelectionUI() {
     document.getElementById('selectedCount').textContent = selectedFiles.size;
     document.getElementById('importBtn').disabled = selectedFiles.size === 0;
+}
+
+// Audio playback toggle
+function toggleAudioPlayback(audioPath, buttonElement) {
+    const audioPlayer = document.getElementById('audioPlayer');
+
+    // If clicking on currently playing audio, stop it
+    if (currentlyPlayingAudio === audioPath && !audioPlayer.paused) {
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+        currentlyPlayingAudio = null;
+        buttonElement.classList.remove('playing');
+        // Reset icon to play
+        buttonElement.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="5 3 19 12 5 21" fill="currentColor" />
+        </svg>`;
+        return;
+    }
+
+    // Stop any currently playing audio
+    if (currentlyPlayingAudio) {
+        audioPlayer.pause();
+        // Reset previous button
+        const prevBtn = document.querySelector(`.audio-play-btn[data-audio-path="${CSS.escape(currentlyPlayingAudio)}"]`);
+        if (prevBtn) {
+            prevBtn.classList.remove('playing');
+            prevBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="5 3 19 12 5 21" fill="currentColor" />
+            </svg>`;
+        }
+    }
+
+    // Play new audio
+    audioPlayer.src = audioPath;
+    audioPlayer.play().then(() => {
+        currentlyPlayingAudio = audioPath;
+        buttonElement.classList.add('playing');
+        // Change icon to pause (stop bars)
+        buttonElement.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="4" width="4" height="16" fill="currentColor" />
+            <rect x="14" y="4" width="4" height="16" fill="currentColor" />
+        </svg>`;
+    }).catch(e => {
+        console.error('Audio playback error:', e);
+        showStatus('Cannot play this audio format', 'error');
+    });
+
+    // When audio ends, reset button
+    audioPlayer.onended = () => {
+        currentlyPlayingAudio = null;
+        buttonElement.classList.remove('playing');
+        buttonElement.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="5 3 19 12 5 21" fill="currentColor" />
+        </svg>`;
+    };
 }
 
 function selectAll() {
