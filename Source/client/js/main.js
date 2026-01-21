@@ -3,6 +3,11 @@
 
 const csInterface = new CSInterface();
 
+// Listen for custom event to open the panel (useful for Excalibur/shortcuts)
+csInterface.addEventListener("com.database.premiere.open", function (event) {
+    csInterface.requestOpenExtension("com.database.premiere.panel", "");
+});
+
 // ============================================================================
 // TRANSLATIONS (embedded to avoid async loading issues)
 // ============================================================================

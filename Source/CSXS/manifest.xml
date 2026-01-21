@@ -34,6 +34,7 @@
           <CEFCommandLine>
             <Parameter>--enable-nodejs</Parameter>
             <Parameter>--mixed-context</Parameter>
+            <Parameter>--persist</Parameter>
           </CEFCommandLine>
         </Resources>
         <Lifecycle>
