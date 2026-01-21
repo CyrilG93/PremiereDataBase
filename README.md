@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -23,6 +23,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 ### 📋 Display Modes
 - **List View** - Compact list showing filename and folder path
 - **Grid View** - Thumbnail grid for visual browsing
+- **Resize Slider** - Adjust thumbnail/icon size for both views (persisted in settings)
 
 ### 📥 Smart Import
 - Multi-select files for batch import
@@ -51,6 +52,12 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 ### 🎬 Video Thumbnails
 - **Live Preview**: Hover over video thumbnails in Grid View to play
 - **Supported Formats**: Preview support for web-friendly formats (mp4, webm, mov) using HTML5
+
+### 🎵 Audio Preview
+- **Play Button**: Click the blue play button on any audio file to listen
+- **Click to Stop**: Click again to stop playback
+- **Visual Feedback**: Button turns orange when playing
+- **Supported Formats**: MP3, WAV, AAC/M4A, OGG, FLAC
 
 ### 🔄 Consolidate Option
 - Optional setting to copy files to project folder on import
@@ -145,6 +152,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 | **Consolidation Depth** | How many parent folders to keep when copying (0=none, 1=parent, etc.) |
 | **Excluded Extensions** | File extensions to skip during scanning |
 | **Excluded Folders** | Folder names to skip (e.g., .git, node_modules) |
+| **Flatten Import Path** | Import files to root folder only (ignores subfolders) |
 
 ## 🎬 Supported File Types
 
@@ -208,7 +216,15 @@ Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
 
-### v1.0.0 (2025-01-19)
+### v1.1.0 (2026-01-21)
+- **New Feature**: Audio preview - Play audio files directly from the extension
+- **New Feature**: Resize slider - Adjust thumbnail and icon sizes in List/Grid views
+- **New Feature**: Flatten Import Path option - Import files to root folder only
+- **Improvement**: Windows compatibility fixes for path handling
+- **Improvement**: Fixed "Open in Explorer" on Windows
+- **Fix**: Translation keys now display correctly in settings
+
+### v1.0.0 (2026-01-19)
 - **New Feature**: "Import Folder" context menu to recursively import entire folders
 - **New Feature**: "Add to Database" button to export from Premiere to Database preserving bin structure
 - **New Feature**: Video thumbnail previews (hover to play) in Grid View
