@@ -9,6 +9,50 @@ csInterface.addEventListener("com.database.premiere.open", function (event) {
 });
 
 // ============================================================================
+// SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
+// ============================================================================
+let spellbook = null;
+
+function initSpellBook() {
+    try {
+        const Spellbook = require('@knights-of-the-editing-table/spell-book');
+
+        const commands = [
+            {
+                commandID: 'com.database.premiere.showPanel',
+                name: 'Show Database Panel',
+                group: 'Data Base',
+                action: () => {
+                    csInterface.requestOpenExtension("com.database.premiere.panel", "");
+                }
+            },
+            {
+                commandID: 'com.database.premiere.refresh',
+                name: 'Refresh Database',
+                group: 'Data Base',
+                action: () => {
+                    scanDatabaseFiles();
+                    showStatus(t('status.scanning'), 'info');
+                }
+            },
+            {
+                commandID: 'com.database.premiere.addToDb',
+                name: 'Add Selection to Database',
+                group: 'Data Base',
+                action: () => {
+                    addToDatabase();
+                }
+            }
+        ];
+
+        spellbook = new Spellbook('Data Base', 'com.database.premiere.panel', commands);
+        console.log('[Spell Book] Integration enabled with', commands.length, 'commands');
+    } catch (e) {
+        console.log('[Spell Book] Not available or not installed:', e.message);
+    }
+}
+
+// ============================================================================
 // TRANSLATIONS (embedded to avoid async loading issues)
 // ============================================================================
 const translations = {
@@ -1412,6 +1456,9 @@ function browseForDatabase() {
 function init() {
     // Load settings
     loadSettings();
+
+    // Initialize Spell Book integration (Excalibur shortcuts)
+    initSpellBook();
 
     // Event listeners - Settings
     document.getElementById('settingsBtn').addEventListener('click', openSettings);

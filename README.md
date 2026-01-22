@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.2.0-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -69,6 +69,14 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - English (default)
 - French (Français)
 - Easily extensible for additional languages
+
+### ⌨️ Spell Book / Excalibur Integration
+- **Keyboard Shortcuts** via Spell Book extension
+- **Available Commands**:
+  - `Show Database Panel` - Open/show the extension panel
+  - `Refresh Database` - Rescan the database folder
+  - `Add Selection to Database` - Copy selected items from Premiere to DB
+- Commands appear automatically in Excalibur when Spell Book is installed
 
 ## 📋 Requirements
 
@@ -215,6 +223,13 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.2.0 (2026-01-22)
+- **New Feature**: Spell Book integration for keyboard shortcuts via Excalibur
+  - `Show Database Panel` - Open/focus the extension
+  - `Refresh Database` - Trigger database rescan
+  - `Add Selection to Database` - Copy Premiere selection to DB
+- **Improvement**: Extension now persists in background for instant shortcut response
 
 ### v1.1.0 (2026-01-21)
 - **New Feature**: Audio preview - Play audio files directly from the extension
