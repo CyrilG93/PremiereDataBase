@@ -12,7 +12,13 @@ csInterface.addEventListener("com.database.premiere.open", function (event) {
 // SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
 // ============================================================================
 import Spellbook from '@knights-of-the-editing-table/spell-book';
-const { scanDatabase, copyFiles } = require('./fileOperations.js');
+const {
+    scanDatabase,
+    copyFiles,
+    createDirectory,
+    deletePath,
+    openInExplorer
+} = require('./fileOperations.js');
 
 
 // Helper class is imported now.
