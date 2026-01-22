@@ -11,6 +11,9 @@ csInterface.addEventListener("com.database.premiere.open", function (event) {
 // ============================================================================
 // SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
 // ============================================================================
+// ============================================================================
+// SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
+// ============================================================================
 let spellbook = null;
 
 function initSpellBook() {
@@ -60,6 +63,7 @@ function initSpellBook() {
         console.log('[Spell Book] Not available or not installed:', e.message);
     }
 }
+
 
 // ============================================================================
 // TRANSLATIONS (embedded to avoid async loading issues)

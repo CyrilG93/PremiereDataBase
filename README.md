@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
+![Version](https://img.shields.io/badge/version-1.2.1-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -223,6 +223,11 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.2.1 (2026-01-22)
+- **Fix**: Resolved Spell Book initialization crash (Robust CommonJS support)
+- **Improvement**: macOS Installer now performs a full file copy instead of a symlink
+- **Fix**: Removed syntax errors from manual edits
 
 ### v1.2.0 (2026-01-22)
 - **New Feature**: Spell Book integration for keyboard shortcuts via Excalibur
