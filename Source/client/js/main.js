@@ -1458,7 +1458,8 @@ function init() {
     loadSettings();
 
     // Initialize Spell Book integration (Excalibur shortcuts)
-    initSpellBook();
+    // Small delay to ensure CSInterface is ready
+    setTimeout(initSpellBook, 1000);
 
     // Event listeners - Settings
     document.getElementById('settingsBtn').addEventListener('click', openSettings);
