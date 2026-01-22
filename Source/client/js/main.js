@@ -11,12 +11,38 @@ csInterface.addEventListener("com.database.premiere.open", function (event) {
 // ============================================================================
 // SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
 // ============================================================================
-let spellbook = null;
+import Spellbook from '@knights-of-the-editing-table/spell-book';
 
-function initSpellBook() {
-    // Disabled (Rolled back to clean state)
-    // Dependencies removed
-}
+const commands = [
+    {
+        commandID: 'com.database.premiere.showPanel',
+        name: 'Show Database Panel',
+        group: 'Panel',
+        action: () => {
+            csInterface.requestOpenExtension("com.database.premiere.panel", "");
+        }
+    },
+    {
+        commandID: 'com.database.premiere.refresh',
+        name: 'Refresh Database',
+        group: 'Actions',
+        action: () => {
+            scanDatabaseFiles();
+            showStatus(t('status.scanning'), 'info');
+        }
+    },
+    {
+        commandID: 'com.database.premiere.addToDb',
+        name: 'Add Selection to Database',
+        group: 'Actions',
+        action: () => {
+            addToDatabase();
+        }
+    }
+];
+
+const spellbook = new Spellbook('Data Base', 'com.database.premiere.panel', commands);
+spellbook.init();
 
 // ============================================================================
 // TRANSLATIONS (embedded to avoid async loading issues)

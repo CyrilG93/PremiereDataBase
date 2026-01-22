@@ -9,6 +9,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "@knights-of-the-editing-table/spell-book": "^1.0.3"
+  }
 }
