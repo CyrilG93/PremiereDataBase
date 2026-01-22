@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.2.2-blue)
+![Version](https://img.shields.io/badge/version-1.3.0-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -173,49 +173,32 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 ### Image
 `.jpg`, `.jpeg`, `.png`, `.gif`, `.tiff`, `.tif`, `.psd`, `.ai`, `.eps`, `.bmp`, `.webp`, `.svg`
 
-## 💻 Development
-
-### Prerequisites
-- Node.js installed
-- npm installed
-
-### Build Instructions
-Since v1.2.2, the project uses Webpack to bundle the extension code (supporting ES Modules like `spell-book`).
-
-1. Install dependencies:
-   ```bash
-   cd Source
-   npm install
-   ```
-
-2. Build for production:
-   ```bash
-   npm run build
-   ```
-
-3. Watch for changes (dev mode):
-   ```bash
-   npm run watch
-   ```
-
 ## 📁 Project Structure
 
 ```
 PremiereDataBase/
 ├── README.md
-├── .gitignore
 ├── Source/
-├── CSXS/
-│   └── manifest.xml
-├── client/
-│   ├── index.html
-│   ├── css/
-│   ├── js/
-│   └── lang/
-├── host/
-│   └── index.jsx
-├── install_macos.sh
-└── install_windows.bat
+│   ├── CSXS/
+│   │   └── manifest.xml
+│   ├── client/
+│   │   ├── index.html
+│   │   ├── css/
+│   │   │   ├── style.css
+│   │   │   └── grid.css
+│   │   ├── js/
+│   │   │   ├── CSInterface.js
+│   │   │   ├── main.js
+│   │   │   └── fileOperations.js
+│   │   └── lang/
+│   │       ├── en.json
+│   │       └── fr.json
+│   ├── host/
+│   │   └── index.jsx
+│   ├── install_macos.sh
+│   └── install_windows.bat
+├── Releases/
+└── .gitignore
 ```
 
 ## 🔧 Troubleshooting
@@ -249,13 +232,12 @@ Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
 
-### v1.2.2 (2026-01-22)
-- **Refactor**: Migrated to Webpack bundler for better stability and modularity
-- **Feature**: Full native support for `spell-book` npm package (ES Modules) via bundling
-- **Improvement**: Installation is cleaner (no `node_modules` folder needed in production)
-- **Dev**: Added `npm run build` and `npm run watch` scripts
+### v1.3.0 (Rollback) (2026-01-22)
+- **Rollback**: Reverted to clean architecture (Pre-Webpack/SpellBook) to resolve stability issues.
+- **Removed**: Spell Book integration (temporarily removed until a stable implementation is found).
+- **Stability**: Restored original file operation logic and installation method.
 
-### v1.2.1 (2026-01-22)
+### v1.2.2 (Deprecated)
 
 ### v1.2.0 (2026-01-22)
 - **New Feature**: Spell Book integration for keyboard shortcuts via Excalibur

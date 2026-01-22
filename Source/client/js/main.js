@@ -11,61 +11,12 @@ csInterface.addEventListener("com.database.premiere.open", function (event) {
 // ============================================================================
 // SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
 // ============================================================================
-import Spellbook from '@knights-of-the-editing-table/spell-book';
-const {
-    scanDatabase,
-    copyFiles,
-    createDirectory,
-    deletePath,
-    openInExplorer
-} = require('./fileOperations.js');
-
-
-// Helper class is imported now.
-let spellbookInstance = null;
+let spellbook = null;
 
 function initSpellBook() {
-    try {
-        const commands = [
-            {
-                commandID: 'com.database.premiere.showPanel',
-                name: 'Show Database Panel',
-                group: 'Data Base',
-                action: () => {
-                    csInterface.requestOpenExtension("com.database.premiere.panel", "");
-                }
-            },
-            {
-                commandID: 'com.database.premiere.refresh',
-                name: 'Refresh Database',
-                group: 'Data Base',
-                action: () => {
-                    scanDatabaseFiles();
-                    showStatus(t('status.scanning'), 'info');
-                }
-            },
-            {
-                commandID: 'com.database.premiere.addToDb',
-                name: 'Add Selection to Database',
-                group: 'Data Base',
-                action: () => {
-                    addToDatabase();
-                }
-            }
-        ];
-
-        // Initialize using imported Spellbook class (ES Module)
-        spellbookInstance = new Spellbook('Data Base', 'com.database.premiere.panel', commands);
-
-        // Manually trigger registration once to be sure (as per user request/screenshot advice)
-        spellbookInstance.register(commands);
-
-        console.log('[Spell Book] Integration initialized internally with', commands.length, 'commands');
-    } catch (e) {
-        console.log('[Spell Book] Initialization error:', e.message);
-    }
+    // Disabled (Rolled back to clean state)
+    // Dependencies removed
 }
-
 
 // ============================================================================
 // TRANSLATIONS (embedded to avoid async loading issues)
