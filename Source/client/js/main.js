@@ -15,7 +15,11 @@ let spellbook = null;
 
 function initSpellBook() {
     try {
-        const Spellbook = require('@knights-of-the-editing-table/spell-book');
+        let SpellbookModule = require('@knights-of-the-editing-table/spell-book');
+        // Handle ES Module default export if present
+        if (SpellbookModule.default) {
+            SpellbookModule = SpellbookModule.default;
+        }
 
         const commands = [
             {
@@ -45,8 +49,13 @@ function initSpellBook() {
             }
         ];
 
-        spellbook = new Spellbook('Data Base', 'com.database.premiere.panel', commands);
-        console.log('[Spell Book] Integration enabled with', commands.length, 'commands');
+        spellbook = new SpellbookModule('Data Base', 'com.database.premiere.panel', commands);
+
+        // Explicitly register and start (safeguard based on reference implementation)
+        if (spellbook.register) spellbook.register(commands);
+        if (spellbook.start) spellbook.start();
+
+        console.log('[Spell Book] Integration initialized with', commands.length, 'commands');
     } catch (e) {
         console.log('[Spell Book] Not available or not installed:', e.message);
     }
