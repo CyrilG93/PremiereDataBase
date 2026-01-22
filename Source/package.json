@@ -1,15 +1,26 @@
 {
   "name": "source",
-  "version": "1.0.0",
+  "version": "1.2.2",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development",
+    "watch": "webpack --watch --mode development"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@knights-of-the-editing-table/spell-book": "^1.0.3"
+    "@knights-of-the-editing-table/spell-book": "^1.0.3",
+    "esm": "^3.2.25"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.6",
+    "@babel/preset-env": "^7.28.6",
+    "babel-loader": "^10.0.0",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1"
   }
 }

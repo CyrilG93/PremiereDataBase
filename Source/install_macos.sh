@@ -24,7 +24,8 @@ echo "📂 copying files..."
 cp -R "$SOURCE_DIR/CSXS" "$CEP_DIR/$EXTENSION_NAME/"
 cp -R "$SOURCE_DIR/client" "$CEP_DIR/$EXTENSION_NAME/"
 cp -R "$SOURCE_DIR/host" "$CEP_DIR/$EXTENSION_NAME/"
-cp -R "$SOURCE_DIR/node_modules" "$CEP_DIR/$EXTENSION_NAME/"
+# node_modules is not needed anymore as we bundle with Webpack
+# cp -R "$SOURCE_DIR/node_modules" "$CEP_DIR/$EXTENSION_NAME/"
 cp "$SOURCE_DIR/package.json" "$CEP_DIR/$EXTENSION_NAME/"
 
 # Fix permissions if needed

@@ -11,19 +11,15 @@ csInterface.addEventListener("com.database.premiere.open", function (event) {
 // ============================================================================
 // SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
 // ============================================================================
-// ============================================================================
-// SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
-// ============================================================================
-let spellbook = null;
+import Spellbook from '@knights-of-the-editing-table/spell-book';
+const { scanDatabase, copyFiles } = require('./fileOperations.js');
+
+
+// Helper class is imported now.
+let spellbookInstance = null;
 
 function initSpellBook() {
     try {
-        let SpellbookModule = require('@knights-of-the-editing-table/spell-book');
-        // Handle ES Module default export if present
-        if (SpellbookModule.default) {
-            SpellbookModule = SpellbookModule.default;
-        }
-
         const commands = [
             {
                 commandID: 'com.database.premiere.showPanel',
@@ -52,15 +48,15 @@ function initSpellBook() {
             }
         ];
 
-        spellbook = new SpellbookModule('Data Base', 'com.database.premiere.panel', commands);
+        // Initialize using imported Spellbook class (ES Module)
+        spellbookInstance = new Spellbook('Data Base', 'com.database.premiere.panel', commands);
 
-        // Explicitly register and start (safeguard based on reference implementation)
-        if (spellbook.register) spellbook.register(commands);
-        if (spellbook.start) spellbook.start();
+        // Manually trigger registration once to be sure (as per user request/screenshot advice)
+        spellbookInstance.register(commands);
 
-        console.log('[Spell Book] Integration initialized with', commands.length, 'commands');
+        console.log('[Spell Book] Integration initialized internally with', commands.length, 'commands');
     } catch (e) {
-        console.log('[Spell Book] Not available or not installed:', e.message);
+        console.log('[Spell Book] Initialization error:', e.message);
     }
 }
 
@@ -555,14 +551,12 @@ function scanDatabaseFiles() {
 
 // Node.js file scanning - uses the scanDatabase function from fileOperations.js
 function performDatabaseScan(rootPath, options) {
-    // The scanDatabase function is defined in fileOperations.js
-    // and is available in the global scope when loaded
     if (typeof scanDatabase === 'function') {
         return scanDatabase(rootPath, options);
     }
 
-    // Fallback: direct implementation if module not loaded properly
-    return scanDatabaseDirect(rootPath, options);
+    console.error("scanDatabase function not found in imported fileOperations");
+    return { files: [], folders: [] };
 }
 
 // Direct scanning implementation using Node.js fs

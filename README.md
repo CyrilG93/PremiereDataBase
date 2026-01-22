@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.2.1-blue)
+![Version](https://img.shields.io/badge/version-1.2.2-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -173,6 +173,31 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 ### Image
 `.jpg`, `.jpeg`, `.png`, `.gif`, `.tiff`, `.tif`, `.psd`, `.ai`, `.eps`, `.bmp`, `.webp`, `.svg`
 
+## 💻 Development
+
+### Prerequisites
+- Node.js installed
+- npm installed
+
+### Build Instructions
+Since v1.2.2, the project uses Webpack to bundle the extension code (supporting ES Modules like `spell-book`).
+
+1. Install dependencies:
+   ```bash
+   cd Source
+   npm install
+   ```
+
+2. Build for production:
+   ```bash
+   npm run build
+   ```
+
+3. Watch for changes (dev mode):
+   ```bash
+   npm run watch
+   ```
+
 ## 📁 Project Structure
 
 ```
@@ -224,10 +249,13 @@ Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
 
+### v1.2.2 (2026-01-22)
+- **Refactor**: Migrated to Webpack bundler for better stability and modularity
+- **Feature**: Full native support for `spell-book` npm package (ES Modules) via bundling
+- **Improvement**: Installation is cleaner (no `node_modules` folder needed in production)
+- **Dev**: Added `npm run build` and `npm run watch` scripts
+
 ### v1.2.1 (2026-01-22)
-- **Fix**: Resolved Spell Book initialization crash (Robust CommonJS support)
-- **Improvement**: macOS Installer now performs a full file copy instead of a symlink
-- **Fix**: Removed syntax errors from manual edits
 
 ### v1.2.0 (2026-01-22)
 - **New Feature**: Spell Book integration for keyboard shortcuts via Excalibur
