@@ -61,9 +61,12 @@ csInterface.addEventListener("com.database.premiere.open", function (event) {
 // ============================================================================
 // SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
 // ============================================================================
-// Use esm package to load ES Module compatible npm packages
+// Use esm package to load ES Module compatible npm packages (LEGACY/BACKUP)
 const esmRequire = require('esm')(module);
 const Spellbook = esmRequire('@knights-of-the-editing-table/spell-book').default;
+
+// NATIVE ESM (CEP 12 Test)
+// import Spellbook from '@knights-of-the-editing-table/spell-book';
 
 const commands = [
     {
@@ -250,7 +253,7 @@ let settings = {
     flattenImportPath: false, // Only use first-level folder for bin path
     bannedExtensions: ['.txt', '.pdf', '.zip', '.rar', '.exe', '.doc', '.docx', '.prproj'],
     excludedFolderNames: ['.git', 'node_modules', '__MACOSX', 'Adobe Premiere Pro Auto-Save'],
-    debugMode: false // Show debug log panel
+    debugMode: true // Show debug log panel
 };
 
 let allFiles = [];           // All files from database
