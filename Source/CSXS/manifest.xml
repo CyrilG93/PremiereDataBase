@@ -13,7 +13,6 @@
   </Abstract>
   <ExtensionList>
     <Extension Id="com.database.premiere.panel" Version="1.2.2"/>
-    <Extension Id="com.database.premiere.service" Version="1.2.2"/>
   </ExtensionList>
   <ExecutionEnvironment>
     <HostList>
@@ -59,26 +58,6 @@
             </MaxSize>
           </Geometry>
         </UI>
-      </DispatchInfo>
-    </Extension>
-
-    <!-- Background Service (Invisible) -->
-    <Extension Id="com.database.premiere.service">
-      <DispatchInfo>
-        <Resources>
-          <MainPath>./client/background.html</MainPath>
-          <ScriptPath>./host/index.jsx</ScriptPath>
-          <CEFCommandLine>
-            <Parameter>--enable-nodejs</Parameter>
-            <Parameter>--mixed-context</Parameter>
-          </CEFCommandLine>
-        </Resources>
-        <Lifecycle>
-          <AutoVisible>false</AutoVisible>
-          <StartOn>
-            <Event>com.adobe.csxs.events.ApplicationInitialized</Event>
-          </StartOn>
-        </Lifecycle>
       </DispatchInfo>
     </Extension>
   </DispatchInfoList>

@@ -70,14 +70,6 @@ const Spellbook = esmRequire('@knights-of-the-editing-table/spell-book').default
 
 const commands = [
     {
-        commandID: 'com.database.premiere.showPanel',
-        name: 'Show Database Panel',
-        group: 'Panel',
-        action: () => {
-            csInterface.requestOpenExtension("com.database.premiere.panel", "");
-        }
-    },
-    {
         commandID: 'com.database.premiere.refresh',
         name: 'Refresh Database',
         group: 'Actions',
