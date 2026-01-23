@@ -1,6 +1,56 @@
 // Main JavaScript for Data Base Extension
 // Premiere Pro Media Database Browser
 
+// ============================================================================
+// DEBUG LOGGING SYSTEM (must be first to capture all logs)
+// ============================================================================
+const _originalConsole = {
+    log: console.log.bind(console),
+    warn: console.warn.bind(console),
+    error: console.error.bind(console)
+};
+
+function debugLog(message, type = 'info') {
+    // Always log to original console
+    const consoleMethod = type === 'error' ? _originalConsole.error :
+        type === 'warn' ? _originalConsole.warn : _originalConsole.log;
+    consoleMethod(`[DataBase] ${message}`);
+
+    // Add to debug panel if it exists
+    const debugContent = document.getElementById('debugContent');
+    if (debugContent) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.className = `debug-log ${type}`;
+        logEntry.innerHTML = `<span class="timestamp">${timestamp}</span>${escapeHtml(String(message))}`;
+        debugContent.appendChild(logEntry);
+        debugContent.scrollTop = debugContent.scrollHeight;
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Override console methods to capture logs
+console.log = function (...args) {
+    debugLog(args.join(' '), 'info');
+};
+console.warn = function (...args) {
+    debugLog(args.join(' '), 'warn');
+};
+console.error = function (...args) {
+    debugLog(args.join(' '), 'error');
+};
+
+// Global error handler
+window.onerror = function (message, source, lineno, colno, error) {
+    debugLog(`ERROR: ${message} (line ${lineno})`, 'error');
+    return false;
+};
+
 const csInterface = new CSInterface();
 
 // Listen for custom event to open the panel (useful for Excalibur/shortcuts)
@@ -199,7 +249,8 @@ let settings = {
     consolidationDepth: 0,  // 0 = next to project file, 1 = one folder up, etc.
     flattenImportPath: false, // Only use first-level folder for bin path
     bannedExtensions: ['.txt', '.pdf', '.zip', '.rar', '.exe', '.doc', '.docx', '.prproj'],
-    excludedFolderNames: ['.git', 'node_modules', '__MACOSX', 'Adobe Premiere Pro Auto-Save']
+    excludedFolderNames: ['.git', 'node_modules', '__MACOSX', 'Adobe Premiere Pro Auto-Save'],
+    debugMode: false // Show debug log panel
 };
 
 let allFiles = [];           // All files from database
@@ -383,6 +434,12 @@ function loadSettings() {
         document.getElementById('sizeSlider').value = settings.itemSize;
         updateItemSize(settings.itemSize);
     }
+
+    // Debug mode
+    document.getElementById('debugMode').checked = settings.debugMode || false;
+    updateDebugPanelVisibility();
+
+    console.log('Settings loaded successfully');
 }
 
 function updateItemSize(percent) {
@@ -423,6 +480,10 @@ function saveSettings() {
 
     settings.language = currentLang;
 
+    // Debug mode
+    settings.debugMode = document.getElementById('debugMode').checked;
+    updateDebugPanelVisibility();
+
     localStorage.setItem('databaseSettings', JSON.stringify(settings));
 
     updateDatabasePathDisplay();
@@ -431,6 +492,26 @@ function saveSettings() {
 
 function saveFavorites() {
     localStorage.setItem('databaseFavorites', JSON.stringify([...favorites]));
+}
+
+function updateDebugPanelVisibility() {
+    const debugPanel = document.getElementById('debugPanel');
+    if (debugPanel) {
+        if (settings.debugMode) {
+            debugPanel.classList.add('visible');
+            console.log('Debug panel enabled');
+        } else {
+            debugPanel.classList.remove('visible');
+        }
+    }
+}
+
+function clearDebugLogs() {
+    const debugContent = document.getElementById('debugContent');
+    if (debugContent) {
+        debugContent.innerHTML = '';
+        console.log('Debug logs cleared');
+    }
 }
 
 function updateDatabasePathDisplay() {
@@ -1515,6 +1596,9 @@ function init() {
     document.getElementById('closeNewFolderModal').addEventListener('click', closeNewFolderModal);
     document.getElementById('cancelNewFolder').addEventListener('click', closeNewFolderModal);
     document.getElementById('confirmNewFolder').addEventListener('click', createFolder);
+
+    // Debug panel clear button
+    document.getElementById('debugClearBtn').addEventListener('click', clearDebugLogs);
 
     // Enter key for new folder
     document.getElementById('newFolderName').addEventListener('keypress', (e) => {

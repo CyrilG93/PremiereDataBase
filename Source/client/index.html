@@ -323,6 +323,17 @@
                         placeholder="e.g.: node_modules, .git"></textarea>
                 </div>
 
+                <!-- Debug Mode -->
+                <div class="setting-item">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="debugMode">
+                        <span data-i18n="settings.debugMode">Enable Debug Mode</span>
+                    </label>
+                    <p class="setting-description" data-i18n="settings.debugModeDescription">
+                        Shows a log panel at the bottom of the extension with debug information.
+                    </p>
+                </div>
+
                 <button class="save-btn" id="saveSettingsBtn" data-i18n="buttons.save">Save</button>
             </div>
         </div>
@@ -365,6 +376,15 @@
             <button class="context-menu-item delete" id="contextDelete">
                 <span class="context-icon">🗑️</span> <span data-i18n="context.delete">Delete</span>
             </button>
+        </div>
+
+        <!-- Debug Log Panel -->
+        <div class="debug-panel" id="debugPanel">
+            <div class="debug-header">
+                <span>📋 Debug Log</span>
+                <button class="debug-clear-btn" id="debugClearBtn" title="Clear logs">🗑️</button>
+            </div>
+            <div class="debug-content" id="debugContent"></div>
         </div>
 
         <!-- Audio Player (hidden) -->
