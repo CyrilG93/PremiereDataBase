@@ -18,13 +18,21 @@ mkdir -p "$CEP_DIR"
 rm -rf "$CEP_DIR/$EXTENSION_NAME"
 mkdir -p "$CEP_DIR/$EXTENSION_NAME"
 
-echo "📂 copying files..."
+echo "📦 Installing npm dependencies..."
+# Install/update npm packages (spell-book, esm, etc.)
+if command -v npm &> /dev/null; then
+    npm install --silent
+else
+    echo "⚠️  npm not found. Please install Node.js to enable SpellBook integration."
+fi
 
-# Copy specific directories and files to avoid clutter (like .git, .DS_Store)
+echo "📂 Copying files..."
+
+# Copy specific directories and files
 cp -R "$SOURCE_DIR/CSXS" "$CEP_DIR/$EXTENSION_NAME/"
 cp -R "$SOURCE_DIR/client" "$CEP_DIR/$EXTENSION_NAME/"
 cp -R "$SOURCE_DIR/host" "$CEP_DIR/$EXTENSION_NAME/"
-# node_modules not needed - dependencies are bundled in bundle.js
+cp -R "$SOURCE_DIR/node_modules" "$CEP_DIR/$EXTENSION_NAME/" 2>/dev/null || true
 cp "$SOURCE_DIR/package.json" "$CEP_DIR/$EXTENSION_NAME/"
 
 # Fix permissions if needed

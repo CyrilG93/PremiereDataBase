@@ -11,7 +11,9 @@ csInterface.addEventListener("com.database.premiere.open", function (event) {
 // ============================================================================
 // SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
 // ============================================================================
-import Spellbook from '@knights-of-the-editing-table/spell-book';
+// Use esm package to load ES Module compatible npm packages
+const esmRequire = require('esm')(module);
+const Spellbook = esmRequire('@knights-of-the-editing-table/spell-book').default;
 
 const commands = [
     {
@@ -42,7 +44,6 @@ const commands = [
 ];
 
 const spellbook = new Spellbook('Data Base', 'com.database.premiere.panel', commands);
-spellbook.init();
 
 // ============================================================================
 // TRANSLATIONS (embedded to avoid async loading issues)
