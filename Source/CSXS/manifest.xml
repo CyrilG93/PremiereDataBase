@@ -74,22 +74,11 @@
           </CEFCommandLine>
         </Resources>
         <Lifecycle>
-          <AutoVisible>true</AutoVisible>
+          <AutoVisible>false</AutoVisible>
           <StartOn>
             <Event>com.adobe.csxs.events.ApplicationInitialized</Event>
           </StartOn>
         </Lifecycle>
-        <UI>
-          <Type>Custom</Type>
-          <Menu>Data Base Service</Menu>
-          <Geometry>
-            <Size>
-               <Height>0</Height>
-               <Width>0</Width>
-            </Size>
-          </Geometry>
-          <Icons/>
-        </UI>
       </DispatchInfo>
     </Extension>
   </DispatchInfoList>
