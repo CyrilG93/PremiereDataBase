@@ -1304,7 +1304,8 @@ main {
     height: 150px;
     background: #1a1a1a;
     border-top: 2px solid var(--accent-primary);
-    z-index: 9999;
+    z-index: 100;
+    /* Lower than settings panel */
     flex-direction: column;
 }
 

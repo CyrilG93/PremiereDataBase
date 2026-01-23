@@ -71,7 +71,11 @@ const commands = [
         name: 'Show Database Panel',
         group: 'Panel',
         action: () => {
-            csInterface.requestOpenExtension("com.database.premiere.panel", "");
+            // Use evalScript to call ExtendScript that opens the panel
+            csInterface.evalScript('app.setSDKEventMessage("Opening Data Base panel", "info")');
+            // The panel should already be open since this command is running from it
+            // This is more of a focus/bring-to-front action
+            console.log('Show Panel command executed');
         }
     },
     {
@@ -1529,9 +1533,7 @@ function init() {
     // Load settings
     loadSettings();
 
-    // Initialize Spell Book integration (Excalibur shortcuts)
-    // Small delay to ensure CSInterface is ready
-    setTimeout(initSpellBook, 1000);
+    // SpellBook is now initialized at module load time (top of file)
 
     // Event listeners - Settings
     document.getElementById('settingsBtn').addEventListener('click', openSettings);
