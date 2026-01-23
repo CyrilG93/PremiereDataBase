@@ -71,11 +71,7 @@ const commands = [
         name: 'Show Database Panel',
         group: 'Panel',
         action: () => {
-            // Use evalScript to call ExtendScript that opens the panel
-            csInterface.evalScript('app.setSDKEventMessage("Opening Data Base panel", "info")');
-            // The panel should already be open since this command is running from it
-            // This is more of a focus/bring-to-front action
-            console.log('Show Panel command executed');
+            csInterface.requestOpenExtension("com.database.premiere.panel", "");
         }
     },
     {
