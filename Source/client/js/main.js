@@ -51,7 +51,24 @@ window.onerror = function (message, source, lineno, colno, error) {
     return false;
 };
 
-const csInterface = new CSInterface();
+let csInterface;
+try {
+    if (typeof CSInterface !== 'undefined') {
+        csInterface = new CSInterface();
+    } else {
+        console.error('CSInterface class is not defined! CSInterface.js might have failed to load.');
+        // Create a dummy to prevent crashes in main.js
+        csInterface = {
+            addEventListener: () => { },
+            requestOpenExtension: () => { },
+            evalScript: () => { },
+            // Add minimal mocks
+        };
+        debugLog('CRITICAL ERROR: CSInterface not found', 'error');
+    }
+} catch (e) {
+    console.error('Error initializing CSInterface:', e);
+}
 
 // Listen for custom event to open the panel (useful for Excalibur/shortcuts)
 csInterface.addEventListener("com.database.premiere.open", function (event) {
@@ -991,7 +1008,21 @@ function getFileIcon(type, filePath = null) {
     if (filePath) {
         if (type === 'image') {
             // Use the actual image as thumbnail if available
-            const safePath = filePath.replace(/'/g, "\\'");
+            // Fix path for CSS url() usage
+            let safePath = filePath.replace(/\\/g, '/'); // Normalize slashes
+            safePath = safePath.replace(/'/g, "\\'");   // Escape quotes
+
+            // Add protocol if not present
+            if (!safePath.startsWith('file://')) {
+                // Ensure Windows drive letters (C:/) get 3 slashes (file:///C:/)
+                // and Mac paths (/) get 2 slashes (file:///)
+                if (safePath.startsWith('/')) {
+                    safePath = 'file://' + safePath;
+                } else {
+                    safePath = 'file:///' + safePath;
+                }
+            }
+
             return `<div class="thumbnail-image" style="background-image: url('${safePath}')"></div>`;
         } else if (type === 'video') {
             // Try to show video thumbnail/preview for supported browser formats
