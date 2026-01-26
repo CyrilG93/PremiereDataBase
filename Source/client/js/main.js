@@ -4,13 +4,24 @@
 // ============================================================================
 // DEBUG LOGGING SYSTEM (must be first to capture all logs)
 // ============================================================================
-const _originalConsole = {
-    log: console.log.bind(console),
-    warn: console.warn.bind(console),
-    error: console.error.bind(console)
-};
+// Backup original console methods for our debug panel
+if (!window._originalConsole) {
+    window._originalConsole = {
+        log: console.log.bind(console),
+        warn: console.warn.bind(console),
+        error: console.error.bind(console)
+    };
+}
+var _originalConsole = window._originalConsole;
 
 function debugLog(message, type = 'info') {
+    // Process early buffer if this is the first real call
+    if (window._debugBuffer && window._debugBuffer.length > 0) {
+        const buffer = window._debugBuffer;
+        window._debugBuffer = [];
+        buffer.forEach(log => debugLog(log.m, log.t));
+    }
+
     // Always log to original console
     const consoleMethod = type === 'error' ? _originalConsole.error :
         type === 'warn' ? _originalConsole.warn : _originalConsole.log;
@@ -79,13 +90,13 @@ csInterface.addEventListener("com.database.premiere.open", function (event) {
 // SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
 // ============================================================================
 // Use esm package to load ES Module compatible npm packages (LEGACY/BACKUP)
-const esmRequire = require('esm')(module);
-const Spellbook = esmRequire('@knights-of-the-editing-table/spell-book').default;
+var esmRequire = require('esm')(module);
+var Spellbook = esmRequire('@knights-of-the-editing-table/spell-book').default;
 
 // NATIVE ESM (CEP 12 Test)
 // import Spellbook from '@knights-of-the-editing-table/spell-book';
 
-const commands = [
+var commands = [
     {
         commandID: 'com.database.premiere.refresh',
         name: 'Refresh Database',
@@ -105,12 +116,12 @@ const commands = [
     }
 ];
 
-const spellbook = new Spellbook('Data Base', 'com.database.premiere.panel', commands);
+var spellbook = new Spellbook('Data Base', 'com.database.premiere.panel', commands);
 
 // ============================================================================
 // TRANSLATIONS (embedded to avoid async loading issues)
 // ============================================================================
-const translations = {
+var translations = {
     en: {
         labels: {
             database: "Database:",
@@ -148,7 +159,11 @@ const translations = {
             consolidationDepth: "Consolidation folder depth",
             consolidationDepthHint: "0 = project file folder, 1 = one folder up, etc.",
             flattenImportPath: "Import to root folder only",
-            flattenImportPathDescription: "When enabled, files are imported into the first-level folder only (e.g., ELEMENTS/IMAGES/file.png → ELEMENTS bin)."
+            flattenImportPathDescription: "When enabled, files are imported into the first-level folder only (e.g., ELEMENTS/IMAGES/file.png → ELEMENTS bin).",
+            debugMode: "Enable Debug Mode",
+            debugModeDescription: "Shows a log panel at the bottom of the extension with debug information.",
+            showWaveforms: "Show audio waveforms",
+            showWaveformsDescription: "Display interactive waveforms for audio files in list view."
         },
         empty: {
             configureDatabase: "Configure your database path in settings",
@@ -216,7 +231,11 @@ const translations = {
             consolidationDepth: "Profondeur du dossier de consolidation",
             consolidationDepthHint: "0 = dossier du projet, 1 = un dossier au-dessus, etc.",
             flattenImportPath: "Importer dans le dossier racine uniquement",
-            flattenImportPathDescription: "Lorsque cette option est activée, les fichiers sont importés uniquement dans le dossier de premier niveau (ex: ELEMENTS/IMAGES/fichier.png → bin ELEMENTS)."
+            flattenImportPathDescription: "Lorsque cette option est activée, les fichiers sont importés uniquement dans le dossier de premier niveau (ex: ELEMENTS/IMAGES/fichier.png → bin ELEMENTS).",
+            debugMode: "Activer le mode Debug",
+            debugModeDescription: "Affiche un panneau de log en bas de l'extension avec des informations de débogage.",
+            showWaveforms: "Afficher les formes d'onde",
+            showWaveformsDescription: "Afficher les formes d'onde interactives pour les fichiers audio en vue liste."
         },
         empty: {
             configureDatabase: "Configurez le chemin de la base de données dans les paramètres",
@@ -252,8 +271,8 @@ const translations = {
 // ============================================================================
 // STATE
 // ============================================================================
-let currentLang = 'en';
-let settings = {
+var currentLang = 'en';
+var settings = {
     databasePath: '',
     language: 'en',
     itemSize: 0, // 0-100 slider value
@@ -262,23 +281,25 @@ let settings = {
     flattenImportPath: false, // Only use first-level folder for bin path
     bannedExtensions: ['.txt', '.pdf', '.zip', '.rar', '.exe', '.doc', '.docx', '.prproj'],
     excludedFolderNames: ['.git', 'node_modules', '__MACOSX', 'Adobe Premiere Pro Auto-Save'],
-    debugMode: true // Show debug log panel
+    debugMode: true, // Show debug log panel
+    showWaveforms: true // New setting
 };
 
-let allFiles = [];           // All files from database
-let allFolders = [];         // All folders from database
-let filteredFiles = [];      // Files after applying filters
-let selectedFiles = new Set(); // Selected file paths
-let favorites = new Set();   // Favorite file paths
-let currentPath = '';        // Current folder path being viewed
-let currentViewMode = 'list'; // 'list' or 'grid'
-let activeTypeFilters = ['all']; // Active type filters
-let showFavoritesOnly = false;
-let searchQuery = '';
-let searchDebounceTimer = null;
-let saveSettingsTimer = null;
-let currentlyPlayingAudio = null; // Path of currently playing audio file
-let expandedFolders = new Set(); // Folders that are expanded in list view
+var allFiles = [];           // All files from database
+var allFolders = [];         // All folders from database
+var filteredFiles = [];      // Files after applying filters
+var selectedFiles = new Set(); // Selected file paths
+var favorites = new Set();   // Favorite file paths
+var currentPath = '';        // Current folder path being viewed
+var currentViewMode = 'list'; // 'list' or 'grid'
+var activeTypeFilters = ['all']; // Active type filters
+var showFavoritesOnly = false;
+var searchQuery = '';
+var searchDebounceTimer = null;
+var saveSettingsTimer = null;
+var currentlyPlayingAudio = null; // Path of currently playing audio file
+var expandedFolders = new Set(); // Folders that are expanded in list view
+var wavesurferInstances = new Map(); // Map of audioPath -> Wavesurfer instance
 
 // ============================================================================
 // TRANSLATION FUNCTIONS
@@ -451,6 +472,12 @@ function loadSettings() {
     document.getElementById('debugMode').checked = settings.debugMode || false;
     updateDebugPanelVisibility();
 
+    // Show Waveforms toggle
+    const showWaveformsCheckbox = document.getElementById('showWaveformsCheckbox');
+    if (showWaveformsCheckbox) {
+        showWaveformsCheckbox.checked = settings.showWaveforms !== false;
+    }
+
     console.log('Settings loaded successfully');
 }
 
@@ -495,6 +522,12 @@ function saveSettings() {
     // Debug mode
     settings.debugMode = document.getElementById('debugMode').checked;
     updateDebugPanelVisibility();
+
+    // Show Waveforms
+    const showWaveformsCheckbox = document.getElementById('showWaveformsCheckbox');
+    if (showWaveformsCheckbox) {
+        settings.showWaveforms = showWaveformsCheckbox.checked;
+    }
 
     localStorage.setItem('databaseSettings', JSON.stringify(settings));
 
@@ -903,6 +936,12 @@ function renderFiles() {
 
     // Attach event listeners
     attachFileEventListeners();
+
+    // Initialize waveforms for audio files (LIST VIEW ONLY)
+    if (currentViewMode === 'list') {
+        if (typeof debugLog === 'function') debugLog('Scheduling waveform initialization (50ms delay)...', 'info');
+        setTimeout(initWaveforms, 50);
+    }
 }
 
 // Render contents of an expanded folder (recursive)
@@ -974,8 +1013,10 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
 
     const indentStyle = indent > 0 ? `style="margin-left: ${indent}px"` : '';
 
-    // Add play button for audio files
-    const playBtnHtml = file.type === 'audio' ? `
+    // Add play button and waveform for audio files
+    const isAudio = file.type === 'audio';
+    const showWaveforms = settings.showWaveforms !== false;
+    const playBtnHtml = isAudio ? `
         <button class="audio-play-btn" data-audio-path="${escapeHtml(file.path)}" title="Play/Pause">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <polygon points="5 3 19 12 5 21" fill="currentColor" />
@@ -983,16 +1024,23 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
         </button>
     ` : '';
 
+    const waveformHtml = (isAudio && showWaveforms && currentViewMode === 'list') ? `
+        <div class="waveform-wrapper" data-audio-path="${escapeHtml(file.path)}">
+            <div class="waveform-container" id="waveform-${generateSafeId(file.path)}"></div>
+        </div>
+    ` : '';
+
     return `
-        <div class="file-item ${isSelected ? 'selected' : ''}" data-path="${escapeHtml(file.path)}" data-type="file" ${indentStyle}>
+        <div class="file-item ${file.type} ${isSelected ? 'selected' : ''}" data-path="${escapeHtml(file.path)}" data-type="file" ${indentStyle}>
             <input type="checkbox" class="file-checkbox" ${isSelected ? 'checked' : ''}>
             <div class="file-icon ${file.type}">
                 ${iconHtml}
             </div>
             <div class="file-info">
-                <div class="file-name">${escapeHtml(file.name)}</div>
+                <div class="file-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
                 <div class="file-path">📁 ${escapeHtml(folderDisplay)}</div>
             </div>
+            ${waveformHtml}
             ${playBtnHtml}
             <button class="file-favorite ${isFavorite ? 'active' : ''}" data-path="${escapeHtml(file.path)}">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1112,6 +1160,15 @@ function attachFileEventListeners() {
         });
     });
 
+
+
+    // Waveform container clicks - stop propagation to prevent file selection
+    document.querySelectorAll('.waveform-wrapper').forEach(wrapper => {
+        wrapper.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    });
+
     // Checkbox changes
     document.querySelectorAll('.file-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', (e) => {
@@ -1153,14 +1210,164 @@ function attachFileEventListeners() {
     });
 }
 
-function toggleFileSelection(path) {
-    if (selectedFiles.has(path)) {
-        selectedFiles.delete(path);
-    } else {
-        selectedFiles.add(path);
+function initWaveforms() {
+    if (typeof debugLog === 'function') debugLog('Starting waveform initialization...', 'info');
+
+    if (typeof WaveSurfer === 'undefined') {
+        console.error('WaveSurfer library not loaded!');
+        if (typeof debugLog === 'function') debugLog('WaveSurfer library not loaded! Check index.html isolation fix.', 'error');
+        return;
     }
+
+    const wrappers = document.querySelectorAll('.waveform-wrapper');
+    if (typeof debugLog === 'function') debugLog(`Found ${wrappers.length} waveform wrappers.`, 'info');
+
+    // Determine which instances to keep and which to destroy
+    for (const [path, ws] of wavesurferInstances.entries()) {
+        const wrapper = document.querySelector(`.waveform-wrapper[data-audio-path="${CSS.escape(path)}"]`);
+
+        if (!wrapper) {
+            // File no longer visible, destroy instance
+            ws.destroy();
+            wavesurferInstances.delete(path);
+        } else {
+            // File still visible, check if we need to re-attach or if it's already okay
+            const container = wrapper.querySelector('.waveform-container');
+            const currentWrapper = ws.getWrapper();
+
+            if (currentWrapper && !container.contains(currentWrapper.parentNode)) {
+                // DOM was replaced but file is still here. 
+                // If it's playing, we HAVE to keep it and move it? 
+                // Wavesurfer doesn't like moving between shadow roots easily.
+                // Simpler: if not playing, destroy and recreate. If playing, try to keep.
+                if (!ws.isPlaying()) {
+                    ws.destroy();
+                    wavesurferInstances.delete(path);
+                } else {
+                    // Try to re-append the wavesurfer element to the new container
+                    container.innerHTML = '';
+                    container.appendChild(ws.getWrapper().parentNode.parentNode); // This is tricky with Shadow DOM
+                    // Re-creating is safer if we can sync the time.
+                }
+            }
+        }
+    }
+
+    // Initialize new instances
+    document.querySelectorAll('.waveform-wrapper').forEach(wrapper => {
+        const audioPath = wrapper.getAttribute('data-audio-path');
+        const container = wrapper.querySelector('.waveform-container');
+
+        if (wavesurferInstances.has(audioPath)) {
+            // Check if it's actually in the container
+            if (container.children.length === 0) {
+                // It was kept but the container is empty (newly rendered)
+                // We need to either move the instance or recreate it.
+                // For now, let's just recreate everything to be safe, except maybe the playing one.
+                const oldWs = wavesurferInstances.get(audioPath);
+                const currentTime = oldWs.getCurrentTime();
+                const isPlaying = oldWs.isPlaying();
+
+                oldWs.destroy();
+                wavesurferInstances.delete(audioPath);
+
+                // Recreate below
+            } else {
+                return; // Already exists and attached
+            }
+        }
+
+        try {
+            const ws = WaveSurfer.create({
+                container: container,
+                waveColor: '#6d6d6d',
+                progressColor: '#0078d4',
+                cursorColor: '#0078d4',
+                height: 24,
+                barWidth: 2,
+                barGap: 1,
+                barRadius: 2,
+                normalize: true,
+                interact: true, // Enable clicking to seek
+                autoplay: false,
+                cursorWidth: 2,
+                cursorColor: '#0078d4',
+                url: toFileUrl(audioPath)
+            });
+
+            wavesurferInstances.set(audioPath, ws);
+
+            ws.on('ready', () => {
+                if (typeof debugLog === 'function') debugLog(`Waveform ready: ${audioPath.split('/').pop()}`, 'success');
+            });
+
+            // Sync UI when WaveSurfer plays/pauses
+            ws.on('play', () => {
+                currentlyPlayingAudio = audioPath;
+                updatePlayButtonState(audioPath, true);
+
+                // Pause other WaveSurfers
+                for (const [otherPath, otherWs] of wavesurferInstances.entries()) {
+                    if (otherPath !== audioPath) otherWs.pause();
+                }
+                // Pause global player
+                const audioPlayer = document.getElementById('audioPlayer');
+                if (audioPlayer) audioPlayer.pause();
+            });
+
+            ws.on('pause', () => {
+                updatePlayButtonState(audioPath, false);
+            });
+
+            // "Play on Click": Seek and Play
+            ws.on('interaction', () => {
+                ws.play();
+            });
+
+            ws.on('error', (err) => {
+                console.error('Wavesurfer error:', err, 'for path:', audioPath);
+                if (typeof debugLog === 'function') debugLog(`Wavesurfer ERROR for ${audioPath.split('/').pop()}: ${err}`, 'error');
+            });
+
+            ws.on('play', () => {
+                updatePlayButtonState(audioPath, true);
+                for (const [path, otherWs] of wavesurferInstances.entries()) {
+                    if (path !== audioPath) otherWs.pause();
+                }
+                // Also stop the hidden audio player if it's playing
+                const audioPlayer = document.getElementById('audioPlayer');
+                if (!audioPlayer.paused) audioPlayer.pause();
+            });
+
+            ws.on('pause', () => updatePlayButtonState(audioPath, false));
+            ws.on('finish', () => updatePlayButtonState(audioPath, false));
+
+            // If we were recreating a playing instance, resume it
+            // (Note: this is a bit complex for a first pass, let's just do standard init first)
+
+        } catch (e) {
+            console.error('Wavesurfer init error for:', audioPath, e);
+        }
+    });
+}
+
+function toggleFileSelection(path) {
+    const isSelected = !selectedFiles.has(path);
+    if (isSelected) {
+        selectedFiles.add(path);
+    } else {
+        selectedFiles.delete(path);
+    }
+
+    // Update DOM directly instead of re-rendering everything
+    const el = document.querySelector(`.file-item[data-path="${CSS.escape(path)}"]`);
+    if (el) {
+        el.classList.toggle('selected', isSelected);
+        const checkbox = el.querySelector('.file-checkbox');
+        if (checkbox) checkbox.checked = isSelected;
+    }
+
     updateSelectionUI();
-    renderFiles();
 }
 
 function updateSelectionUI() {
@@ -1170,6 +1377,19 @@ function updateSelectionUI() {
 
 // Audio playback toggle
 function toggleAudioPlayback(audioPath, buttonElement) {
+    const ws = wavesurferInstances.get(audioPath);
+
+    if (ws) {
+        // If we have a Wavesurfer instance, use it
+        if (ws.isPlaying()) {
+            ws.pause();
+        } else {
+            ws.play();
+        }
+        return;
+    }
+
+    // Fallback to basic audio player for grid view or if script failed
     const audioPlayer = document.getElementById('audioPlayer');
 
     // If clicking on currently playing audio, stop it
@@ -1177,37 +1397,26 @@ function toggleAudioPlayback(audioPath, buttonElement) {
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
         currentlyPlayingAudio = null;
-        buttonElement.classList.remove('playing');
-        // Reset icon to play
-        buttonElement.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="5 3 19 12 5 21" fill="currentColor" />
-        </svg>`;
+        updatePlayButtonState(audioPath, false);
         return;
     }
 
     // Stop any currently playing audio
     if (currentlyPlayingAudio) {
         audioPlayer.pause();
-        // Reset previous button
-        const prevBtn = document.querySelector(`.audio-play-btn[data-audio-path="${CSS.escape(currentlyPlayingAudio)}"]`);
-        if (prevBtn) {
-            prevBtn.classList.remove('playing');
-            prevBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="5 3 19 12 5 21" fill="currentColor" />
-            </svg>`;
-        }
+        updatePlayButtonState(currentlyPlayingAudio, false);
+    }
+
+    // Stop any Wavesurfer instances
+    for (const ws of wavesurferInstances.values()) {
+        ws.pause();
     }
 
     // Play new audio
     audioPlayer.src = audioPath;
     audioPlayer.play().then(() => {
         currentlyPlayingAudio = audioPath;
-        buttonElement.classList.add('playing');
-        // Change icon to pause (stop bars)
-        buttonElement.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="6" y="4" width="4" height="16" fill="currentColor" />
-            <rect x="14" y="4" width="4" height="16" fill="currentColor" />
-        </svg>`;
+        updatePlayButtonState(audioPath, true);
     }).catch(e => {
         console.error('Audio playback error:', e);
         showStatus('Cannot play this audio format', 'error');
@@ -1216,11 +1425,26 @@ function toggleAudioPlayback(audioPath, buttonElement) {
     // When audio ends, reset button
     audioPlayer.onended = () => {
         currentlyPlayingAudio = null;
-        buttonElement.classList.remove('playing');
-        buttonElement.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        updatePlayButtonState(audioPath, false);
+    };
+}
+
+function updatePlayButtonState(audioPath, isPlaying) {
+    const btn = document.querySelector(`.audio-play-btn[data-audio-path="${CSS.escape(audioPath)}"]`);
+    if (!btn) return;
+
+    if (isPlaying) {
+        btn.classList.add('playing');
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="4" width="4" height="16" fill="currentColor" />
+            <rect x="14" y="4" width="4" height="16" fill="currentColor" />
+        </svg>`;
+    } else {
+        btn.classList.remove('playing');
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <polygon points="5 3 19 12 5 21" fill="currentColor" />
         </svg>`;
-    };
+    }
 }
 
 function selectAll() {
@@ -1236,13 +1460,23 @@ function deselectAll() {
 }
 
 function toggleFavorite(path) {
-    if (favorites.has(path)) {
-        favorites.delete(path);
-    } else {
+    const isFavorite = !favorites.has(path);
+    if (isFavorite) {
         favorites.add(path);
+    } else {
+        favorites.delete(path);
     }
+
+    // Update DOM directly instead of re-rendering everything
+    const el = document.querySelector(`.file-item[data-path="${CSS.escape(path)}"]`);
+    if (el) {
+        const favoriteBtn = el.querySelector('.file-favorite');
+        if (favoriteBtn) {
+            favoriteBtn.classList.toggle('active', isFavorite);
+        }
+    }
+
     saveFavorites();
-    renderFiles();
 }
 
 // ============================================================================
@@ -1307,7 +1541,9 @@ function setViewMode(mode) {
 
     if (mode === 'grid') {
         browser.classList.add('grid-view');
+        browser.classList.remove('list-view');
     } else {
+        browser.classList.add('list-view');
         browser.classList.remove('grid-view');
     }
 
@@ -1537,6 +1773,45 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function toFileUrl(filePath) {
+    if (!filePath) return '';
+    let safePath = filePath.replace(/\\/g, '/');
+
+    // Normalize path and ensure it's a file:// URL
+    if (!safePath.startsWith('file://')) {
+        if (safePath.startsWith('/')) {
+            safePath = 'file://' + safePath;
+        } else {
+            safePath = 'file:///' + safePath;
+        }
+    }
+
+    // Encode spaces and other special characters that fetch/Wavesurfer might struggle with
+    const protocolMatch = safePath.match(/^file:\/\/\/?/);
+    if (!protocolMatch) {
+        if (typeof debugLog === 'function') debugLog(`Could not determine protocol for path: ${safePath}`, 'error');
+        return safePath;
+    }
+    const protocol = protocolMatch[0];
+    const rest = safePath.substring(protocol.length);
+    const encodedPath = protocol + rest.split('/').map(segment => encodeURIComponent(segment)).join('/');
+
+    if (typeof debugLog === 'function') debugLog(`Path normalized: ${encodedPath}`, 'info');
+    return encodedPath;
+}
+
+function generateSafeId(text) {
+    if (!text) return 'id-' + Math.random().toString(36).substr(2, 9);
+    // Simple fast hash to generate a numeric-leaning safe ID
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+        const char = text.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return 'ws-' + Math.abs(hash).toString(16);
+}
+
 // ============================================================================
 // BROWSE FOR FOLDER
 // ============================================================================
@@ -1576,6 +1851,13 @@ function init() {
     document.getElementById('settingsLanguageSelect').addEventListener('change', (e) => {
         changeLanguage(e.target.value);
         document.getElementById('languageSelect').value = e.target.value;
+    });
+
+    // Show Waveforms toggle
+    document.getElementById('showWaveformsCheckbox')?.addEventListener('change', (e) => {
+        settings.showWaveforms = e.target.checked;
+        saveSettings();
+        renderFiles(); // Refresh UI
     });
 
     // Search
@@ -1634,14 +1916,28 @@ function init() {
         const path = document.getElementById('contextMenu').dataset.filePath;
         favorites.add(path);
         saveFavorites();
-        renderFiles();
+
+        // Direct DOM update
+        const el = document.querySelector(`.file-item[data-path="${CSS.escape(path)}"]`);
+        if (el) {
+            const favoriteBtn = el.querySelector('.file-favorite');
+            if (favoriteBtn) favoriteBtn.classList.add('active');
+        }
+
         hideContextMenu();
     });
     document.getElementById('contextRemoveFavorite').addEventListener('click', () => {
         const path = document.getElementById('contextMenu').dataset.filePath;
         favorites.delete(path);
         saveFavorites();
-        renderFiles();
+
+        // Direct DOM update
+        const el = document.querySelector(`.file-item[data-path="${CSS.escape(path)}"]`);
+        if (el) {
+            const favoriteBtn = el.querySelector('.file-favorite');
+            if (favoriteBtn) favoriteBtn.classList.remove('active');
+        }
+
         hideContextMenu();
     });
     document.getElementById('contextOpenFolder').addEventListener('click', () => {
@@ -1703,4 +1999,8 @@ function init() {
 }
 
 // Start when DOM is ready
-document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    init();
+} else {
+    document.addEventListener('DOMContentLoaded', init);
+}

@@ -626,6 +626,8 @@ main {
 .file-info {
     flex: 1;
     min-width: 0;
+    margin-right: var(--spacing-sm);
+    /* Push everything after this to the right */
 }
 
 .file-name {
@@ -706,6 +708,65 @@ main {
     height: 12px;
 }
 
+/* Waveform Container */
+.waveform-wrapper {
+    flex: 2;
+    /* Relative weight for waveform */
+    height: 30px;
+    margin: 0 var(--spacing-md);
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    position: relative;
+    overflow: hidden;
+    min-width: 150px;
+    display: none;
+}
+
+/* Waveform Display: only in list view */
+.file-item.audio .waveform-wrapper {
+    display: none;
+}
+
+.list-view .file-item.audio .waveform-wrapper {
+    display: block;
+    flex: 1 1 200px;
+    margin: 0 var(--spacing-md);
+    height: 30px;
+}
+
+/* Ensure buttons stay right-aligned in list view */
+.list-view .file-item .file-info {
+    flex: 0 1 250px;
+    margin-right: auto;
+    /* This is the key to push buttons to the right */
+}
+
+/* Gallery Mode (Grid View) compact layout */
+.grid-view .file-item {
+    height: auto !important;
+    gap: var(--spacing-xs);
+}
+
+.grid-view .file-item .file-info {
+    flex: none !important;
+    /* Stop stretching */
+    width: 100%;
+}
+
+.grid-view .file-item .audio-play-btn,
+.grid-view .file-item .waveform-wrapper {
+    display: none !important;
+    /* Hide audio specific UI in grid */
+}
+
+.waveform-container {
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+
 /* Grid View */
 .file-browser.grid-view .file-list {
     display: grid;
@@ -736,6 +797,19 @@ main {
     height: auto;
     aspect-ratio: 4/3;
     margin-bottom: var(--spacing-xs);
+    display: flex;
+    /* Ensure it stays visible */
+}
+
+/* Fix Gallery Mode Gaps: Hide waveform elements completely in grid view */
+.file-browser.grid-view .waveform-wrapper,
+.file-browser.grid-view .audio-play-btn {
+    display: none !important;
+}
+
+/* Fix Gallery Mode Gaps: Ensure audio items don't have different layout */
+.file-browser.grid-view .file-item.audio {
+    height: auto;
 }
 
 .file-browser.grid-view .file-info {

@@ -9,6 +9,35 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <script>
+        // REDIRECT CONSOLE TO DEBUG PANEL EARLY
+        var _originalConsole = {
+            log: console.log.bind(console),
+            warn: console.warn.bind(console),
+            error: console.error.bind(console)
+        };
+
+        function debugLog(message, type) {
+            type = type || 'info';
+            _originalConsole.log("[early-debug]", message);
+            var debugContent = document.getElementById('debugContent');
+            if (debugContent) {
+                var logEntry = document.createElement('div');
+                logEntry.className = 'debug-log ' + type;
+                logEntry.innerHTML = '<span class="timestamp">' + new Date().toLocaleTimeString() + '</span> ' + String(message);
+                debugContent.appendChild(logEntry);
+                debugContent.scrollTop = debugContent.scrollHeight;
+            } else {
+                // Buffer logs until DOM ready
+                window._debugBuffer = window._debugBuffer || [];
+                window._debugBuffer.push({ m: message, t: type });
+            }
+        }
+
+        console.log = function () { debugLog(Array.from(arguments).join(' '), 'info'); };
+        console.warn = function () { debugLog(Array.from(arguments).join(' '), 'warn'); };
+        console.error = function () { debugLog(Array.from(arguments).join(' '), 'error'); };
+    </script>
 </head>
 
 <body>
@@ -323,6 +352,17 @@
                         placeholder="e.g.: node_modules, .git"></textarea>
                 </div>
 
+                <!-- Show Waveforms -->
+                <div class="setting-item">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showWaveformsCheckbox" checked>
+                        <span data-i18n="settings.showWaveforms">Show audio waveforms</span>
+                    </label>
+                    <p class="setting-description" data-i18n="settings.showWaveformsDescription">
+                        Display interactive waveforms for audio files in list view.
+                    </p>
+                </div>
+
                 <!-- Debug Mode -->
                 <div class="setting-item">
                     <label class="checkbox-label">
@@ -391,6 +431,23 @@
         <audio id="audioPlayer" style="display: none;"></audio>
 
         <script src="js/CSInterface.js"></script>
+        <script>
+            // Mask Node.js globals to force WaveSurfer into window (browser mode)
+            window._cep_node = { module: window.module, exports: window.exports, define: window.define };
+            window.module = undefined;
+            window.exports = undefined;
+            window.define = undefined;
+        </script>
+        <script src="js/wavesurfer.min.js"></script>
+        <script>
+            // Restore Node.js globals
+            if (window._cep_node) {
+                window.module = window._cep_node.module;
+                window.exports = window._cep_node.exports;
+                window.define = window._cep_node.define;
+            }
+            console.log('WaveSurfer initialization status:', typeof WaveSurfer);
+        </script>
         <script src="js/fileOperations.js"></script>
         <script src="js/main.js"></script>
 </body>
