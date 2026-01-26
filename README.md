@@ -53,10 +53,11 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - **Live Preview**: Hover over video thumbnails in Grid View to play
 - **Supported Formats**: Preview support for web-friendly formats (mp4, webm, mov) using HTML5
 
-### 🎵 Audio Preview
-- **Play Button**: Click the blue play button on any audio file to listen
-- **Click to Stop**: Click again to stop playback
-- **Visual Feedback**: Button turns orange when playing
+### 🎵 Audio Preview & Waveforms
+- **Interactive Waveforms**: High-quality visual representation of audio files (List View)
+- **Play on Click**: Click or seek anywhere on the waveform to start balanced playback
+- **Legacy Play Button**: Standard play/pause button still available on all audio files
+- **Visual Feedback**: Real-time progress tracking on both the waveform and play button
 - **Supported Formats**: MP3, WAV, AAC/M4A, OGG, FLAC
 
 ### 🔄 Consolidate Option
@@ -231,6 +232,13 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.4.0 (2026-01-26)
+- **New Feature**: **Audio Waveforms** - Interactive horizontal waveforms for all audio files in List View.
+- **Improvement**: **Play on Click** - Clicking the waveform now starts or seeks playback automatically.
+- **Improvement**: **Optimized Rendering** - Direct DOM updates prevent list flickering and waveform reloads during file selection.
+- **New Setting**: **Show Waveforms** - Toggle waveforms on/off in settings for a more compact list.
+- **UI Refinement**: Balanced alignment and compact Gallery mode fixes.
 
 ### v1.3.0 (Rollback) (2026-01-22)
 - **Rollback**: Reverted to clean architecture (Pre-Webpack/SpellBook) to resolve stability issues.
