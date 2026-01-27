@@ -39,19 +39,22 @@ cp "$SOURCE_DIR/.debug" "$CEP_DIR/$EXTENSION_NAME/"
 # Fix permissions if needed
 chmod -R 755 "$CEP_DIR/$EXTENSION_NAME"
 
+echo "🔧 Enabling PlayerDebugMode for unsigned extensions..."
+# Enable debug mode for all CSXS versions
+defaults write com.adobe.CSXS.9 PlayerDebugMode 1 2>/dev/null
+defaults write com.adobe.CSXS.10 PlayerDebugMode 1 2>/dev/null
+defaults write com.adobe.CSXS.11 PlayerDebugMode 1 2>/dev/null
+defaults write com.adobe.CSXS.12 PlayerDebugMode 1 2>/dev/null
+defaults write com.adobe.CSXS.13 PlayerDebugMode 1 2>/dev/null
+defaults write com.adobe.CSXS.14 PlayerDebugMode 1 2>/dev/null
+defaults write com.adobe.CSXS.15 PlayerDebugMode 1 2>/dev/null
+defaults write com.adobe.CSXS.16 PlayerDebugMode 1 2>/dev/null
+echo "   ✓ Debug mode enabled for CSXS 9-16"
+
+echo ""
 echo "✅ Data Base extension installed successfully!"
 echo ""
 echo "📁 Location: $CEP_DIR/$EXTENSION_NAME"
 echo ""
-echo "⚠️  If the extension doesn't appear in Premiere Pro:"
-echo "    1. Enable unsigned extensions by running in Terminal:"
-echo "       defaults write com.adobe.CSXS.9 PlayerDebugMode 1"
-echo "       defaults write com.adobe.CSXS.10 PlayerDebugMode 1"
-echo "       defaults write com.adobe.CSXS.11 PlayerDebugMode 1"
-echo "       defaults write com.adobe.CSXS.12 PlayerDebugMode 1"
-echo "       defaults write com.adobe.CSXS.13 PlayerDebugMode 1"
-echo "       defaults write com.adobe.CSXS.14 PlayerDebugMode 1"
-echo "       defaults write com.adobe.CSXS.15 PlayerDebugMode 1"
-echo "    2. Restart Premiere Pro"
-echo ""
-echo "🚀 Access via: Window > Extensions > Data Base"
+echo "🚀 Restart Premiere Pro and access via: Window > Extensions > Data Base"
+
