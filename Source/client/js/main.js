@@ -191,7 +191,12 @@ var translations = {
             saved: "Settings saved",
             folderCreated: "Folder created",
             folderDeleted: "Folder deleted",
-            copied: "Copied to clipboard"
+            copied: "Copied to clipboard",
+            moveSuccess: "file(s) moved successfully",
+            moveFailed: "Failed to move files",
+            movePartial: "moved, failed",
+            fileExists: "file already exists",
+            sameFolder: "already in this folder"
         }
     },
     fr: {
@@ -263,7 +268,12 @@ var translations = {
             saved: "Paramètres enregistrés",
             folderCreated: "Dossier créé",
             folderDeleted: "Dossier supprimé",
-            copied: "Copié dans le presse-papiers"
+            copied: "Copié dans le presse-papiers",
+            moveSuccess: "fichier(s) déplacé(s) avec succès",
+            moveFailed: "Échec du déplacement",
+            movePartial: "déplacé(s), échoué(s)",
+            fileExists: "fichier déjà existant",
+            sameFolder: "déjà dans ce dossier"
         }
     }
 };
@@ -1208,6 +1218,198 @@ function attachFileEventListeners() {
             showContextMenu(e, el.getAttribute('data-path'), el.getAttribute('data-type'));
         });
     });
+
+    // =========================================================================
+    // DRAG AND DROP - Files can be dragged to folders
+    // =========================================================================
+
+    // Make files draggable
+    document.querySelectorAll('.file-item[data-type="file"]').forEach(el => {
+        el.setAttribute('draggable', 'true');
+
+        el.addEventListener('dragstart', (e) => {
+            const filePath = el.getAttribute('data-path');
+
+            // If this file is not selected, select it (and only it)
+            if (!selectedFiles.has(filePath)) {
+                selectedFiles.clear();
+                selectedFiles.add(filePath);
+                updateSelectionUI();
+                renderFiles();
+            }
+
+            // Store all selected files for multi-drag
+            const filesToDrag = Array.from(selectedFiles);
+            e.dataTransfer.setData('application/json', JSON.stringify(filesToDrag));
+            e.dataTransfer.effectAllowed = 'move';
+
+            // Add dragging class to all selected files
+            selectedFiles.forEach(path => {
+                const fileEl = document.querySelector(`.file-item[data-path="${CSS.escape(path)}"]`);
+                if (fileEl) fileEl.classList.add('dragging');
+            });
+
+            // Create custom drag image showing count
+            pdb_createDragGhost(filesToDrag.length, e);
+        });
+
+        el.addEventListener('dragend', () => {
+            // Remove dragging class from all files
+            document.querySelectorAll('.file-item.dragging').forEach(item => {
+                item.classList.remove('dragging');
+            });
+            // Remove any drop target highlights
+            document.querySelectorAll('.file-item.drop-target').forEach(item => {
+                item.classList.remove('drop-target');
+            });
+            // Remove drag ghost
+            pdb_removeDragGhost();
+        });
+    });
+
+    // Make folders drop targets
+    document.querySelectorAll('.file-item.folder').forEach(el => {
+        el.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            el.classList.add('drop-target');
+        });
+
+        el.addEventListener('dragleave', (e) => {
+            // Only remove if we're actually leaving this element
+            if (!el.contains(e.relatedTarget)) {
+                el.classList.remove('drop-target');
+            }
+        });
+
+        el.addEventListener('drop', (e) => {
+            e.preventDefault();
+            el.classList.remove('drop-target');
+
+            try {
+                const data = e.dataTransfer.getData('application/json');
+                if (!data) return;
+
+                const filesToMove = JSON.parse(data);
+                const destFolderPath = el.getAttribute('data-path');
+
+                pdb_moveFilesToFolder(filesToMove, destFolderPath);
+            } catch (err) {
+                console.error('Drop error:', err);
+                showStatus('Error processing drop: ' + err.message, 'error');
+            }
+        });
+    });
+}
+
+// ============================================================================
+// DRAG AND DROP HELPER FUNCTIONS
+// ============================================================================
+
+var pdb_dragGhostElement = null;
+
+function pdb_createDragGhost(count, event) {
+    pdb_removeDragGhost(); // Clean up any existing ghost
+
+    pdb_dragGhostElement = document.createElement('div');
+    pdb_dragGhostElement.className = 'drag-ghost';
+    pdb_dragGhostElement.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" />
+            <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" />
+        </svg>
+        <span>${count} ${count === 1 ? t('labels.files').replace(/s$/, '') : t('labels.files')}</span>
+    `;
+
+    document.body.appendChild(pdb_dragGhostElement);
+
+    // Position ghost off-screen initially (browser will use it)
+    pdb_dragGhostElement.style.left = '-9999px';
+    pdb_dragGhostElement.style.top = '-9999px';
+
+    // Set as drag image
+    event.dataTransfer.setDragImage(pdb_dragGhostElement, 20, 20);
+}
+
+function pdb_removeDragGhost() {
+    if (pdb_dragGhostElement && pdb_dragGhostElement.parentNode) {
+        pdb_dragGhostElement.parentNode.removeChild(pdb_dragGhostElement);
+    }
+    pdb_dragGhostElement = null;
+}
+
+function pdb_moveFilesToFolder(filePaths, destFolderRelativePath) {
+    if (!filePaths || filePaths.length === 0) {
+        console.warn('No files to move');
+        return;
+    }
+
+    const path = require('path');
+
+    // Get the absolute destination folder path
+    const destFolderAbsolute = path.join(settings.databasePath, destFolderRelativePath);
+
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+
+    // Stop any audio playback for files being moved
+    filePaths.forEach(filePath => {
+        if (wavesurferInstances.has(filePath)) {
+            const ws = wavesurferInstances.get(filePath);
+            ws.pause();
+            ws.destroy();
+            wavesurferInstances.delete(filePath);
+        }
+    });
+
+    // Move each file
+    for (const sourcePath of filePaths) {
+        const fileName = path.basename(sourcePath);
+        const destPath = path.join(destFolderAbsolute, fileName);
+
+        // Check if destination already has a file with this name
+        if (typeof fileExists === 'function' && fileExists(destPath)) {
+            errors.push(`${fileName}: file already exists in destination`);
+            errorCount++;
+            continue;
+        }
+
+        // Check we're not moving to the same folder
+        const sourceDir = path.dirname(sourcePath);
+        if (sourceDir === destFolderAbsolute) {
+            errors.push(`${fileName}: already in this folder`);
+            errorCount++;
+            continue;
+        }
+
+        // Perform the move
+        const result = movePath(sourcePath, destPath);
+        if (result.success) {
+            successCount++;
+        } else {
+            errors.push(`${fileName}: ${result.error}`);
+            errorCount++;
+        }
+    }
+
+    // Clear selection
+    selectedFiles.clear();
+    updateSelectionUI();
+
+    // Refresh the database view
+    scanDatabaseFiles();
+
+    // Show result
+    if (errorCount === 0) {
+        showStatus(`${successCount} ${successCount === 1 ? 'file' : 'files'} moved successfully`, 'success');
+    } else if (successCount === 0) {
+        showStatus(`Failed to move files: ${errors[0]}`, 'error');
+    } else {
+        showStatus(`${successCount} moved, ${errorCount} failed`, 'warning');
+    }
+
+    console.log('Move results:', { successCount, errorCount, errors });
 }
 
 function initWaveforms() {

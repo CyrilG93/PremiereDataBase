@@ -566,6 +566,51 @@ main {
     color: var(--accent-primary);
 }
 
+/* Drag and Drop States */
+.file-item.dragging {
+    opacity: 0.5;
+    background: var(--bg-tertiary);
+}
+
+.file-item.folder.drop-target {
+    background: rgba(0, 120, 212, 0.3);
+    border: 2px dashed var(--accent-primary);
+    transform: scale(1.02);
+}
+
+.file-item.folder.drop-target .file-icon {
+    transform: scale(1.1);
+}
+
+.file-item[data-type="file"][draggable="true"] {
+    cursor: grab;
+}
+
+.file-item[data-type="file"][draggable="true"]:active {
+    cursor: grabbing;
+}
+
+/* Drag count badge for multi-selection */
+.drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 10000;
+    background: var(--accent-primary);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.drag-ghost svg {
+    width: 16px;
+    height: 16px;
+}
+
 .file-checkbox {
     width: 16px;
     height: 16px;

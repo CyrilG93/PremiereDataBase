@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.4.1-blue)
+![Version](https://img.shields.io/badge/version-1.5.0-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -36,7 +36,13 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - Delete files and folders
 - Refresh database contents
 
-### 📤 Add to Database (Export from Premiere)
+### �️ Drag and Drop
+- **Move files between folders** by dragging and dropping
+- **Multi-selection support** - Select multiple files and drag them all at once
+- **Visual feedback** - Folders highlight when you drag files over them
+- **Smart validation** - Prevents moving files to the same folder or overwriting existing files
+
+### �📤 Add to Database (Export from Premiere)
 - **Export from Project Panel**: Select bins or items in Premiere Pro and click "Add to DB"
 - **Preserves Bin Structure**: Replicates your Premiere Pro bin hierarchy as folders in your database
 - **Recursive**: Handles nested bins and all contained media
@@ -140,6 +146,13 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - **Import Folder**: Right-click a folder in the browser and select **Import Folder** to recursively import all its content
 - **Smart Bins**: Files are imported into bins that match their folder structure
 
+### Moving Files (Drag & Drop)
+
+1. **Select** one or more files by clicking on them
+2. **Drag** the selected files to a folder
+3. **Drop** on the target folder (highlighted in blue when valid)
+4. Files are moved to the new location
+
 ### Adding to Database (from Premiere)
 
 1. Select one or more items (clips or bins) in the Premiere Pro Project Panel
@@ -232,6 +245,12 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.5.0 (2026-01-27)
+- **New Feature**: **Drag and Drop** - Move files between folders by dragging and dropping
+- **Multi-selection drag** - Select multiple files and drag them all at once
+- **Visual feedback** - Folders highlight when dragging files over them
+- **Smart validation** - Prevents overwriting existing files or moving to same folder
 
 ### v1.4.1 (2026-01-26)
 - **Bugfix**: Fixed waveform display not appearing by ensuring `list-view` class is applied by default.
