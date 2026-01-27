@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.4.0-blue)
+![Version](https://img.shields.io/badge/version-1.4.1-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -233,6 +233,11 @@ Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
 
+### v1.4.1 (2026-01-26)
+- **Bugfix**: Fixed waveform display not appearing by ensuring `list-view` class is applied by default.
+- **Cleanup**: Removed duplicate event handlers in waveform initialization code.
+- **Improvement**: Better check for audio player state before pausing.
+
 ### v1.4.0 (2026-01-26)
 - **New Feature**: **Audio Waveforms** - Interactive horizontal waveforms for all audio files in List View.
 - **Improvement**: **Play on Click** - Clicking the waveform now starts or seeks playback automatically.
@@ -249,7 +254,6 @@ Contributions are welcome! Feel free to submit issues or pull requests.
 
 ### v1.2.0 (2026-01-22)
 - **New Feature**: Spell Book integration for keyboard shortcuts via Excalibur
-  - `Show Database Panel` - Open/focus the extension
   - `Refresh Database` - Trigger database rescan
   - `Add Selection to Database` - Copy Premiere selection to DB
 - **Improvement**: Extension now persists in background for instant shortcut response

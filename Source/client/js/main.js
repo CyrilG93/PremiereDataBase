@@ -1312,10 +1312,14 @@ function initWaveforms() {
                 }
                 // Pause global player
                 const audioPlayer = document.getElementById('audioPlayer');
-                if (audioPlayer) audioPlayer.pause();
+                if (audioPlayer && !audioPlayer.paused) audioPlayer.pause();
             });
 
             ws.on('pause', () => {
+                updatePlayButtonState(audioPath, false);
+            });
+
+            ws.on('finish', () => {
                 updatePlayButtonState(audioPath, false);
             });
 
@@ -1328,19 +1332,6 @@ function initWaveforms() {
                 console.error('Wavesurfer error:', err, 'for path:', audioPath);
                 if (typeof debugLog === 'function') debugLog(`Wavesurfer ERROR for ${audioPath.split('/').pop()}: ${err}`, 'error');
             });
-
-            ws.on('play', () => {
-                updatePlayButtonState(audioPath, true);
-                for (const [path, otherWs] of wavesurferInstances.entries()) {
-                    if (path !== audioPath) otherWs.pause();
-                }
-                // Also stop the hidden audio player if it's playing
-                const audioPlayer = document.getElementById('audioPlayer');
-                if (!audioPlayer.paused) audioPlayer.pause();
-            });
-
-            ws.on('pause', () => updatePlayButtonState(audioPath, false));
-            ws.on('finish', () => updatePlayButtonState(audioPath, false));
 
             // If we were recreating a playing instance, resume it
             // (Note: this is a bit complex for a first pass, let's just do standard init first)
