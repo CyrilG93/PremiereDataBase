@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.5.0-blue)
+![Version](https://img.shields.io/badge/version-1.5.1-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -245,6 +245,10 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.5.1 (2026-01-27)
+- **Fix**: macOS installer now automatically enables PlayerDebugMode (CSXS 9-16)
+- No more manual `defaults write` commands required on macOS
 
 ### v1.5.0 (2026-01-27)
 - **New Feature**: **Drag and Drop** - Move files between folders by dragging and dropping
