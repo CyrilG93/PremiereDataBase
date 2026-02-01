@@ -780,6 +780,18 @@ main {
     height: 30px;
 }
 
+/* Video waveform display: only in list view */
+.file-item.video .waveform-wrapper {
+    display: none;
+}
+
+.list-view .file-item.video .waveform-wrapper {
+    display: block;
+    flex: 1 1 200px;
+    margin: 0 var(--spacing-md);
+    height: 30px;
+}
+
 /* Ensure buttons stay right-aligned in list view */
 .list-view .file-item .file-info {
     flex: 0 1 250px;
@@ -802,7 +814,7 @@ main {
 .grid-view .file-item .audio-play-btn,
 .grid-view .file-item .waveform-wrapper {
     display: none !important;
-    /* Hide audio specific UI in grid */
+    /* Hide audio/video specific UI in grid */
 }
 
 .waveform-container {

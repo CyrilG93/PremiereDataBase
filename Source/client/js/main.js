@@ -163,7 +163,9 @@ var translations = {
             debugMode: "Enable Debug Mode",
             debugModeDescription: "Shows a log panel at the bottom of the extension with debug information.",
             showWaveforms: "Show audio waveforms",
-            showWaveformsDescription: "Display interactive waveforms for audio files in list view."
+            showWaveformsDescription: "Display interactive waveforms for audio files in list view.",
+            showVideoWaveforms: "Show video waveforms",
+            showVideoWaveformsDescription: "Display interactive audio waveforms and play button for video files in list view."
         },
         empty: {
             configureDatabase: "Configure your database path in settings",
@@ -239,8 +241,10 @@ var translations = {
             flattenImportPathDescription: "Lorsque cette option est activée, les fichiers sont importés uniquement dans le dossier de premier niveau (ex: ELEMENTS/IMAGES/fichier.png → bin ELEMENTS).",
             debugMode: "Activer le mode Debug",
             debugModeDescription: "Affiche un panneau de log en bas de l'extension avec des informations de débogage.",
-            showWaveforms: "Afficher les formes d'onde",
-            showWaveformsDescription: "Afficher les formes d'onde interactives pour les fichiers audio en vue liste."
+            showWaveforms: "Afficher les formes d'onde audio",
+            showWaveformsDescription: "Afficher les formes d'onde interactives pour les fichiers audio en vue liste.",
+            showVideoWaveforms: "Afficher les formes d'onde vidéo",
+            showVideoWaveformsDescription: "Afficher les formes d'onde audio et le bouton de lecture pour les fichiers vidéo en vue liste."
         },
         empty: {
             configureDatabase: "Configurez le chemin de la base de données dans les paramètres",
@@ -292,7 +296,8 @@ var settings = {
     bannedExtensions: ['.txt', '.pdf', '.zip', '.rar', '.exe', '.doc', '.docx', '.prproj'],
     excludedFolderNames: ['.git', 'node_modules', '__MACOSX', 'Adobe Premiere Pro Auto-Save'],
     debugMode: true, // Show debug log panel
-    showWaveforms: true // New setting
+    showWaveforms: true, // Show audio waveforms
+    showVideoWaveforms: true // Show video waveforms
 };
 
 var allFiles = [];           // All files from database
@@ -488,6 +493,12 @@ function loadSettings() {
         showWaveformsCheckbox.checked = settings.showWaveforms !== false;
     }
 
+    // Show Video Waveforms toggle
+    const showVideoWaveformsCheckbox = document.getElementById('showVideoWaveformsCheckbox');
+    if (showVideoWaveformsCheckbox) {
+        showVideoWaveformsCheckbox.checked = settings.showVideoWaveforms !== false;
+    }
+
     console.log('Settings loaded successfully');
 }
 
@@ -537,6 +548,12 @@ function saveSettings() {
     const showWaveformsCheckbox = document.getElementById('showWaveformsCheckbox');
     if (showWaveformsCheckbox) {
         settings.showWaveforms = showWaveformsCheckbox.checked;
+    }
+
+    // Show Video Waveforms
+    const showVideoWaveformsCheckbox = document.getElementById('showVideoWaveformsCheckbox');
+    if (showVideoWaveformsCheckbox) {
+        settings.showVideoWaveforms = showVideoWaveformsCheckbox.checked;
     }
 
     localStorage.setItem('databaseSettings', JSON.stringify(settings));
@@ -1094,19 +1111,26 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
 
     const indentStyle = indent > 0 ? `style="margin-left: ${indent}px"` : '';
 
-    // Add play button and waveform for audio files
+    // Add play button and waveform for audio AND video files
     const isAudio = file.type === 'audio';
-    const showWaveforms = settings.showWaveforms !== false;
-    const playBtnHtml = isAudio ? `
-        <button class="audio-play-btn" data-audio-path="${escapeHtml(file.path)}" title="Play/Pause">
+    const isVideo = file.type === 'video';
+    const showAudioWaveforms = settings.showWaveforms !== false;
+    const showVideoWaveforms = settings.showVideoWaveforms !== false;
+
+    // Determine if we should show waveform for this file
+    const shouldShowWaveform = (isAudio && showAudioWaveforms) || (isVideo && showVideoWaveforms);
+    const hasPlayableAudio = isAudio || isVideo;
+
+    const playBtnHtml = hasPlayableAudio ? `
+        <button class="audio-play-btn" data-audio-path="${escapeHtml(file.path)}" data-file-type="${file.type}" title="Play/Pause">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <polygon points="5 3 19 12 5 21" fill="currentColor" />
             </svg>
         </button>
     ` : '';
 
-    const waveformHtml = (isAudio && showWaveforms && currentViewMode === 'list') ? `
-        <div class="waveform-wrapper" data-audio-path="${escapeHtml(file.path)}">
+    const waveformHtml = (shouldShowWaveform && currentViewMode === 'list') ? `
+        <div class="waveform-wrapper ${file.type}-waveform" data-audio-path="${escapeHtml(file.path)}" data-file-type="${file.type}">
             <div class="waveform-container" id="waveform-${generateSafeId(file.path)}"></div>
         </div>
     ` : '';
