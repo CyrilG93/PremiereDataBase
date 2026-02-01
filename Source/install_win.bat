@@ -9,17 +9,28 @@ echo ----------------------------------------------------
 echo  Data Base Extension Installer (Windows)
 echo ----------------------------------------------------
 
-:: 1. Check/Install NPM
+:: 1. Check/Install NPM Dependencies
 echo.
-echo [1/4] Checking npm dependencies...
+echo [1/4] Installing npm dependencies (spell-book, esm, etc.)...
+
+:: Change to source directory for npm install
+pushd "%SOURCE_DIR%"
+
 where npm >nul 2>nul
 if %ERRORLEVEL% EQU 0 (
-    echo    Installing/Updating npm packages...
+    echo    Running npm install in %SOURCE_DIR%...
     call npm install --silent
+    if %ERRORLEVEL% NEQ 0 (
+        echo    WARNING: npm install failed. SpellBook may not work correctly.
+    ) else (
+        echo    npm packages installed successfully.
+    )
 ) else (
     echo    WARNING: npm not found. Automatic dependency installation skipped.
-    echo    Please ensure Node.js is installed if SpellBook is required.
+    echo    Please install Node.js to enable SpellBook integration.
 )
+
+popd
 
 :: 2. Create Directory
 echo.
