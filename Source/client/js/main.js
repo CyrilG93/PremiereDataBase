@@ -1185,8 +1185,8 @@ function getFileIcon(type, filePath = null) {
 
             if (supportedVideoExts.includes(ext)) {
                 // Use video tag with preload metadata to show first frame
-                // Muted is required for autoplay (though we don't autoplay)
-                return `<video class="thumbnail-video" src="${filePath}" preload="metadata" muted onmouseover="this.play()" onmouseout="this.pause();this.currentTime=0;"></video>`;
+                // Muted is required, will be synced with waveform playback
+                return `<video class="thumbnail-video" src="${filePath}" data-video-path="${escapeHtml(filePath)}" preload="metadata" muted></video>`;
             }
         }
     }
@@ -1554,6 +1554,7 @@ function initWaveforms() {
     document.querySelectorAll('.waveform-wrapper').forEach(wrapper => {
         const audioPath = wrapper.getAttribute('data-audio-path');
         const container = wrapper.querySelector('.waveform-container');
+        const fileType = wrapper.getAttribute('data-file-type');
 
         if (wavesurferInstances.has(audioPath)) {
             // Check if it's actually in the container
@@ -1610,14 +1611,41 @@ function initWaveforms() {
                 // Pause global player
                 const audioPlayer = document.getElementById('audioPlayer');
                 if (audioPlayer && !audioPlayer.paused) audioPlayer.pause();
+
+                // Sync video thumbnail if this is a video file
+                if (fileType === 'video') {
+                    syncVideoThumbnail(audioPath, 'play', ws.getCurrentTime());
+                }
             });
 
             ws.on('pause', () => {
                 updatePlayButtonState(audioPath, false);
+                // Sync video thumbnail if this is a video file
+                if (fileType === 'video') {
+                    syncVideoThumbnail(audioPath, 'pause');
+                }
             });
 
             ws.on('finish', () => {
                 updatePlayButtonState(audioPath, false);
+                // Reset video thumbnail if this is a video file
+                if (fileType === 'video') {
+                    syncVideoThumbnail(audioPath, 'stop');
+                }
+            });
+
+            // Sync on seek/interaction
+            ws.on('seeking', (time) => {
+                if (fileType === 'video') {
+                    syncVideoThumbnail(audioPath, 'seek', time);
+                }
+            });
+
+            // Continuous time sync for smooth video playback
+            ws.on('timeupdate', (time) => {
+                if (fileType === 'video' && ws.isPlaying()) {
+                    syncVideoThumbnail(audioPath, 'timeupdate', time);
+                }
             });
 
             // "Play on Click": Seek and Play
@@ -1637,6 +1665,38 @@ function initWaveforms() {
             console.error('Wavesurfer init error for:', audioPath, e);
         }
     });
+}
+
+// Sync video thumbnail with waveform playback
+function syncVideoThumbnail(videoPath, action, time = 0) {
+    // Find the video thumbnail element
+    const videoEl = document.querySelector(`video.thumbnail-video[data-video-path="${CSS.escape(videoPath)}"]`);
+    if (!videoEl) return;
+
+    try {
+        switch (action) {
+            case 'play':
+                videoEl.currentTime = time;
+                videoEl.play().catch(() => { }); // Ignore autoplay errors
+                break;
+            case 'pause':
+                videoEl.pause();
+                break;
+            case 'stop':
+                videoEl.pause();
+                videoEl.currentTime = 0;
+                break;
+            case 'seek':
+            case 'timeupdate':
+                // Only sync if difference is significant (>0.5s) to avoid jitter
+                if (Math.abs(videoEl.currentTime - time) > 0.5) {
+                    videoEl.currentTime = time;
+                }
+                break;
+        }
+    } catch (e) {
+        // Video element may not be ready, ignore errors
+    }
 }
 
 function toggleFileSelection(path) {
@@ -2061,6 +2121,7 @@ function initWaveformsInElement(container) {
     container.querySelectorAll('.waveform-wrapper').forEach(wrapper => {
         const audioPath = wrapper.getAttribute('data-audio-path');
         const waveformContainer = wrapper.querySelector('.waveform-container');
+        const fileType = wrapper.getAttribute('data-file-type');
 
         // Skip if already initialized
         if (wavesurferInstances.has(audioPath)) {
@@ -2098,14 +2159,39 @@ function initWaveformsInElement(container) {
                 }
                 const audioPlayer = document.getElementById('audioPlayer');
                 if (audioPlayer && !audioPlayer.paused) audioPlayer.pause();
+
+                // Sync video thumbnail if this is a video file
+                if (fileType === 'video') {
+                    syncVideoThumbnail(audioPath, 'play', ws.getCurrentTime());
+                }
             });
 
             ws.on('pause', () => {
                 updatePlayButtonState(audioPath, false);
+                if (fileType === 'video') {
+                    syncVideoThumbnail(audioPath, 'pause');
+                }
             });
 
             ws.on('finish', () => {
                 updatePlayButtonState(audioPath, false);
+                if (fileType === 'video') {
+                    syncVideoThumbnail(audioPath, 'stop');
+                }
+            });
+
+            // Sync on seek
+            ws.on('seeking', (time) => {
+                if (fileType === 'video') {
+                    syncVideoThumbnail(audioPath, 'seek', time);
+                }
+            });
+
+            // Continuous time sync for smooth video playback
+            ws.on('timeupdate', (time) => {
+                if (fileType === 'video' && ws.isPlaying()) {
+                    syncVideoThumbnail(audioPath, 'timeupdate', time);
+                }
             });
 
             ws.on('interaction', () => {
