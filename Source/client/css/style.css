@@ -1495,3 +1495,18 @@ main {
     color: var(--text-muted);
     margin-right: 8px;
 }
+
+/* ============================================
+   EXPANDED FOLDER CONTENT CONTAINER
+   ============================================ */
+.expanded-folder-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Ensure nested expanded content also displays correctly */
+.expanded-folder-content .expanded-folder-content {
+    margin-left: 0;
+    /* Indentation is handled by inline styles */
+}

@@ -927,11 +927,7 @@ function renderFiles() {
         // Normal navigation: show folders then files
         for (const folder of currentFolders) {
             html += renderFolderItem(folder);
-
-            // If folder is expanded, show its contents (LIST VIEW ONLY)
-            if (currentViewMode === 'list' && expandedFolders.has(folder.relativePath)) {
-                html += renderExpandedFolderContents(folder.relativePath);
-            }
+            // Note: expanded content is now inserted after initial render (see below)
         }
 
         // Render files in current folder
@@ -947,6 +943,40 @@ function renderFiles() {
     // Attach event listeners
     attachFileEventListeners();
 
+    // Restore expanded folders by programmatically inserting their content
+    // This uses the optimized incremental approach
+    if (!searchQuery && currentViewMode === 'list') {
+        for (const folderPath of expandedFolders) {
+            // Only expand if this folder is visible (direct child of current path)
+            const isDirectChild = currentFolders.some(f => f.relativePath === folderPath);
+            if (isDirectChild) {
+                const folderEl = document.querySelector(`.file-item.folder[data-path="${CSS.escape(folderPath)}"]`);
+                if (folderEl) {
+                    // Update the expand icon
+                    const expandIcon = folderEl.querySelector('.folder-expand');
+                    if (expandIcon) {
+                        expandIcon.textContent = '▼';
+                    }
+
+                    // Get the content HTML
+                    const contentHtml = renderExpandedFolderContents(folderPath);
+                    if (contentHtml) {
+                        const contentContainer = document.createElement('div');
+                        contentContainer.className = 'expanded-folder-content';
+                        contentContainer.setAttribute('data-parent-folder', folderPath);
+                        contentContainer.innerHTML = contentHtml;
+
+                        folderEl.insertAdjacentElement('afterend', contentContainer);
+                        attachEventListenersToElement(contentContainer);
+
+                        // Restore any nested expanded folders
+                        restoreNestedExpandedFolders(folderPath);
+                    }
+                }
+            }
+        }
+    }
+
     // Initialize waveforms for audio files (LIST VIEW ONLY)
     if (currentViewMode === 'list') {
         if (typeof debugLog === 'function') debugLog('Scheduling waveform initialization (50ms delay)...', 'info');
@@ -954,7 +984,8 @@ function renderFiles() {
     }
 }
 
-// Render contents of an expanded folder (recursive)
+// Render contents of an expanded folder (non-recursive for inline content)
+// Nested expanded folders are handled separately by expandFolder calls
 function renderExpandedFolderContents(folderPath) {
     let html = '';
     const depth = folderPath.split('/').length - (currentPath ? currentPath.split('/').length : 0);
@@ -966,12 +997,10 @@ function renderExpandedFolderContents(folderPath) {
         return parentPath === folderPath;
     });
 
-    // Render subfolders
+    // Render subfolders (but NOT their nested content - that's handled by expandFolder)
     for (const subfolder of subFolders) {
         html += renderFolderItem(subfolder, indent);
-        if (expandedFolders.has(subfolder.relativePath)) {
-            html += renderExpandedFolderContents(subfolder.relativePath);
-        }
+        // Note: nested expanded content is handled separately, not inline
     }
 
     // Render files in this folder
@@ -981,6 +1010,48 @@ function renderExpandedFolderContents(folderPath) {
     }
 
     return html;
+}
+
+// After inserting expanded content, also expand any nested folders that were previously expanded
+function restoreNestedExpandedFolders(parentFolderPath) {
+    // Find all expanded folders that are direct children of this parent
+    for (const folderPath of expandedFolders) {
+        // Check if this is a direct child of the parent
+        if (folderPath.startsWith(parentFolderPath + '/')) {
+            const remainingPath = folderPath.substring(parentFolderPath.length + 1);
+            // If there's no more slashes, it's a direct child
+            if (!remainingPath.includes('/')) {
+                const folderEl = document.querySelector(`.file-item.folder[data-path="${CSS.escape(folderPath)}"]`);
+                if (folderEl) {
+                    // Update the expand icon
+                    const expandIcon = folderEl.querySelector('.folder-expand');
+                    if (expandIcon) {
+                        expandIcon.textContent = '▼';
+                    }
+
+                    // Get the content HTML for this subfolder
+                    const contentHtml = renderExpandedFolderContents(folderPath);
+                    if (contentHtml) {
+                        const contentContainer = document.createElement('div');
+                        contentContainer.className = 'expanded-folder-content';
+                        contentContainer.setAttribute('data-parent-folder', folderPath);
+                        contentContainer.innerHTML = contentHtml;
+
+                        folderEl.insertAdjacentElement('afterend', contentContainer);
+                        attachEventListenersToElement(contentContainer);
+
+                        // Initialize waveforms for this container
+                        if (currentViewMode === 'list' && settings.showWaveforms !== false) {
+                            setTimeout(() => initWaveformsInElement(contentContainer), 50);
+                        }
+
+                        // Recursively restore nested expanded folders
+                        restoreNestedExpandedFolders(folderPath);
+                    }
+                }
+            }
+        }
+    }
 }
 
 function renderFolderItem(folder, indent = 0) {
@@ -1701,12 +1772,330 @@ function navigateBack() {
 }
 
 function toggleFolderExpand(folderPath) {
-    if (expandedFolders.has(folderPath)) {
+    const wasExpanded = expandedFolders.has(folderPath);
+
+    if (wasExpanded) {
         expandedFolders.delete(folderPath);
+        // Remove expanded content from DOM without full re-render
+        collapseFolder(folderPath);
     } else {
         expandedFolders.add(folderPath);
+        // Insert expanded content into DOM without full re-render
+        expandFolder(folderPath);
     }
-    renderFiles();
+}
+
+// Expand a folder by inserting its contents after the folder element
+function expandFolder(folderPath) {
+    const folderEl = document.querySelector(`.file-item.folder[data-path="${CSS.escape(folderPath)}"]`);
+    if (!folderEl) {
+        // Fallback to full re-render if element not found
+        renderFiles();
+        return;
+    }
+
+    // Update the expand icon
+    const expandIcon = folderEl.querySelector('.folder-expand');
+    if (expandIcon) {
+        expandIcon.textContent = '▼';
+    }
+
+    // Get the content HTML for this folder
+    const contentHtml = renderExpandedFolderContents(folderPath);
+    if (!contentHtml) return;
+
+    // Create a container for the expanded content
+    const contentContainer = document.createElement('div');
+    contentContainer.className = 'expanded-folder-content';
+    contentContainer.setAttribute('data-parent-folder', folderPath);
+    contentContainer.innerHTML = contentHtml;
+
+    // Insert after the folder element
+    folderEl.insertAdjacentElement('afterend', contentContainer);
+
+    // Attach event listeners to the new content
+    attachEventListenersToElement(contentContainer);
+
+    // Initialize waveforms only for the new content (LIST VIEW ONLY)
+    if (currentViewMode === 'list' && settings.showWaveforms !== false) {
+        setTimeout(() => initWaveformsInElement(contentContainer), 50);
+    }
+}
+
+// Collapse a folder by removing its expanded content from DOM
+function collapseFolder(folderPath) {
+    const folderEl = document.querySelector(`.file-item.folder[data-path="${CSS.escape(folderPath)}"]`);
+    if (folderEl) {
+        // Update the expand icon
+        const expandIcon = folderEl.querySelector('.folder-expand');
+        if (expandIcon) {
+            expandIcon.textContent = '▶';
+        }
+    }
+
+    // Remove the expanded content container
+    const contentContainer = document.querySelector(`.expanded-folder-content[data-parent-folder="${CSS.escape(folderPath)}"]`);
+    if (contentContainer) {
+        // Destroy any wavesurfer instances in this container first
+        contentContainer.querySelectorAll('.waveform-wrapper').forEach(wrapper => {
+            const audioPath = wrapper.getAttribute('data-audio-path');
+            if (wavesurferInstances.has(audioPath)) {
+                wavesurferInstances.get(audioPath).destroy();
+                wavesurferInstances.delete(audioPath);
+            }
+        });
+
+        // Also collapse any nested expanded folders recursively
+        contentContainer.querySelectorAll('.expanded-folder-content').forEach(nestedContainer => {
+            const nestedPath = nestedContainer.getAttribute('data-parent-folder');
+            if (nestedPath) {
+                expandedFolders.delete(nestedPath);
+            }
+        });
+
+        contentContainer.remove();
+    }
+
+    // Remove this and all nested paths from expandedFolders
+    const pathsToRemove = [];
+    for (const path of expandedFolders) {
+        if (path.startsWith(folderPath + '/')) {
+            pathsToRemove.push(path);
+        }
+    }
+    pathsToRemove.forEach(p => expandedFolders.delete(p));
+}
+
+// Attach event listeners to elements within a specific container
+function attachEventListenersToElement(container) {
+    // Folder expand/collapse icons
+    container.querySelectorAll('.folder-expand').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const folderPath = el.getAttribute('data-folder');
+            toggleFolderExpand(folderPath);
+        });
+    });
+
+    // Folder clicks - single click to expand, double click to navigate
+    container.querySelectorAll('.file-item.folder').forEach(el => {
+        el.addEventListener('click', (e) => {
+            if (e.target.closest('.folder-expand')) return;
+            const path = el.getAttribute('data-path');
+            if (currentViewMode === 'grid') {
+                navigateToFolder(path);
+            } else {
+                toggleFolderExpand(path);
+            }
+        });
+
+        el.addEventListener('dblclick', () => {
+            const path = el.getAttribute('data-path');
+            navigateToFolder(path);
+        });
+    });
+
+    // File clicks (selection)
+    container.querySelectorAll('.file-item[data-type="file"]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            if (e.target.closest('.file-checkbox') || e.target.closest('.file-favorite')) {
+                return;
+            }
+            const path = el.getAttribute('data-path');
+            toggleFileSelection(path);
+        });
+    });
+
+    // Waveform container clicks
+    container.querySelectorAll('.waveform-wrapper').forEach(wrapper => {
+        wrapper.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    });
+
+    // Checkbox changes
+    container.querySelectorAll('.file-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation();
+            const path = checkbox.closest('.file-item').getAttribute('data-path');
+            if (checkbox.checked) {
+                selectedFiles.add(path);
+            } else {
+                selectedFiles.delete(path);
+            }
+            updateSelectionUI();
+        });
+    });
+
+    // Favorite buttons
+    container.querySelectorAll('.file-favorite').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const path = btn.getAttribute('data-path');
+            toggleFavorite(path);
+        });
+    });
+
+    // Audio play buttons
+    container.querySelectorAll('.audio-play-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const audioPath = btn.getAttribute('data-audio-path');
+            toggleAudioPlayback(audioPath, btn);
+        });
+    });
+
+    // Context menu
+    container.querySelectorAll('.file-item').forEach(el => {
+        el.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showContextMenu(e, el.getAttribute('data-path'), el.getAttribute('data-type'));
+        });
+    });
+
+    // Make files draggable
+    container.querySelectorAll('.file-item[data-type="file"]').forEach(el => {
+        el.setAttribute('draggable', 'true');
+
+        el.addEventListener('dragstart', (e) => {
+            const filePath = el.getAttribute('data-path');
+            if (!selectedFiles.has(filePath)) {
+                selectedFiles.clear();
+                selectedFiles.add(filePath);
+                updateSelectionUI();
+                // Update the visual state directly instead of re-rendering
+                document.querySelectorAll('.file-item.selected').forEach(item => item.classList.remove('selected'));
+                el.classList.add('selected');
+                const checkbox = el.querySelector('.file-checkbox');
+                if (checkbox) checkbox.checked = true;
+            }
+
+            const filesToDrag = Array.from(selectedFiles);
+            e.dataTransfer.setData('application/json', JSON.stringify(filesToDrag));
+            e.dataTransfer.effectAllowed = 'move';
+
+            selectedFiles.forEach(path => {
+                const fileEl = document.querySelector(`.file-item[data-path="${CSS.escape(path)}"]`);
+                if (fileEl) fileEl.classList.add('dragging');
+            });
+
+            pdb_createDragGhost(filesToDrag.length, e);
+        });
+
+        el.addEventListener('dragend', () => {
+            document.querySelectorAll('.file-item.dragging').forEach(item => {
+                item.classList.remove('dragging');
+            });
+            document.querySelectorAll('.file-item.drop-target').forEach(item => {
+                item.classList.remove('drop-target');
+            });
+            pdb_removeDragGhost();
+        });
+    });
+
+    // Make folders drop targets
+    container.querySelectorAll('.file-item.folder').forEach(el => {
+        el.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            el.classList.add('drop-target');
+        });
+
+        el.addEventListener('dragleave', (e) => {
+            if (!el.contains(e.relatedTarget)) {
+                el.classList.remove('drop-target');
+            }
+        });
+
+        el.addEventListener('drop', (e) => {
+            e.preventDefault();
+            el.classList.remove('drop-target');
+
+            try {
+                const data = e.dataTransfer.getData('application/json');
+                if (!data) return;
+
+                const filesToMove = JSON.parse(data);
+                const destFolderPath = el.getAttribute('data-path');
+
+                pdb_moveFilesToFolder(filesToMove, destFolderPath);
+            } catch (err) {
+                console.error('Drop error:', err);
+                showStatus('Error processing drop: ' + err.message, 'error');
+            }
+        });
+    });
+}
+
+// Initialize waveforms only within a specific container element
+function initWaveformsInElement(container) {
+    if (typeof WaveSurfer === 'undefined') {
+        console.error('WaveSurfer library not loaded!');
+        return;
+    }
+
+    container.querySelectorAll('.waveform-wrapper').forEach(wrapper => {
+        const audioPath = wrapper.getAttribute('data-audio-path');
+        const waveformContainer = wrapper.querySelector('.waveform-container');
+
+        // Skip if already initialized
+        if (wavesurferInstances.has(audioPath)) {
+            return;
+        }
+
+        try {
+            const ws = WaveSurfer.create({
+                container: waveformContainer,
+                waveColor: '#6d6d6d',
+                progressColor: '#0078d4',
+                cursorColor: '#0078d4',
+                height: 24,
+                barWidth: 2,
+                barGap: 1,
+                barRadius: 2,
+                normalize: true,
+                interact: true,
+                autoplay: false,
+                cursorWidth: 2,
+                url: toFileUrl(audioPath)
+            });
+
+            wavesurferInstances.set(audioPath, ws);
+
+            ws.on('ready', () => {
+                if (typeof debugLog === 'function') debugLog(`Waveform ready: ${audioPath.split('/').pop()}`, 'success');
+            });
+
+            ws.on('play', () => {
+                currentlyPlayingAudio = audioPath;
+                updatePlayButtonState(audioPath, true);
+                for (const [otherPath, otherWs] of wavesurferInstances.entries()) {
+                    if (otherPath !== audioPath) otherWs.pause();
+                }
+                const audioPlayer = document.getElementById('audioPlayer');
+                if (audioPlayer && !audioPlayer.paused) audioPlayer.pause();
+            });
+
+            ws.on('pause', () => {
+                updatePlayButtonState(audioPath, false);
+            });
+
+            ws.on('finish', () => {
+                updatePlayButtonState(audioPath, false);
+            });
+
+            ws.on('interaction', () => {
+                ws.play();
+            });
+
+            ws.on('error', (err) => {
+                console.error('Wavesurfer error:', err, 'for path:', audioPath);
+            });
+
+        } catch (e) {
+            console.error('Wavesurfer init error for:', audioPath, e);
+        }
+    });
 }
 
 function renderBreadcrumb() {
