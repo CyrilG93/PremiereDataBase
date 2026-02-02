@@ -481,6 +481,11 @@ main {
     pointer-events: none;
 }
 
+.toolbar-icon-btn.active {
+    background: var(--accent-primary);
+    color: white;
+}
+
 /* Folder expand arrow */
 .folder-expand {
     width: 16px;
@@ -858,10 +863,26 @@ main {
     /* Ensure it stays visible */
 }
 
-/* Fix Gallery Mode Gaps: Hide waveform elements completely in grid view */
+/* Fix Gallery Mode Gaps: Hide list-view waveform elements in grid view */
 .file-browser.grid-view .waveform-wrapper,
 .file-browser.grid-view .audio-play-btn {
     display: none !important;
+}
+
+/* Gallery mode compact waveforms (under filename) */
+.gallery-waveform-wrapper {
+    width: 100%;
+    height: 16px;
+    margin-top: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.gallery-waveform-wrapper .waveform-container {
+    width: 100%;
+    height: 100%;
 }
 
 /* Fix Gallery Mode Gaps: Ensure audio items don't have different layout */

@@ -499,6 +499,9 @@ function loadSettings() {
         showVideoWaveformsCheckbox.checked = settings.showVideoWaveforms !== false;
     }
 
+    // Update waveform toggle button state
+    pdb_updateWaveformToggleButton();
+
     console.log('Settings loaded successfully');
 }
 
@@ -575,6 +578,43 @@ function updateDebugPanelVisibility() {
         } else {
             debugPanel.classList.remove('visible');
         }
+    }
+}
+
+// Toggle waveforms visibility from toolbar button
+function pdb_toggleWaveforms() {
+    const waveformsEnabled = settings.showWaveforms !== false;
+
+    // Toggle both audio and video waveforms together
+    settings.showWaveforms = !waveformsEnabled;
+    settings.showVideoWaveforms = !waveformsEnabled;
+
+    // Update button state
+    pdb_updateWaveformToggleButton();
+
+    // Update settings checkboxes in panel
+    const showWaveformsCheckbox = document.getElementById('showWaveformsCheckbox');
+    if (showWaveformsCheckbox) {
+        showWaveformsCheckbox.checked = settings.showWaveforms;
+    }
+    const showVideoWaveformsCheckbox = document.getElementById('showVideoWaveformsCheckbox');
+    if (showVideoWaveformsCheckbox) {
+        showVideoWaveformsCheckbox.checked = settings.showVideoWaveforms;
+    }
+
+    // Save to localStorage
+    localStorage.setItem('databaseSettings', JSON.stringify(settings));
+
+    // Re-render files to show/hide waveforms
+    renderFiles();
+}
+
+// Update waveform toggle button active state
+function pdb_updateWaveformToggleButton() {
+    const btn = document.getElementById('waveformToggleBtn');
+    if (btn) {
+        const waveformsEnabled = settings.showWaveforms !== false;
+        btn.classList.toggle('active', waveformsEnabled);
     }
 }
 
@@ -994,8 +1034,10 @@ function renderFiles() {
         }
     }
 
-    // Initialize waveforms for audio files (LIST VIEW ONLY)
-    if (currentViewMode === 'list') {
+    // Initialize waveforms for audio files
+    // List view: uses regular waveform-wrapper
+    // Grid view: uses gallery-waveform-wrapper (if enabled)
+    if (settings.showWaveforms !== false) {
         if (typeof debugLog === 'function') debugLog('Scheduling waveform initialization (50ms delay)...', 'info');
         setTimeout(initWaveforms, 50);
     }
@@ -1129,9 +1171,17 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
         </button>
     ` : '';
 
+    // List view waveform (wider, full-featured)
     const waveformHtml = (shouldShowWaveform && currentViewMode === 'list') ? `
         <div class="waveform-wrapper ${file.type}-waveform" data-audio-path="${escapeHtml(file.path)}" data-file-type="${file.type}">
             <div class="waveform-container" id="waveform-${generateSafeId(file.path)}"></div>
+        </div>
+    ` : '';
+
+    // Gallery view waveform (compact, under filename, only for audio files)
+    const galleryWaveformHtml = (isAudio && showAudioWaveforms && currentViewMode === 'grid') ? `
+        <div class="gallery-waveform-wrapper" data-audio-path="${escapeHtml(file.path)}" data-file-type="${file.type}">
+            <div class="waveform-container gallery-waveform" id="gallery-waveform-${generateSafeId(file.path)}"></div>
         </div>
     ` : '';
 
@@ -1144,6 +1194,7 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
             <div class="file-info">
                 <div class="file-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
                 <div class="file-path">📁 ${escapeHtml(folderDisplay)}</div>
+                ${galleryWaveformHtml}
             </div>
             ${waveformHtml}
             ${playBtnHtml}
@@ -1521,7 +1572,8 @@ function initWaveforms() {
 
     // Determine which instances to keep and which to destroy
     for (const [path, ws] of wavesurferInstances.entries()) {
-        const wrapper = document.querySelector(`.waveform-wrapper[data-audio-path="${CSS.escape(path)}"]`);
+        // Check both list and gallery wrapper types
+        const wrapper = document.querySelector(`.waveform-wrapper[data-audio-path="${CSS.escape(path)}"], .gallery-waveform-wrapper[data-audio-path="${CSS.escape(path)}"]`);
 
         if (!wrapper) {
             // File no longer visible, destroy instance
@@ -1550,11 +1602,13 @@ function initWaveforms() {
         }
     }
 
-    // Initialize new instances
-    document.querySelectorAll('.waveform-wrapper').forEach(wrapper => {
+    // Initialize new instances for both list and gallery waveforms
+    const allWrappers = document.querySelectorAll('.waveform-wrapper, .gallery-waveform-wrapper');
+    allWrappers.forEach(wrapper => {
         const audioPath = wrapper.getAttribute('data-audio-path');
         const container = wrapper.querySelector('.waveform-container');
         const fileType = wrapper.getAttribute('data-file-type');
+        const isGallery = wrapper.classList.contains('gallery-waveform-wrapper');
 
         if (wavesurferInstances.has(audioPath)) {
             // Check if it's actually in the container
@@ -1576,20 +1630,22 @@ function initWaveforms() {
         }
 
         try {
+            // Gallery waveforms use smaller height (12px) than list view (24px)
+            const waveformHeight = isGallery ? 12 : 24;
+
             const ws = WaveSurfer.create({
                 container: container,
                 waveColor: '#6d6d6d',
                 progressColor: '#0078d4',
                 cursorColor: '#0078d4',
-                height: 24,
-                barWidth: 2,
+                height: waveformHeight,
+                barWidth: isGallery ? 1 : 2,
                 barGap: 1,
-                barRadius: 2,
+                barRadius: isGallery ? 1 : 2,
                 normalize: true,
                 interact: true, // Enable clicking to seek
                 autoplay: false,
-                cursorWidth: 2,
-                cursorColor: '#0078d4',
+                cursorWidth: isGallery ? 1 : 2,
                 url: toFileUrl(audioPath)
             });
 
@@ -2591,6 +2647,7 @@ function init() {
     // Folder actions
     document.getElementById('newFolderBtn').addEventListener('click', openNewFolderModal);
     document.getElementById('refreshBtn').addEventListener('click', scanDatabaseFiles);
+    document.getElementById('waveformToggleBtn').addEventListener('click', pdb_toggleWaveforms);
     document.getElementById('closeNewFolderModal').addEventListener('click', closeNewFolderModal);
     document.getElementById('cancelNewFolder').addEventListener('click', closeNewFolderModal);
     document.getElementById('confirmNewFolder').addEventListener('click', createFolder);
