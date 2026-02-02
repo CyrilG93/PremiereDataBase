@@ -171,105 +171,101 @@
                                 stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                     </button>
-
-                    <!-- View Toggle (right) -->
-                    <div class="view-toggle">
-                        <input type="range" id="sizeSlider" min="0" max="100" value="0" title="Adjust Size"
-                            style="width: 80px; margin-right: 8px;">
-                        <div class="divider-vertical"
-                            style="width: 1px; height: 20px; background: var(--border); margin: 0 8px;"></div>
-                        <button class="view-btn active" id="listViewBtn" title="List view">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <line x1="8" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                                <line x1="8" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                                <line x1="8" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                                <circle cx="4" cy="6" r="1" fill="currentColor" />
-                                <circle cx="4" cy="12" r="1" fill="currentColor" />
-                                <circle cx="4" cy="18" r="1" fill="currentColor" />
-                            </svg>
-                        </button>
-                        <button class="view-btn" id="gridViewBtn" title="Grid view">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
-                                <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
-                                <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
-                                <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor"
-                                    stroke-width="2" />
-                            </svg>
-                        </button>
-                    </div>
                 </div>
 
-                <!-- File Browser -->
-                <div class="file-browser list-view" id="fileBrowser">
-                    <!-- Files will be rendered here -->
-                    <div class="empty-state" id="emptyState">
+                <!-- View Toggle (right) -->
+                <div class="view-toggle">
+                    <input type="range" id="sizeSlider" min="0" max="100" value="0" title="Adjust Size"
+                        style="width: 80px; margin-right: 8px;">
+                    <div class="divider-vertical"
+                        style="width: 1px; height: 20px; background: var(--border); margin: 0 8px;"></div>
+                    <button class="view-btn active" id="listViewBtn" title="List view">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                            <line x1="8" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="8" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="8" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <circle cx="4" cy="6" r="1" fill="currentColor" />
+                            <circle cx="4" cy="12" r="1" fill="currentColor" />
+                            <circle cx="4" cy="18" r="1" fill="currentColor" />
+                        </svg>
+                    </button>
+                    <button class="view-btn" id="gridViewBtn" title="Grid view">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- File Browser -->
+            <div class="file-browser list-view" id="fileBrowser">
+                <!-- Files will be rendered here -->
+                <div class="empty-state" id="emptyState">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p data-i18n="empty.configureDatabase">Configure your database path in settings</p>
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="action-bar" id="actionBar">
+                <div class="selection-info">
+                    <span id="selectedCount">0</span>
+                    <span data-i18n="labels.selected">selected</span>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn secondary" id="selectAllBtn" title="Select all">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                    <button class="action-btn secondary" id="deselectAllBtn" title="Deselect all">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                    <!-- Add to Database Button -->
+                    <button class="action-btn secondary" id="addToDbBtn" title="Add project selection to database"
+                        style="margin-right: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <p data-i18n="empty.configureDatabase">Configure your database path in settings</p>
-                    </div>
+                        <span data-i18n="buttons.addToDb">Add to DB</span>
+                    </button>
+                    <button class="action-btn primary" id="importBtn" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span data-i18n="buttons.import">Import</span>
+                    </button>
                 </div>
+            </div>
 
-                <!-- Action Bar -->
-                <div class="action-bar" id="actionBar">
-                    <div class="selection-info">
-                        <span id="selectedCount">0</span>
-                        <span data-i18n="labels.selected">selected</span>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="action-btn secondary" id="selectAllBtn" title="Select all">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                        <button class="action-btn secondary" id="deselectAllBtn" title="Deselect all">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor"
-                                    stroke-width="2" />
-                            </svg>
-                        </button>
-                        <!-- Add to Database Button -->
-                        <button class="action-btn secondary" id="addToDbBtn" title="Add project selection to database"
-                            style="margin-right: 8px;">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                            <span data-i18n="buttons.addToDb">Add to DB</span>
-                        </button>
-                        <button class="action-btn primary" id="importBtn" disabled>
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                            <span data-i18n="buttons.import">Import</span>
-                        </button>
-                    </div>
+
+
+            <!-- Progress Bar -->
+            <div class="progress-section" id="progressSection">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
                 </div>
+                <span class="progress-text" id="progressText">Loading...</span>
+            </div>
 
-
-
-                <!-- Progress Bar -->
-                <div class="progress-section" id="progressSection">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressBar"></div>
-                    </div>
-                    <span class="progress-text" id="progressText">Loading...</span>
-                </div>
-
-                <!-- Status Message -->
-                <div class="status-message" id="statusMessage"></div>
+            <!-- Status Message -->
+            <div class="status-message" id="statusMessage"></div>
         </main>
 
         <!-- Settings Panel -->
