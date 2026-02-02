@@ -1319,7 +1319,7 @@ function attachFileEventListeners() {
 
 
     // Waveform container clicks - stop propagation to prevent file selection
-    document.querySelectorAll('.waveform-wrapper').forEach(wrapper => {
+    document.querySelectorAll('.waveform-wrapper, .gallery-waveform-wrapper').forEach(wrapper => {
         wrapper.addEventListener('click', (e) => {
             e.stopPropagation();
         });
