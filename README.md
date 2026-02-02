@@ -36,13 +36,13 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - Delete files and folders
 - Refresh database contents
 
-### �️ Drag and Drop
+### 📂 Drag and Drop
 - **Move files between folders** by dragging and dropping
 - **Multi-selection support** - Select multiple files and drag them all at once
 - **Visual feedback** - Folders highlight when you drag files over them
 - **Smart validation** - Prevents moving files to the same folder or overwriting existing files
 
-### �📤 Add to Database (Export from Premiere)
+### 📤 Add to Database (Export from Premiere)
 - **Export from Project Panel**: Select bins or items in Premiere Pro and click "Add to DB"
 - **Preserves Bin Structure**: Replicates your Premiere Pro bin hierarchy as folders in your database
 - **Recursive**: Handles nested bins and all contained media
@@ -82,7 +82,6 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 ### ⌨️ Spell Book / Excalibur Integration
 - **Keyboard Shortcuts** via Spell Book extension
 - **Available Commands**:
-  - `Show Database Panel` - Open/show the extension panel
   - `Refresh Database` - Rescan the database folder
   - `Add Selection to Database` - Copy selected items from Premiere to DB
 - Commands appear automatically in Excalibur when Spell Book is installed
@@ -106,21 +105,17 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
    chmod +x install_macos.sh
    ./install_macos.sh
    ```
-4. Enable unsigned extensions (if not already done):
-   ```bash
-   defaults write com.adobe.CSXS.11 PlayerDebugMode 1
-   ```
-5. Restart Premiere Pro
+4. Restart Premiere Pro
+
+> **Note**: The installer automatically enables unsigned extensions (PlayerDebugMode) for CSXS 9-16. No manual configuration required.
 
 ### Windows
 
 1. Download or clone this repository
-2. Right-click `install_windows.bat` and select **Run as Administrator**
-3. Enable unsigned extensions:
-   - Open Registry Editor (regedit)
-   - Navigate to `HKEY_CURRENT_USER\SOFTWARE\Adobe\CSXS.11`
-   - Create a new String value: `PlayerDebugMode` = `1`
-4. Restart Premiere Pro
+2. Right-click `install_win.bat` and select **Run as Administrator**
+3. Restart Premiere Pro
+
+> **Note**: The installer automatically enables unsigned extensions (PlayerDebugMode) in the Windows Registry. No manual configuration required.
 
 ## 📖 Usage
 
