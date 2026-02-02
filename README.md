@@ -60,10 +60,12 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - **Supported Formats**: Preview support for web-friendly formats (mp4, webm, mov) using HTML5
 
 ### 🎵 Audio Preview & Waveforms
-- **Interactive Waveforms**: High-quality visual representation of audio files (List View)
-- **Play on Click**: Click or seek anywhere on the waveform to start balanced playback
-- **Legacy Play Button**: Standard play/pause button still available on all audio files
-- **Visual Feedback**: Real-time progress tracking on both the waveform and play button
+- **Interactive Waveforms**: High-quality visual representation of audio and video files
+- **List View Waveforms**: Full waveforms for audio/video files with seek-on-click
+- **Gallery View Waveforms**: Compact waveforms under thumbnails with play/pause button
+- **Waveform Toggle**: Quick toolbar button to show/hide waveforms
+- **Play on Click**: Click or seek anywhere on the waveform to start playback
+- **Visual Feedback**: Real-time progress tracking on waveform and play buttons
 - **Supported Formats**: MP3, WAV, AAC/M4A, OGG, FLAC
 
 ### 🔄 Consolidate Option
@@ -198,8 +200,7 @@ PremiereDataBase/
 │   ├── client/
 │   │   ├── index.html
 │   │   ├── css/
-│   │   │   ├── style.css
-│   │   │   └── grid.css
+│   │   │   └── style.css
 │   │   ├── js/
 │   │   │   ├── CSInterface.js
 │   │   │   ├── main.js
@@ -245,6 +246,13 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.6.1 (2026-02-02)
+- **New Feature**: **Waveform Toggle Button** - Quick show/hide waveforms from toolbar
+- **New Feature**: **Gallery Mode Waveforms** - Compact waveforms under thumbnails for audio and video files
+- **New Feature**: **Gallery Play/Pause Button** - Small button to control playback in gallery mode
+- **Improvement**: Video files now show waveforms in both list and gallery views
+- **Fix**: Clicking on gallery waveform no longer selects the file for import
 
 ### v1.5.1 (2026-01-27)
 - **Fix**: macOS installer now automatically enables PlayerDebugMode (CSXS 9-16)
