@@ -1182,6 +1182,15 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
     const galleryWaveformHtml = (shouldShowWaveform && currentViewMode === 'grid') ? `
         <div class="gallery-waveform-wrapper" data-audio-path="${escapeHtml(file.path)}" data-file-type="${file.type}">
             <div class="waveform-container gallery-waveform" id="gallery-waveform-${generateSafeId(file.path)}"></div>
+            <button class="gallery-play-btn" data-audio-path="${escapeHtml(file.path)}" title="Play/Pause">
+                <svg class="play-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="5 3 19 12 5 21" fill="currentColor" />
+                </svg>
+                <svg class="pause-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:none;">
+                    <rect x="6" y="4" width="4" height="16" fill="currentColor" />
+                    <rect x="14" y="4" width="4" height="16" fill="currentColor" />
+                </svg>
+            </button>
         </div>
     ` : '';
 
@@ -1322,6 +1331,24 @@ function attachFileEventListeners() {
     document.querySelectorAll('.waveform-wrapper, .gallery-waveform-wrapper').forEach(wrapper => {
         wrapper.addEventListener('click', (e) => {
             e.stopPropagation();
+        });
+    });
+
+    // Gallery play/pause buttons
+    document.querySelectorAll('.gallery-play-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const audioPath = btn.getAttribute('data-audio-path');
+            const ws = wavesurferInstances.get(audioPath);
+            if (ws) {
+                if (ws.isPlaying()) {
+                    ws.pause();
+                    btn.classList.remove('playing');
+                } else {
+                    ws.play();
+                    btn.classList.add('playing');
+                }
+            }
         });
     });
 
@@ -1672,6 +1699,9 @@ function initWaveforms() {
                 if (fileType === 'video') {
                     syncVideoThumbnail(audioPath, 'play', ws.getCurrentTime());
                 }
+                // Update gallery play button state
+                const galleryBtn = document.querySelector(`.gallery-play-btn[data-audio-path="${CSS.escape(audioPath)}"]`);
+                if (galleryBtn) galleryBtn.classList.add('playing');
             });
 
             ws.on('pause', () => {
@@ -1680,6 +1710,9 @@ function initWaveforms() {
                 if (fileType === 'video') {
                     syncVideoThumbnail(audioPath, 'pause');
                 }
+                // Update gallery play button state
+                const galleryBtn = document.querySelector(`.gallery-play-btn[data-audio-path="${CSS.escape(audioPath)}"]`);
+                if (galleryBtn) galleryBtn.classList.remove('playing');
             });
 
             ws.on('finish', () => {
@@ -1688,6 +1721,9 @@ function initWaveforms() {
                 if (fileType === 'video') {
                     syncVideoThumbnail(audioPath, 'stop');
                 }
+                // Update gallery play button state
+                const galleryBtn = document.querySelector(`.gallery-play-btn[data-audio-path="${CSS.escape(audioPath)}"]`);
+                if (galleryBtn) galleryBtn.classList.remove('playing');
             });
 
             // Sync on seek/interaction

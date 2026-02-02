@@ -878,11 +878,47 @@ main {
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: var(--radius-sm);
     overflow: hidden;
+    display: flex;
+    align-items: center;
 }
 
 .gallery-waveform-wrapper .waveform-container {
-    width: 100%;
+    flex: 1;
     height: 100%;
+    min-width: 0;
+}
+
+.gallery-play-btn {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    background: var(--accent-primary);
+    border: none;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background var(--transition-fast);
+}
+
+.gallery-play-btn:hover {
+    background: var(--accent-hover);
+}
+
+.gallery-play-btn svg {
+    width: 8px;
+    height: 8px;
+}
+
+.gallery-play-btn.playing .play-icon {
+    display: none;
+}
+
+.gallery-play-btn.playing .pause-icon {
+    display: block !important;
 }
 
 /* Fix Gallery Mode Gaps: Ensure audio items don't have different layout */

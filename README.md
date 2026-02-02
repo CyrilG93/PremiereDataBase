@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.5.1-blue)
+![Version](https://img.shields.io/badge/version-1.6.1-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
