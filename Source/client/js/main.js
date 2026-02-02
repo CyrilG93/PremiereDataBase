@@ -1178,8 +1178,8 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
         </div>
     ` : '';
 
-    // Gallery view waveform (compact, under filename, only for audio files)
-    const galleryWaveformHtml = (isAudio && showAudioWaveforms && currentViewMode === 'grid') ? `
+    // Gallery view waveform (compact, under filename, for audio and video files)
+    const galleryWaveformHtml = (shouldShowWaveform && currentViewMode === 'grid') ? `
         <div class="gallery-waveform-wrapper" data-audio-path="${escapeHtml(file.path)}" data-file-type="${file.type}">
             <div class="waveform-container gallery-waveform" id="gallery-waveform-${generateSafeId(file.path)}"></div>
         </div>
