@@ -317,6 +317,106 @@ var expandedFolders = new Set(); // Folders that are expanded in list view
 var wavesurferInstances = new Map(); // Map of audioPath -> Wavesurfer instance
 
 // ============================================================================
+// FILE-BASED SETTINGS STORAGE (persists across Premiere versions)
+// ============================================================================
+var pdb_fs = require('fs');
+var pdb_path = require('path');
+var pdb_os = require('os');
+
+/**
+ * Get the path to the settings file (cross-platform)
+ * macOS: ~/Library/Application Support/PremiereDataBase/settings.json
+ * Windows: %APPDATA%/PremiereDataBase/settings.json
+ */
+function pdb_getSettingsDir() {
+    const platform = pdb_os.platform();
+    if (platform === 'darwin') {
+        return pdb_path.join(pdb_os.homedir(), 'Library', 'Application Support', 'PremiereDataBase');
+    } else {
+        // Windows
+        return pdb_path.join(process.env.APPDATA || pdb_os.homedir(), 'PremiereDataBase');
+    }
+}
+
+function pdb_getSettingsFilePath() {
+    return pdb_path.join(pdb_getSettingsDir(), 'settings.json');
+}
+
+function pdb_getFavoritesFilePath() {
+    return pdb_path.join(pdb_getSettingsDir(), 'favorites.json');
+}
+
+/**
+ * Read settings from JSON file
+ * Returns null if file doesn't exist or is invalid
+ */
+function pdb_readSettingsFromFile() {
+    try {
+        const filePath = pdb_getSettingsFilePath();
+        if (pdb_fs.existsSync(filePath)) {
+            const data = pdb_fs.readFileSync(filePath, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error('Error reading settings file:', e);
+    }
+    return null;
+}
+
+/**
+ * Write settings to JSON file
+ */
+function pdb_writeSettingsToFile(settingsData) {
+    try {
+        const dir = pdb_getSettingsDir();
+        if (!pdb_fs.existsSync(dir)) {
+            pdb_fs.mkdirSync(dir, { recursive: true });
+        }
+        const filePath = pdb_getSettingsFilePath();
+        pdb_fs.writeFileSync(filePath, JSON.stringify(settingsData, null, 2), 'utf8');
+        console.log('Settings saved to file:', filePath);
+        return true;
+    } catch (e) {
+        console.error('Error writing settings file:', e);
+        return false;
+    }
+}
+
+/**
+ * Read favorites from JSON file
+ */
+function pdb_readFavoritesFromFile() {
+    try {
+        const filePath = pdb_getFavoritesFilePath();
+        if (pdb_fs.existsSync(filePath)) {
+            const data = pdb_fs.readFileSync(filePath, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error('Error reading favorites file:', e);
+    }
+    return null;
+}
+
+/**
+ * Write favorites to JSON file
+ */
+function pdb_writeFavoritesToFile(favoritesArray) {
+    try {
+        const dir = pdb_getSettingsDir();
+        if (!pdb_fs.existsSync(dir)) {
+            pdb_fs.mkdirSync(dir, { recursive: true });
+        }
+        const filePath = pdb_getFavoritesFilePath();
+        pdb_fs.writeFileSync(filePath, JSON.stringify(favoritesArray, null, 2), 'utf8');
+        return true;
+    } catch (e) {
+        console.error('Error writing favorites file:', e);
+        return false;
+    }
+}
+
+// ============================================================================
 // TRANSLATION FUNCTIONS
 // ============================================================================
 function t(key) {
@@ -438,25 +538,54 @@ function addToDatabase() {
 // SETTINGS
 // ============================================================================
 function loadSettings() {
-    const saved = localStorage.getItem('databaseSettings');
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            settings = { ...settings, ...parsed };
-            currentLang = settings.language || 'en';
-        } catch (e) {
-            console.error('Error loading settings:', e);
+    let migratedFromLocalStorage = false;
+
+    // First, try to load from JSON file (persistent across Premiere versions)
+    const fileSettings = pdb_readSettingsFromFile();
+    if (fileSettings) {
+        settings = { ...settings, ...fileSettings };
+        currentLang = settings.language || 'en';
+        console.log('Settings loaded from file:', pdb_getSettingsFilePath());
+    } else {
+        // Fallback: migrate from localStorage (one-time migration)
+        const saved = localStorage.getItem('databaseSettings');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                settings = { ...settings, ...parsed };
+                currentLang = settings.language || 'en';
+                migratedFromLocalStorage = true;
+                console.log('Settings migrated from localStorage');
+            } catch (e) {
+                console.error('Error loading settings from localStorage:', e);
+            }
         }
     }
 
-    // Load favorites
-    const savedFavorites = localStorage.getItem('databaseFavorites');
-    if (savedFavorites) {
-        try {
-            favorites = new Set(JSON.parse(savedFavorites));
-        } catch (e) {
-            console.error('Error loading favorites:', e);
+    // Load favorites from file or localStorage
+    const fileFavorites = pdb_readFavoritesFromFile();
+    if (fileFavorites) {
+        favorites = new Set(fileFavorites);
+        console.log('Favorites loaded from file');
+    } else {
+        // Fallback: migrate from localStorage
+        const savedFavorites = localStorage.getItem('databaseFavorites');
+        if (savedFavorites) {
+            try {
+                favorites = new Set(JSON.parse(savedFavorites));
+                migratedFromLocalStorage = true;
+                console.log('Favorites migrated from localStorage');
+            } catch (e) {
+                console.error('Error loading favorites from localStorage:', e);
+            }
         }
+    }
+
+    // If we migrated from localStorage, save to file for future use
+    if (migratedFromLocalStorage) {
+        pdb_writeSettingsToFile(settings);
+        pdb_writeFavoritesToFile([...favorites]);
+        console.log('Migration complete: settings saved to persistent file storage');
     }
 
     // Update UI with settings
@@ -559,6 +688,10 @@ function saveSettings() {
         settings.showVideoWaveforms = showVideoWaveformsCheckbox.checked;
     }
 
+    // Save to persistent file storage (survives Premiere version upgrades)
+    pdb_writeSettingsToFile(settings);
+
+    // Also keep localStorage as backup for legacy support
     localStorage.setItem('databaseSettings', JSON.stringify(settings));
 
     updateDatabasePathDisplay();
@@ -566,6 +699,10 @@ function saveSettings() {
 }
 
 function saveFavorites() {
+    // Save to persistent file storage
+    pdb_writeFavoritesToFile([...favorites]);
+
+    // Also keep localStorage as backup
     localStorage.setItem('databaseFavorites', JSON.stringify([...favorites]));
 }
 
@@ -602,7 +739,8 @@ function pdb_toggleWaveforms() {
         showVideoWaveformsCheckbox.checked = settings.showVideoWaveforms;
     }
 
-    // Save to localStorage
+    // Save to persistent file storage
+    pdb_writeSettingsToFile(settings);
     localStorage.setItem('databaseSettings', JSON.stringify(settings));
 
     // Re-render files to show/hide waveforms
@@ -2670,6 +2808,7 @@ function init() {
         // Debounce saving settings
         clearTimeout(saveSettingsTimer);
         saveSettingsTimer = setTimeout(() => {
+            pdb_writeSettingsToFile(settings);
             localStorage.setItem('databaseSettings', JSON.stringify(settings));
         }, 500);
     });
