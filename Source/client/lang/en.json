@@ -37,7 +37,9 @@
         "flattenImportPath": "Import to root folder only",
         "flattenImportPathDescription": "When enabled, files are imported into the first-level folder only (e.g., ELEMENTS/IMAGES/file.png → ELEMENTS bin).",
         "debugMode": "Enable Debug Mode",
-        "debugModeDescription": "Shows a log panel at the bottom of the extension with debug information."
+        "debugModeDescription": "Shows a log panel at the bottom of the extension with debug information.",
+        "hoverPreview": "Preview on hover",
+        "hoverPreviewDescription": "Automatically play video/audio from start when hovering."
     },
     "empty": {
         "configureDatabase": "Configure your database path in settings",
