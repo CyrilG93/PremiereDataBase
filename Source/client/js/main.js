@@ -165,7 +165,9 @@ var translations = {
             showWaveforms: "Show audio waveforms",
             showWaveformsDescription: "Display interactive waveforms for audio files in list view.",
             showVideoWaveforms: "Show video waveforms",
-            showVideoWaveformsDescription: "Display interactive audio waveforms and play button for video files in list view."
+            showVideoWaveformsDescription: "Display interactive audio waveforms and play button for video files in list view.",
+            hoverPreview: "Preview on hover",
+            hoverPreviewDescription: "Automatically play video/audio when hovering over the thumbnail."
         },
         empty: {
             configureDatabase: "Configure your database path in settings",
@@ -244,7 +246,9 @@ var translations = {
             showWaveforms: "Afficher les formes d'onde audio",
             showWaveformsDescription: "Afficher les formes d'onde interactives pour les fichiers audio en vue liste.",
             showVideoWaveforms: "Afficher les formes d'onde vidéo",
-            showVideoWaveformsDescription: "Afficher les formes d'onde audio et le bouton de lecture pour les fichiers vidéo en vue liste."
+            showVideoWaveformsDescription: "Afficher les formes d'onde audio et le bouton de lecture pour les fichiers vidéo en vue liste.",
+            hoverPreview: "Aperçu au survol",
+            hoverPreviewDescription: "Lance automatiquement la lecture vidéo/audio au survol de la vignette."
         },
         empty: {
             configureDatabase: "Configurez le chemin de la base de données dans les paramètres",
@@ -1622,6 +1626,113 @@ function attachFileEventListeners() {
                 console.error('Drop error:', err);
                 showStatus('Error processing drop: ' + err.message, 'error');
             }
+        });
+    });
+
+    // =========================================================================
+    // HOVER PREVIEW (Video & Audio)
+    // =========================================================================
+    // Video Hover
+    document.querySelectorAll('.file-item.video').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            // double check dynamic setting
+            if (!settings.hoverPreview) return;
+
+            const videoEl = el.querySelector('video.thumbnail-video');
+            if (videoEl) {
+                // Stop any other playing audio/video
+                const audioPlayer = document.getElementById('audioPlayer');
+                if (audioPlayer && !audioPlayer.paused) audioPlayer.pause();
+
+                // Pause all wavesurfers
+                if (typeof wavesurferInstances !== 'undefined') {
+                    for (const ws of wavesurferInstances.values()) {
+                        if (ws.isPlaying()) ws.pause();
+                    }
+                }
+
+                videoEl.currentTime = 0;
+                videoEl.muted = false; // Unmute for hover preview
+                videoEl.play().catch(e => { /* ignore play errors */ });
+                el.classList.add('hover-playing');
+            }
+        });
+
+        el.addEventListener('mouseleave', () => {
+            const videoEl = el.querySelector('video.thumbnail-video');
+            if (videoEl) {
+                videoEl.pause();
+                videoEl.currentTime = 0;
+                videoEl.muted = true; // Reset mute
+                el.classList.remove('hover-playing');
+            }
+        });
+    });
+
+    // Audio Hover
+    document.querySelectorAll('.file-item.audio').forEach(el => {
+        let hoverTimeout;
+
+        el.addEventListener('mouseenter', () => {
+            if (!settings.hoverPreview) return;
+
+            // Small delay to avoid playing when just sweeping over files
+            hoverTimeout = setTimeout(() => {
+                const audioPath = el.getAttribute('data-path');
+
+                // Check if we have a wavesurfer instance
+                if (typeof wavesurferInstances !== 'undefined' && wavesurferInstances.has(audioPath)) {
+                    const ws = wavesurferInstances.get(audioPath);
+                    ws.seekTo(0); // Seek to start
+                    ws.play();
+                } else {
+                    // Use global audio player
+                    const audioPlayer = document.getElementById('audioPlayer');
+
+                    // Stop any other playing
+                    if (currentlyPlayingAudio && currentlyPlayingAudio !== audioPath) {
+                        if (wavesurferInstances.has(currentlyPlayingAudio)) {
+                            wavesurferInstances.get(currentlyPlayingAudio).pause();
+                        } else {
+                            audioPlayer.pause();
+                        }
+                    }
+
+                    // Helper to get file URL or raw path
+                    const src = (typeof toFileUrl === 'function') ? toFileUrl(audioPath) : audioPath;
+                    audioPlayer.src = src;
+                    audioPlayer.currentTime = 0;
+
+                    audioPlayer.play().then(() => {
+                        currentlyPlayingAudio = audioPath;
+                        updatePlayButtonState(audioPath, true);
+                    }).catch(e => console.error('Hover audio error:', e));
+                }
+                el.classList.add('hover-playing');
+            }, 100); // 100ms delay
+        });
+
+        el.addEventListener('mouseleave', () => {
+            clearTimeout(hoverTimeout);
+
+            const audioPath = el.getAttribute('data-path');
+
+            if (typeof wavesurferInstances !== 'undefined' && wavesurferInstances.has(audioPath)) {
+                const ws = wavesurferInstances.get(audioPath);
+                if (ws.isPlaying()) {
+                    ws.pause();
+                    ws.seekTo(0);
+                }
+            } else {
+                const audioPlayer = document.getElementById('audioPlayer');
+                if (currentlyPlayingAudio === audioPath) {
+                    audioPlayer.pause();
+                    audioPlayer.currentTime = 0;
+                    currentlyPlayingAudio = null;
+                    updatePlayButtonState(audioPath, false);
+                }
+            }
+            el.classList.remove('hover-playing');
         });
     });
 }
