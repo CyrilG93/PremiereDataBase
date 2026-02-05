@@ -30,3 +30,9 @@ npm-debug.log*
 *.cfa
 *.xmp
 Adobe Premiere Pro Auto-Save/
+
+# Internal Task documentation
+task.md
+walkthrough.md
+implementation_plan.md
+cleanup_task.md
