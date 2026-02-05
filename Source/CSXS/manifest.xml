@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.database.premiere" ExtensionBundleVersion="1.6.1"
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.database.premiere" ExtensionBundleVersion="1.6.2"
                    ExtensionBundleName="Data Base" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Author>
     <![CDATA[Premiere DataBase Extension]]>

@@ -1,10 +1,7 @@
-# Task: Implement Preview on Hover
+# Task: Create Release v1.6.2
 
-- [x] Add translation keys for hover preview setting <!-- id: 0 -->
-- [x] Add checkbox to Settings panel in `index.html` <!-- id: 1 -->
-- [x] Update `main.js` to handle new setting (load/save) <!-- id: 2 -->
-- [x] Implement hover event listeners in `main.js` for Video <!-- id: 3 -->
-- [x] Implement hover event listeners in `main.js` for Audio <!-- id: 4 -->
-- [x] Verify implementation <!-- id: 5 -->
-- [x] Fix translation keys display in Settings <!-- id: 6 -->
-- [x] Fix hover preview in subfolders and grid view <!-- id: 7 -->
+- [x] Bump version in `Source/CSXS/manifest.xml` to 1.6.2 <!-- id: 0 -->
+- [x] Bump version in `Source/package.json` to 1.6.2 <!-- id: 1 -->
+- [x] Create `PremiereDataBase-v1.6.2.zip` in `Releases` folder <!-- id: 2 -->
+- [ ] Commit and Push changes <!-- id: 3 -->
+- [ ] Commit and Push changes <!-- id: 3 -->
