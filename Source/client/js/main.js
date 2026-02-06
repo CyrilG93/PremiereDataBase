@@ -3339,8 +3339,20 @@ function checkForUpdates() {
                     console.log('Latest Github version:', latestVersion);
 
                     if (compareVersions(latestVersion, CURRENT_VERSION) > 0) {
-                        showUpdateBanner(data.html_url);
-                        console.log('Update available:', latestVersion);
+                        var downloadUrl = data.html_url; // Default to release page
+
+                        // Try to find a zip asset
+                        if (data.assets && data.assets.length > 0) {
+                            for (var i = 0; i < data.assets.length; i++) {
+                                if (data.assets[i].name.endsWith('.zip')) {
+                                    downloadUrl = data.assets[i].browser_download_url;
+                                    break;
+                                }
+                            }
+                        }
+
+                        showUpdateBanner(downloadUrl);
+                        console.log('Update available:', latestVersion, 'Download:', downloadUrl);
                     } else {
                         console.log('App is up to date');
                     }
@@ -3378,6 +3390,7 @@ function showUpdateBanner(downloadUrl) {
     if (banner) {
         banner.style.display = 'block';
         banner.onclick = function () {
+            // direct download if zip found, else opens release page
             csInterface.openURLInDefaultBrowser(downloadUrl);
         };
     }
