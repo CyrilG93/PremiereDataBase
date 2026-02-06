@@ -55,6 +55,12 @@
                 </svg>
                 <h1>Data Base</h1>
             </div>
+
+            <!-- Update Banner -->
+            <div id="updateBanner" class="update-banner" style="display: none;">
+                <span>🚀 Update available!</span>
+            </div>
+
             <div class="header-actions">
                 <!-- Language Selector -->
                 <select class="header-lang-select" id="languageSelect" title="Language">
@@ -272,7 +278,10 @@
         <div class="settings-overlay" id="settingsOverlay"></div>
         <div class="settings-panel" id="settingsPanel">
             <div class="settings-header">
-                <h2 data-i18n="settings.title">Settings</h2>
+                <div class="settings-title-group">
+                    <h2 data-i18n="settings.title">Settings</h2>
+                    <span id="versionInfo" class="version-badge">v1.0.0</span>
+                </div>
                 <button class="close-btn" id="closeSettingsBtn">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"

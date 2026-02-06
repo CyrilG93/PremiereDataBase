@@ -327,6 +327,11 @@ var wavesurferInstances = new Map(); // Map of audioPath -> Wavesurfer instance
 var pdb_fs = require('fs');
 var pdb_path = require('path');
 var pdb_os = require('os');
+var pdb_https = require('https');
+
+// UPDATE SYSTEM CONSTANTS
+var GITHUB_REPO = 'CyrilG93/PremiereDataBase';
+var CURRENT_VERSION = '1.0.0'; // Will be updated from manifest
 
 /**
  * Get the path to the settings file (cross-platform)
@@ -791,6 +796,107 @@ function updateDatabasePathDisplay() {
     } else {
         pathEl.textContent = t('labels.notConfigured');
         pathEl.title = '';
+    }
+}
+
+// ============================================================================
+// UPDATE SYSTEM
+// ============================================================================
+function getAppVersion() {
+    try {
+        var extensionPath = csInterface.getSystemPath(SystemPath.EXTENSION);
+        var manifestPath = pdb_path.join(extensionPath, 'CSXS', 'manifest.xml');
+
+        if (pdb_fs.existsSync(manifestPath)) {
+            var content = pdb_fs.readFileSync(manifestPath, 'utf8');
+            var match = content.match(/ExtensionBundleVersion="([^"]+)"/);
+            if (match && match[1]) {
+                CURRENT_VERSION = match[1];
+                console.log('Detected version:', CURRENT_VERSION);
+            }
+        }
+    } catch (e) {
+        console.error('Error reading manifest:', e);
+    }
+
+    // Update settings UI
+    var versionEl = document.getElementById('versionInfo');
+    if (versionEl) {
+        versionEl.textContent = 'v' + CURRENT_VERSION;
+    }
+}
+
+function checkForUpdates() {
+    var url = 'https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest';
+
+    var options = {
+        headers: {
+            'User-Agent': 'Premiere-Database-Extension'
+        }
+    };
+
+    pdb_https.get(url, options, function (res) {
+        var body = '';
+
+        res.on('data', function (chunk) {
+            body += chunk;
+        });
+
+        res.on('end', function () {
+            try {
+                if (res.statusCode === 200) {
+                    var data = JSON.parse(body);
+                    var latestVersion = data.tag_name;
+
+                    // Remove 'v' prefix if present
+                    if (latestVersion && latestVersion.charAt(0) === 'v') {
+                        latestVersion = latestVersion.substring(1);
+                    }
+
+                    console.log('Latest Github version:', latestVersion);
+
+                    if (compareVersions(latestVersion, CURRENT_VERSION) > 0) {
+                        showUpdateBanner(data.html_url);
+                        console.log('Update available:', latestVersion);
+                    } else {
+                        console.log('App is up to date');
+                    }
+                } else {
+                    console.log('Github API returned:', res.statusCode);
+                }
+            } catch (e) {
+                console.error('Error parsing Github response:', e);
+            }
+        });
+    }).on('error', function (e) {
+        console.error('Error checking updates:', e);
+    });
+}
+
+function compareVersions(v1, v2) {
+    if (!v1 || !v2) return 0;
+
+    var parts1 = v1.split('.').map(Number);
+    var parts2 = v2.split('.').map(Number);
+
+    for (var i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+        var p1 = parts1[i] || 0;
+        var p2 = parts2[i] || 0;
+
+        if (p1 > p2) return 1;
+        if (p1 < p2) return -1;
+    }
+
+    return 0;
+}
+
+function showUpdateBanner(downloadUrl) {
+    var banner = document.getElementById('updateBanner');
+    if (banner) {
+        banner.style.display = 'block';
+        banner.onclick = function () {
+            csInterface.openURLInDefaultBrowser(downloadUrl);
+        };
     }
 }
 
@@ -3160,6 +3266,12 @@ function init() {
         setTimeout(scanDatabaseFiles, 100);
     }
 
+    // Check for updates
+    setTimeout(() => {
+        getAppVersion();
+        checkForUpdates();
+    }, 1500);
+
     console.log('Data Base extension initialized');
 }
 
@@ -3168,4 +3280,105 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
     init();
 } else {
     document.addEventListener('DOMContentLoaded', init);
+}
+
+// ============================================================================
+// UPDATE SYSTEM
+// ============================================================================
+function getAppVersion() {
+    try {
+        var extensionPath = csInterface.getSystemPath(SystemPath.EXTENSION);
+        var manifestPath = pdb_path.join(extensionPath, 'CSXS', 'manifest.xml');
+
+        if (pdb_fs.existsSync(manifestPath)) {
+            var content = pdb_fs.readFileSync(manifestPath, 'utf8');
+            var match = content.match(/ExtensionBundleVersion="([^"]+)"/);
+            if (match && match[1]) {
+                CURRENT_VERSION = match[1];
+                console.log('Detected version:', CURRENT_VERSION);
+            }
+        }
+    } catch (e) {
+        console.error('Error reading manifest:', e);
+    }
+
+    // Update settings UI
+    var versionEl = document.getElementById('versionInfo');
+    if (versionEl) {
+        versionEl.textContent = 'v' + CURRENT_VERSION;
+    }
+}
+
+function checkForUpdates() {
+    var url = 'https://api.github.com/repos/' + GITHUB_REPO + '/releases/latest';
+
+    var options = {
+        headers: {
+            'User-Agent': 'Premiere-Database-Extension'
+        }
+    };
+
+    pdb_https.get(url, options, function (res) {
+        var body = '';
+
+        res.on('data', function (chunk) {
+            body += chunk;
+        });
+
+        res.on('end', function () {
+            try {
+                if (res.statusCode === 200) {
+                    var data = JSON.parse(body);
+                    var latestVersion = data.tag_name;
+
+                    // Remove 'v' prefix if present
+                    if (latestVersion && latestVersion.charAt(0) === 'v') {
+                        latestVersion = latestVersion.substring(1);
+                    }
+
+                    console.log('Latest Github version:', latestVersion);
+
+                    if (compareVersions(latestVersion, CURRENT_VERSION) > 0) {
+                        showUpdateBanner(data.html_url);
+                        console.log('Update available:', latestVersion);
+                    } else {
+                        console.log('App is up to date');
+                    }
+                } else {
+                    console.log('Github API returned:', res.statusCode);
+                }
+            } catch (e) {
+                console.error('Error parsing Github response:', e);
+            }
+        });
+    }).on('error', function (e) {
+        console.error('Error checking updates:', e);
+    });
+}
+
+function compareVersions(v1, v2) {
+    if (!v1 || !v2) return 0;
+
+    var parts1 = v1.split('.').map(Number);
+    var parts2 = v2.split('.').map(Number);
+
+    for (var i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+        var p1 = parts1[i] || 0;
+        var p2 = parts2[i] || 0;
+
+        if (p1 > p2) return 1;
+        if (p1 < p2) return -1;
+    }
+
+    return 0;
+}
+
+function showUpdateBanner(downloadUrl) {
+    var banner = document.getElementById('updateBanner');
+    if (banner) {
+        banner.style.display = 'block';
+        banner.onclick = function () {
+            csInterface.openURLInDefaultBrowser(downloadUrl);
+        };
+    }
 }

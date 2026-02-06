@@ -164,6 +164,51 @@ header h1 {
     height: 18px;
 }
 
+/* Update Banner */
+.update-banner {
+    background: var(--success);
+    color: white;
+    padding: 6px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    animation: fadeIn 0.5s;
+    transition: all var(--transition-fast);
+}
+
+.update-banner:hover {
+    background: #43a047;
+    transform: translateY(-1px);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.settings-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.version-badge {
+    font-size: 11px;
+    background: var(--bg-primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
 /* Main */
 main {
     flex: 1;
