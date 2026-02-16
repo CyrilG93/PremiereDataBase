@@ -89,34 +89,45 @@ csInterface.addEventListener("com.database.premiere.open", function (event) {
 // ============================================================================
 // SPELL BOOK INTEGRATION (Shortcut support via Excalibur)
 // ============================================================================
-// Use esm package to load ES Module compatible npm packages (LEGACY/BACKUP)
-var esmRequire = require('esm')(module);
-var Spellbook = esmRequire('@knights-of-the-editing-table/spell-book').default;
+// Feature flag: keep Spellbook code for later reactivation without shipping it by default.
+var SPELLBOOK_ENABLED = false;
 
-// NATIVE ESM (CEP 12 Test)
-// import Spellbook from '@knights-of-the-editing-table/spell-book';
+if (SPELLBOOK_ENABLED) {
+    try {
+        // Use esm package to load ES Module compatible npm packages (LEGACY/BACKUP)
+        var esmRequire = require('esm')(module);
+        var Spellbook = esmRequire('@knights-of-the-editing-table/spell-book').default;
 
-var commands = [
-    {
-        commandID: 'com.database.premiere.refresh',
-        name: 'Refresh Database',
-        group: 'Actions',
-        action: () => {
-            scanDatabaseFiles();
-            showStatus(t('status.scanning'), 'info');
-        }
-    },
-    {
-        commandID: 'com.database.premiere.addToDb',
-        name: 'Add Selection to Database',
-        group: 'Actions',
-        action: () => {
-            addToDatabase();
-        }
+        // NATIVE ESM (CEP 12 Test)
+        // import Spellbook from '@knights-of-the-editing-table/spell-book';
+        var commands = [
+            {
+                commandID: 'com.database.premiere.refresh',
+                name: 'Refresh Database',
+                group: 'Actions',
+                action: () => {
+                    scanDatabaseFiles();
+                    showStatus(t('status.scanning'), 'info');
+                }
+            },
+            {
+                commandID: 'com.database.premiere.addToDb',
+                name: 'Add Selection to Database',
+                group: 'Actions',
+                action: () => {
+                    addToDatabase();
+                }
+            }
+        ];
+
+        var spellbook = new Spellbook('Data Base', 'com.database.premiere.panel', commands);
+        debugLog('Spellbook integration enabled.');
+    } catch (e) {
+        debugLog('Spellbook initialization failed: ' + e.message, 'warn');
     }
-];
-
-var spellbook = new Spellbook('Data Base', 'com.database.premiere.panel', commands);
+} else {
+    debugLog('Spellbook integration disabled (feature flag).');
+}
 
 // ============================================================================
 // TRANSLATIONS (embedded to avoid async loading issues)

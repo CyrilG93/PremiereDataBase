@@ -4,33 +4,38 @@ setlocal EnableDelayedExpansion
 set "EXTENSION_NAME=com.database.premiere"
 set "SOURCE_DIR=%~dp0"
 set "CEP_DIR=%APPDATA%\Adobe\CEP\extensions"
+set "SPELLBOOK_INSTALL_ENABLED=false"
 
 echo ----------------------------------------------------
 echo  Data Base Extension Installer (Windows)
 echo ----------------------------------------------------
 
-:: 1. Check/Install NPM Dependencies
+:: 1. Optional Spellbook/NPM Dependencies
 echo.
-echo [1/4] Installing npm dependencies (spell-book, esm, etc.)...
+if /I "%SPELLBOOK_INSTALL_ENABLED%"=="true" (
+    echo [1/4] Installing npm dependencies...
 
-:: Change to source directory for npm install
-pushd "%SOURCE_DIR%"
+    :: Change to source directory for npm install
+    pushd "%SOURCE_DIR%"
 
-where npm >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
-    echo    Running npm install in %SOURCE_DIR%...
-    call npm install --silent
-    if %ERRORLEVEL% NEQ 0 (
-        echo    WARNING: npm install failed. SpellBook may not work correctly.
+    where npm >nul 2>nul
+    if %ERRORLEVEL% EQU 0 (
+        echo    Running npm install in %SOURCE_DIR%...
+        call npm install --silent
+        if %ERRORLEVEL% NEQ 0 (
+            echo    WARNING: npm install failed. Optional npm dependencies may be unavailable.
+        ) else (
+            echo    npm packages installed successfully.
+        )
     ) else (
-        echo    npm packages installed successfully.
+        echo    WARNING: npm not found. Automatic dependency installation skipped.
+        echo    Please install Node.js to enable optional npm dependencies.
     )
-) else (
-    echo    WARNING: npm not found. Automatic dependency installation skipped.
-    echo    Please install Node.js to enable SpellBook integration.
-)
 
-popd
+    popd
+) else (
+    echo [1/4] Skipping optional npm dependencies.
+)
 
 :: 2. Create Directory
 echo.
@@ -51,10 +56,12 @@ xcopy /E /I /Y "%SOURCE_DIR%host" "%CEP_DIR%\%EXTENSION_NAME%\host" >nul
 :: Copy package.json
 copy /Y "%SOURCE_DIR%package.json" "%CEP_DIR%\%EXTENSION_NAME%\" >nul
 
-:: Copy node_modules if they exist
-if exist "%SOURCE_DIR%node_modules" (
-    echo    Copying node_modules...
-    xcopy /E /I /Y "%SOURCE_DIR%node_modules" "%CEP_DIR%\%EXTENSION_NAME%\node_modules" >nul
+:: Keep this block for future reactivation of Spellbook integration.
+if /I "%SPELLBOOK_INSTALL_ENABLED%"=="true" (
+    if exist "%SOURCE_DIR%node_modules" (
+        echo    Copying node_modules...
+        xcopy /E /I /Y "%SOURCE_DIR%node_modules" "%CEP_DIR%\%EXTENSION_NAME%\node_modules" >nul
+    )
 )
 
 :: Copy debug file

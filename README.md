@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.6.1-blue)
+![Version](https://img.shields.io/badge/version-1.6.5-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -80,6 +80,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - Easily extensible for additional languages
 
 ### ⌨️ Spell Book / Excalibur Integration
+- *(Currently disabled by default in v1.6.5; can be re-enabled via feature flags in code/installers.)*
 - **Keyboard Shortcuts** via Spell Book extension
 - **Available Commands**:
   - `Refresh Database` - Rescan the database folder
@@ -241,6 +242,11 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.6.5 (2026-02-16)
+- **Change**: Spell Book integration is now disabled by default (kept in code behind feature flags for later reactivation).
+- **Change**: macOS and Windows installers no longer install optional npm dependencies by default.
+- **Change**: installer output is now generic and does not expose Spell Book-related messaging.
 
 ### v1.6.1 (2026-02-02)
 - **New Feature**: **Waveform Toggle Button** - Quick show/hide waveforms from toolbar
