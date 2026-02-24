@@ -97,16 +97,15 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 ### macOS
 
 1. Download or clone this repository
-2. Open Terminal and navigate to the Source folder:
+2. Open Terminal
+3. **Easiest method (recommended):** drag and drop `install_macos.sh` (inside the `Source` folder) into the Terminal window, then press Enter
+4. **Manual method (command line):** navigate to the `Source` folder and run:
    ```bash
    cd /path/to/PremiereDataBase/Source
-   ```
-3. Make the install script executable and run it:
-   ```bash
    chmod +x install_macos.sh
    ./install_macos.sh
    ```
-4. Restart Premiere Pro
+5. Restart Premiere Pro
 
 > **Note**: The installer automatically enables unsigned extensions (PlayerDebugMode) for CSXS 9-16. No manual configuration required.
 
