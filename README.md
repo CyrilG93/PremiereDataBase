@@ -288,8 +288,6 @@ Contributions are welcome! Feel free to submit issues or pull requests.
 - **Removed**: Spell Book integration (temporarily removed until a stable implementation is found).
 - **Stability**: Restored original file operation logic and installation method.
 
-### v1.2.2 (Deprecated)
-
 ### v1.2.0 (2026-01-22)
 - **New Feature**: Spell Book integration for keyboard shortcuts via Excalibur
   - `Refresh Database` - Trigger database rescan
