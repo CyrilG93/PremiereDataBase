@@ -167,7 +167,6 @@ var translations = {
             databasePathPlaceholder: "Select database folder...",
             addDatabaseRoot: "Add database",
             removeDatabaseRoot: "Remove",
-            openDatabaseRoot: "Open this database",
             language: "Language",
             consolidateOnImport: "Copy files to project folder on import",
             consolidateDescription: "When enabled, files will be copied to the project folder before importing, preserving the folder structure.",
@@ -259,7 +258,6 @@ var translations = {
             databasePathPlaceholder: "Sélectionner le dossier...",
             addDatabaseRoot: "Ajouter une base",
             removeDatabaseRoot: "Retirer",
-            openDatabaseRoot: "Ouvrir cette base",
             language: "Langue",
             consolidateOnImport: "Copier les fichiers dans le dossier projet lors de l'import",
             consolidateDescription: "Lorsque cette option est activée, les fichiers seront copiés dans le dossier du projet avant l'import, en préservant la structure des dossiers.",
@@ -472,8 +470,17 @@ function pdb_getDatabaseRootById(rootId) {
     return settings.databaseRoots.find((root) => root.id === rootId) || null;
 }
 
+// With several roots configured, the top-level view should always show every root together.
+function pdb_isGroupedHomeView() {
+    return settings.databaseRoots.length > 1 && !searchQuery && !currentPath;
+}
+
 // Return the root currently targeted by create/add operations.
 function pdb_getActiveDatabaseRoot() {
+    if (pdb_isGroupedHomeView()) {
+        return null;
+    }
+
     if (currentDatabaseId) {
         return pdb_getDatabaseRootById(currentDatabaseId);
     }
@@ -750,9 +757,7 @@ function pdb_renderDatabaseRootsSettings() {
     const rootRows = (settings.databaseRoots || []).map((root) => `
         <div class="database-root-row" data-root-id="${escapeHtml(root.id)}">
             <div class="database-root-row-header">
-                <button class="database-root-open-btn" type="button" data-root-id="${escapeHtml(root.id)}" title="${escapeHtml(root.path)}">
-                    ${escapeHtml(t('settings.openDatabaseRoot'))}
-                </button>
+                <span class="database-root-caption">${escapeHtml(root.name || pdb_getDefaultDatabaseName(root.path))}</span>
                 <button class="database-root-remove-btn" type="button" data-root-id="${escapeHtml(root.id)}">
                     ${escapeHtml(t('settings.removeDatabaseRoot'))}
                 </button>
@@ -841,21 +846,6 @@ function pdb_browseForDatabaseRoot(rootId) {
             nameInput.value = pdb_getDefaultDatabaseName(result);
         }
     });
-}
-
-// Open a database root from the settings panel to make top-level actions available.
-function pdb_openDatabaseRootFromSettings(rootId) {
-    settings.databaseRoots = pdb_normalizeDatabaseRoots({
-        databaseRoots: pdb_collectDatabaseRootsFromSettingsUI()
-    });
-    settings.databasePath = settings.databaseRoots[0] ? settings.databaseRoots[0].path : '';
-    const databaseRoot = pdb_getDatabaseRootById(rootId);
-    if (!databaseRoot) {
-        return;
-    }
-
-    closeSettings();
-    navigateToFolder('', rootId);
 }
 
 function loadSettings() {
@@ -1434,7 +1424,7 @@ function applyFilters() {
     let result = [...allFiles];
 
     // Filter by active database root when browsing inside one database.
-    if (currentDatabaseId) {
+    if (currentDatabaseId && !pdb_isGroupedHomeView()) {
         result = result.filter((file) => file.rootId === currentDatabaseId);
     }
 
@@ -1588,16 +1578,6 @@ function pdb_restoreExpandedFolderState(visibleFolders) {
     });
 }
 
-// Attach click handlers to the database headers shown on the grouped home screen.
-function attachDatabaseSectionEventListeners() {
-    document.querySelectorAll('.database-section-header').forEach((button) => {
-        button.addEventListener('click', () => {
-            const rootId = button.getAttribute('data-root-id');
-            navigateToFolder('', rootId);
-        });
-    });
-}
-
 // Render the grouped root view where each configured database keeps its own visual section.
 function pdb_renderDatabaseSections(browser) {
     const sectionHtml = settings.databaseRoots.map((root) => {
@@ -1623,9 +1603,9 @@ function pdb_renderDatabaseSections(browser) {
 
         return `
             <section class="database-section" data-root-id="${escapeHtml(root.id)}">
-                <button class="database-section-header" type="button" data-root-id="${escapeHtml(root.id)}" title="${escapeHtml(root.path)}">
+                <div class="database-section-header" title="${escapeHtml(root.path)}">
                     <span class="database-section-name">${escapeHtml(root.name)}</span>
-                </button>
+                </div>
                 <div class="${contentClassName}">
                     ${contentPieces.join('')}
                 </div>
@@ -1636,7 +1616,6 @@ function pdb_renderDatabaseSections(browser) {
     browser.innerHTML = `<div class="database-sections">${sectionHtml}</div>`;
 
     attachFileEventListeners();
-    attachDatabaseSectionEventListeners();
     pdb_restoreExpandedFolderState(pdb_getHomeFolders());
 }
 
@@ -1658,7 +1637,7 @@ function renderFiles() {
     }
 
     // Show the grouped home screen only when we are not inside a specific database or a search result view.
-    if (!searchQuery && !currentDatabaseId) {
+    if (pdb_isGroupedHomeView()) {
         pdb_renderDatabaseSections(browser);
 
         if (settings.showWaveforms !== false) {
@@ -2823,6 +2802,9 @@ function navigateBack() {
         currentPath = currentPath.substring(0, lastSlash);
     } else {
         currentPath = '';
+        if (settings.databaseRoots.length > 1) {
+            currentDatabaseId = '';
+        }
     }
 
     selectedFiles.clear();
@@ -3325,7 +3307,7 @@ function renderBreadcrumb() {
     const backBtn = document.getElementById('backBtn');
     if (backBtn) {
         backBtn.onclick = () => navigateBack();
-        const canGoBack = Boolean(currentPath || currentDatabaseId);
+        const canGoBack = Boolean(currentPath) || (Boolean(currentDatabaseId) && settings.databaseRoots.length === 1);
         backBtn.disabled = !canGoBack;
         backBtn.classList.toggle('disabled', !canGoBack);
     }
@@ -3678,6 +3660,9 @@ function init() {
     document.getElementById('settingsOverlay').addEventListener('click', closeSettings);
     document.getElementById('saveSettingsBtn').addEventListener('click', () => {
         saveSettings();
+        if (settings.databaseRoots.length > 1) {
+            navigateToFolder('', '');
+        }
         closeSettings();
         scanDatabaseFiles();
     });
@@ -3693,11 +3678,6 @@ function init() {
         if (removeButton) {
             pdb_removeDatabaseRoot(removeButton.getAttribute('data-root-id') || '');
             return;
-        }
-
-        const openButton = event.target.closest('.database-root-open-btn');
-        if (openButton) {
-            pdb_openDatabaseRootFromSettings(openButton.getAttribute('data-root-id') || '');
         }
     });
 
