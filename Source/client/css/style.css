@@ -107,6 +107,12 @@ header {
     gap: var(--spacing-sm);
 }
 
+.header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .logo {
     width: 24px;
     height: 24px;
@@ -117,6 +123,11 @@ header h1 {
     font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
+}
+
+.header-version-badge {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted);
 }
 
 .header-actions {

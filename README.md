@@ -26,6 +26,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - **List View** - Compact list showing filename and folder path
 - **Grid View** - Thumbnail grid for visual browsing
 - **Resize Slider** - Adjust thumbnail/icon size for both views (persisted in settings)
+- **Version Badge** - The current version is shown directly in the main header for quick verification
 
 ### 📥 Smart Import
 - Multi-select files for batch import
@@ -262,6 +263,7 @@ Contributions are welcome! Feel free to submit issues or pull requests.
 - **Improvement**: The home view now shows all configured databases directly in separate sections for easier browsing.
 - **Fix**: `Import to root folder only` now keeps the direct first-level import behavior even when multiple databases are configured.
 - **New Feature**: Added Deutsch, Español, Italiano, Português (Brasil), Русский, 日本語, and 简体中文, with flag-based language selectors.
+- **Improvement**: The current version is now also shown directly next to the plugin name in the main header.
 - **Fix**: After removing extra databases and keeping only one, the root view now shows that remaining database correctly again.
 - **Change**: The debug log panel is now disabled by default for new installations.
 

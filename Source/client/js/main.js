@@ -1831,11 +1831,13 @@ function getAppVersion() {
         console.error('Error reading manifest:', e);
     }
 
-    // Update settings UI
-    var versionEl = document.getElementById('versionInfo');
-    if (versionEl) {
-        versionEl.textContent = 'v' + CURRENT_VERSION;
-    }
+    // Keep the settings panel and main header in sync with the detected version.
+    ['versionInfo', 'headerVersionInfo'].forEach(function (elementId) {
+        var versionEl = document.getElementById(elementId);
+        if (versionEl) {
+            versionEl.textContent = 'v' + CURRENT_VERSION;
+        }
+    });
 }
 
 function checkForUpdates() {
@@ -4571,11 +4573,13 @@ function getAppVersion() {
         console.error('Error reading manifest:', e);
     }
 
-    // Update settings UI
-    var versionEl = document.getElementById('versionInfo');
-    if (versionEl) {
-        versionEl.textContent = 'v' + CURRENT_VERSION;
-    }
+    // Keep the settings panel and main header in sync with the detected version.
+    ['versionInfo', 'headerVersionInfo'].forEach(function (elementId) {
+        var versionEl = document.getElementById(elementId);
+        if (versionEl) {
+            versionEl.textContent = 'v' + CURRENT_VERSION;
+        }
+    });
 }
 
 function checkForUpdates() {
