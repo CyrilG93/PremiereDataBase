@@ -89,14 +89,6 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - 🇯🇵 日本語
 - 🇨🇳 简体中文
 
-### ⌨️ Spell Book / Excalibur Integration
-- *(Currently disabled by default in v1.7.0; can be re-enabled via feature flags in code/installers.)*
-- **Keyboard Shortcuts** via Spell Book extension
-- **Available Commands**:
-  - `Refresh Database` - Rescan the database folder
-  - `Add Selection to Database` - Copy selected items from Premiere to DB
-- Commands appear automatically in Excalibur when Spell Book is installed
-
 ## 📋 Requirements
 
 - Adobe Premiere Pro 2023 or later
