@@ -131,7 +131,9 @@ header h1 {
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: 14px;
+    min-width: 132px;
+    max-width: 168px;
+    font-size: 12px;
     cursor: pointer;
     transition: all var(--transition-fast);
 }

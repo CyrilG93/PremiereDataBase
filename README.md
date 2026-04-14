@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from one or more database folders directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.6.7-blue)
+![Version](https://img.shields.io/badge/version-1.6.8-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -31,6 +31,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - Multi-select files for batch import
 - **Automatic bin creation** matching your database folder structure
   - Example: `DATABASE/ELEMENTS/TEST/clip.mp4` → Creates `ELEMENTS/TEST` bin in Premiere
+- **Import to root folder only** still imports directly into the first visible folder level, even when multiple databases are configured
 - Progress indicator during import
 
 ### 📂 Folder Management
@@ -77,12 +78,18 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - Disabled by default
 
 ### 🌍 Multi-Language Support
+- Deutsch
 - English (default)
-- French (Français)
-- Easily extensible for additional languages
+- Español
+- Français
+- Italiano
+- Português (Brasil)
+- Русский
+- 日本語
+- 简体中文
 
 ### ⌨️ Spell Book / Excalibur Integration
-- *(Currently disabled by default in v1.6.7; can be re-enabled via feature flags in code/installers.)*
+- *(Currently disabled by default in v1.6.8; can be re-enabled via feature flags in code/installers.)*
 - **Keyboard Shortcuts** via Spell Book extension
 - **Available Commands**:
   - `Refresh Database` - Rescan the database folder
@@ -249,6 +256,11 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.6.8 (2026-04-14)
+- **Fix**: `Import to root folder only` now imports directly into the first displayed folder level again, even when multiple databases are configured.
+- **New Feature**: Added Deutsch, Español, Italiano, Português (Brasil), Русский, 日本語, and 简体中文 to the interface language list.
+- **Improvement**: Language selectors are now shown in native names with a shared alphabetical order.
 
 ### v1.6.7 (2026-04-14)
 - **Improvement**: the main window now shows all configured databases directly in the top-level view, without needing a separate "open this database" action.

@@ -317,6 +317,659 @@ var translations = {
     }
 };
 
+// Keep all supported UI languages in one native-name ordered list for both selectors.
+var LANGUAGE_OPTIONS = [
+    { value: 'de', label: 'Deutsch' },
+    { value: 'en', label: 'English' },
+    { value: 'es', label: 'Español' },
+    { value: 'fr', label: 'Français' },
+    { value: 'it', label: 'Italiano' },
+    { value: 'pt-BR', label: 'Português (Brasil)' },
+    { value: 'ru', label: 'Русский' },
+    { value: 'ja', label: '日本語' },
+    { value: 'zh-CN', label: '简体中文' }
+];
+
+Object.assign(translations, {
+    de: {
+        labels: {
+            database: "Datenbank:",
+            notConfigured: "Nicht konfiguriert",
+            root: "Stamm",
+            files: "Dateien",
+            selected: "ausgewählt"
+        },
+        search: {
+            placeholder: "Dateien suchen..."
+        },
+        filters: {
+            all: "Alle",
+            video: "Video",
+            audio: "Audio",
+            image: "Bild"
+        },
+        buttons: {
+            import: "Importieren",
+            save: "Speichern",
+            cancel: "Abbrechen",
+            create: "Erstellen",
+            addToDb: "Zur Datenbank"
+        },
+        settings: {
+            title: "Einstellungen",
+            databaseRoots: "Datenbankordner",
+            databaseRootsDescription: "Fuge einen oder mehrere Datenbankordner hinzu und wähle den im Plugin angezeigten Namen.",
+            databaseName: "Anzeigename",
+            databaseNamePlaceholder: "z. B. SOUND FX",
+            databasePath: "Ordnerpfad",
+            databasePathPlaceholder: "Datenbankordner auswählen...",
+            addDatabaseRoot: "Datenbank hinzufügen",
+            removeDatabaseRoot: "Entfernen",
+            language: "Sprache",
+            consolidateOnImport: "Dateien beim Import in den Projektordner kopieren",
+            consolidateDescription: "Wenn aktiviert, werden Dateien vor dem Import in den Projektordner kopiert und die Ordnerstruktur bleibt erhalten.",
+            bannedExtensions: "Ausgeschlossene Dateiendungen",
+            bannedExtensionsPlaceholder: "z. B.: .txt, .pdf, .zip (eine pro Zeile)",
+            excludedFolders: "Ausgeschlossene Ordnernamen",
+            excludedFoldersPlaceholder: "z. B.: node_modules, .git (einer pro Zeile)",
+            consolidationDepth: "Tiefe des Zielordners",
+            consolidationDepthHint: "0 = Projektordner, 1 = ein Ordner höher usw.",
+            flattenImportPath: "Nur in den Stammordner importieren",
+            flattenImportPathDescription: "Wenn aktiviert, werden Dateien nur in den Ordner der ersten Ebene importiert (z. B. ELEMENTS/IMAGES/file.png -> Bin ELEMENTS).",
+            debugMode: "Debug-Modus aktivieren",
+            debugModeDescription: "Zeigt unten im Plugin ein Log-Panel mit Debug-Informationen an.",
+            showWaveforms: "Audio-Wellenformen anzeigen",
+            showWaveformsDescription: "Zeigt in der Listenansicht interaktive Wellenformen für Audiodateien an.",
+            showVideoWaveforms: "Video-Wellenformen anzeigen",
+            showVideoWaveformsDescription: "Zeigt in der Listenansicht Audio-Wellenformen und einen Abspielknopf für Videodateien an.",
+            hoverPreview: "Vorschau bei Mauszeiger",
+            hoverPreviewDescription: "Spielt Video oder Audio automatisch ab, wenn der Mauszeiger auf der Vorschau liegt."
+        },
+        empty: {
+            configureDatabase: "Konfiguriere den Datenbankpfad in den Einstellungen",
+            noFilesFound: "Keine Dateien gefunden",
+            noFavorites: "Noch keine Favoriten"
+        },
+        modal: {
+            newFolder: "Neuer Ordner",
+            folderNamePlaceholder: "Ordnername",
+            deleteConfirm: "Möchtest du das wirklich löschen?"
+        },
+        context: {
+            addFavorite: "Zu Favoriten hinzufügen",
+            removeFavorite: "Aus Favoriten entfernen",
+            openFolder: "Im Finder/Explorer öffnen",
+            importFolder: "Ordner importieren",
+            delete: "Löschen"
+        },
+        status: {
+            loading: "Wird geladen...",
+            scanning: "Datenbank wird gescannt...",
+            importing: "Dateien werden importiert...",
+            importSuccess: "Dateien erfolgreich importiert",
+            importError: "Import fehlgeschlagen",
+            saved: "Einstellungen gespeichert",
+            folderCreated: "Ordner erstellt",
+            folderDeleted: "Ordner gelöscht",
+            copied: "In die Zwischenablage kopiert",
+            moveSuccess: "Datei(en) erfolgreich verschoben",
+            moveFailed: "Verschieben fehlgeschlagen",
+            movePartial: "verschoben, fehlgeschlagen",
+            fileExists: "Datei existiert bereits",
+            sameFolder: "bereits in diesem Ordner",
+            selectDatabaseFirst: "Öffne zuerst eine Datenbank, bevor du hier Ordner erstellst",
+            selectDatabaseForAdd: "Öffne zuerst eine Datenbank, bevor du Elemente aus Premiere hinzufügst",
+            crossDatabaseMove: "Das Verschieben zwischen verschiedenen Datenbanken wird noch nicht unterstützt"
+        }
+    },
+    es: {
+        labels: {
+            database: "Base de datos:",
+            notConfigured: "No configurada",
+            root: "Raíz",
+            files: "archivos",
+            selected: "seleccionado(s)"
+        },
+        search: {
+            placeholder: "Buscar archivos..."
+        },
+        filters: {
+            all: "Todos",
+            video: "Vídeo",
+            audio: "Audio",
+            image: "Imagen"
+        },
+        buttons: {
+            import: "Importar",
+            save: "Guardar",
+            cancel: "Cancelar",
+            create: "Crear",
+            addToDb: "Añadir a la base"
+        },
+        settings: {
+            title: "Ajustes",
+            databaseRoots: "Carpetas de base de datos",
+            databaseRootsDescription: "Añade una o más carpetas de base de datos y elige el nombre que se mostrará en el plugin.",
+            databaseName: "Nombre mostrado",
+            databaseNamePlaceholder: "p. ej. SOUND FX",
+            databasePath: "Ruta de la carpeta",
+            databasePathPlaceholder: "Seleccionar carpeta de base de datos...",
+            addDatabaseRoot: "Añadir base",
+            removeDatabaseRoot: "Quitar",
+            language: "Idioma",
+            consolidateOnImport: "Copiar archivos a la carpeta del proyecto al importar",
+            consolidateDescription: "Cuando esta opción está activada, los archivos se copiarán a la carpeta del proyecto antes de importarse, conservando la estructura de carpetas.",
+            bannedExtensions: "Extensiones excluidas",
+            bannedExtensionsPlaceholder: "p. ej.: .txt, .pdf, .zip (una por línea)",
+            excludedFolders: "Nombres de carpetas excluidas",
+            excludedFoldersPlaceholder: "p. ej.: node_modules, .git (una por línea)",
+            consolidationDepth: "Profundidad de consolidación",
+            consolidationDepthHint: "0 = carpeta del proyecto, 1 = una carpeta arriba, etc.",
+            flattenImportPath: "Importar solo a la carpeta raíz",
+            flattenImportPathDescription: "Cuando está activado, los archivos se importan solo a la carpeta del primer nivel (p. ej. ELEMENTS/IMAGES/file.png -> bin ELEMENTS).",
+            debugMode: "Activar modo debug",
+            debugModeDescription: "Muestra un panel de logs en la parte inferior del plugin con información de depuración.",
+            showWaveforms: "Mostrar formas de onda de audio",
+            showWaveformsDescription: "Muestra formas de onda interactivas para archivos de audio en la vista de lista.",
+            showVideoWaveforms: "Mostrar formas de onda de vídeo",
+            showVideoWaveformsDescription: "Muestra formas de onda de audio y un botón de reproducción para archivos de vídeo en la vista de lista.",
+            hoverPreview: "Vista previa al pasar el cursor",
+            hoverPreviewDescription: "Reproduce automáticamente el vídeo o audio al pasar el cursor sobre la miniatura."
+        },
+        empty: {
+            configureDatabase: "Configura la ruta de la base de datos en los ajustes",
+            noFilesFound: "No se encontraron archivos",
+            noFavorites: "Todavía no hay favoritos"
+        },
+        modal: {
+            newFolder: "Nueva carpeta",
+            folderNamePlaceholder: "Nombre de la carpeta",
+            deleteConfirm: "¿Seguro que quieres eliminar esto?"
+        },
+        context: {
+            addFavorite: "Añadir a favoritos",
+            removeFavorite: "Quitar de favoritos",
+            openFolder: "Abrir en Finder/Explorer",
+            importFolder: "Importar carpeta",
+            delete: "Eliminar"
+        },
+        status: {
+            loading: "Cargando...",
+            scanning: "Analizando la base de datos...",
+            importing: "Importando archivos...",
+            importSuccess: "archivos importados correctamente",
+            importError: "Error de importación",
+            saved: "Ajustes guardados",
+            folderCreated: "Carpeta creada",
+            folderDeleted: "Carpeta eliminada",
+            copied: "Copiado al portapapeles",
+            moveSuccess: "archivo(s) movido(s) correctamente",
+            moveFailed: "Error al mover archivos",
+            movePartial: "movido(s), fallido(s)",
+            fileExists: "el archivo ya existe",
+            sameFolder: "ya está en esta carpeta",
+            selectDatabaseFirst: "Abre una base antes de crear carpetas aquí",
+            selectDatabaseForAdd: "Abre una base antes de añadir elementos desde Premiere",
+            crossDatabaseMove: "Mover archivos entre distintas bases de datos todavía no es compatible"
+        }
+    },
+    it: {
+        labels: {
+            database: "Database:",
+            notConfigured: "Non configurato",
+            root: "Radice",
+            files: "file",
+            selected: "selezionato/i"
+        },
+        search: {
+            placeholder: "Cerca file..."
+        },
+        filters: {
+            all: "Tutti",
+            video: "Video",
+            audio: "Audio",
+            image: "Immagine"
+        },
+        buttons: {
+            import: "Importa",
+            save: "Salva",
+            cancel: "Annulla",
+            create: "Crea",
+            addToDb: "Aggiungi al DB"
+        },
+        settings: {
+            title: "Impostazioni",
+            databaseRoots: "Cartelle del database",
+            databaseRootsDescription: "Aggiungi una o più cartelle del database e scegli il nome mostrato nel plugin.",
+            databaseName: "Nome visualizzato",
+            databaseNamePlaceholder: "es. SOUND FX",
+            databasePath: "Percorso cartella",
+            databasePathPlaceholder: "Seleziona la cartella del database...",
+            addDatabaseRoot: "Aggiungi database",
+            removeDatabaseRoot: "Rimuovi",
+            language: "Lingua",
+            consolidateOnImport: "Copia i file nella cartella del progetto durante l'importazione",
+            consolidateDescription: "Se attivato, i file verranno copiati nella cartella del progetto prima dell'importazione, mantenendo la struttura delle cartelle.",
+            bannedExtensions: "Estensioni escluse",
+            bannedExtensionsPlaceholder: "es.: .txt, .pdf, .zip (una per riga)",
+            excludedFolders: "Nomi cartelle escluse",
+            excludedFoldersPlaceholder: "es.: node_modules, .git (uno per riga)",
+            consolidationDepth: "Profondità della cartella di consolidamento",
+            consolidationDepthHint: "0 = cartella del progetto, 1 = una cartella sopra, ecc.",
+            flattenImportPath: "Importa solo nella cartella radice",
+            flattenImportPathDescription: "Se attivato, i file vengono importati solo nella cartella di primo livello (es. ELEMENTS/IMAGES/file.png -> bin ELEMENTS).",
+            debugMode: "Attiva modalità debug",
+            debugModeDescription: "Mostra un pannello log nella parte inferiore del plugin con informazioni di debug.",
+            showWaveforms: "Mostra forme d'onda audio",
+            showWaveformsDescription: "Mostra forme d'onda interattive per i file audio nella vista elenco.",
+            showVideoWaveforms: "Mostra forme d'onda video",
+            showVideoWaveformsDescription: "Mostra forme d'onda audio e il pulsante di riproduzione per i file video nella vista elenco.",
+            hoverPreview: "Anteprima al passaggio",
+            hoverPreviewDescription: "Riproduce automaticamente video o audio quando il cursore passa sulla miniatura."
+        },
+        empty: {
+            configureDatabase: "Configura il percorso del database nelle impostazioni",
+            noFilesFound: "Nessun file trovato",
+            noFavorites: "Nessun preferito"
+        },
+        modal: {
+            newFolder: "Nuova cartella",
+            folderNamePlaceholder: "Nome cartella",
+            deleteConfirm: "Sei sicuro di voler eliminare questo elemento?"
+        },
+        context: {
+            addFavorite: "Aggiungi ai preferiti",
+            removeFavorite: "Rimuovi dai preferiti",
+            openFolder: "Apri in Finder/Explorer",
+            importFolder: "Importa cartella",
+            delete: "Elimina"
+        },
+        status: {
+            loading: "Caricamento...",
+            scanning: "Analisi del database...",
+            importing: "Importazione dei file...",
+            importSuccess: "file importati con successo",
+            importError: "Importazione non riuscita",
+            saved: "Impostazioni salvate",
+            folderCreated: "Cartella creata",
+            folderDeleted: "Cartella eliminata",
+            copied: "Copiato negli appunti",
+            moveSuccess: "file spostato/i con successo",
+            moveFailed: "Spostamento non riuscito",
+            movePartial: "spostato/i, fallito/i",
+            fileExists: "il file esiste già",
+            sameFolder: "già in questa cartella",
+            selectDatabaseFirst: "Apri prima un database prima di creare cartelle qui",
+            selectDatabaseForAdd: "Apri prima un database prima di aggiungere elementi da Premiere",
+            crossDatabaseMove: "Lo spostamento tra database diversi non è ancora supportato"
+        }
+    },
+    'pt-BR': {
+        labels: {
+            database: "Banco de dados:",
+            notConfigured: "Não configurado",
+            root: "Raiz",
+            files: "arquivos",
+            selected: "selecionado(s)"
+        },
+        search: {
+            placeholder: "Buscar arquivos..."
+        },
+        filters: {
+            all: "Todos",
+            video: "Vídeo",
+            audio: "Áudio",
+            image: "Imagem"
+        },
+        buttons: {
+            import: "Importar",
+            save: "Salvar",
+            cancel: "Cancelar",
+            create: "Criar",
+            addToDb: "Adicionar ao banco"
+        },
+        settings: {
+            title: "Configurações",
+            databaseRoots: "Pastas do banco de dados",
+            databaseRootsDescription: "Adicione uma ou mais pastas do banco de dados e escolha o nome exibido no plugin.",
+            databaseName: "Nome exibido",
+            databaseNamePlaceholder: "ex.: SOUND FX",
+            databasePath: "Caminho da pasta",
+            databasePathPlaceholder: "Selecionar pasta do banco de dados...",
+            addDatabaseRoot: "Adicionar banco",
+            removeDatabaseRoot: "Remover",
+            language: "Idioma",
+            consolidateOnImport: "Copiar arquivos para a pasta do projeto ao importar",
+            consolidateDescription: "Quando ativado, os arquivos serão copiados para a pasta do projeto antes da importação, preservando a estrutura de pastas.",
+            bannedExtensions: "Extensões excluídas",
+            bannedExtensionsPlaceholder: "ex.: .txt, .pdf, .zip (uma por linha)",
+            excludedFolders: "Nomes de pastas excluídas",
+            excludedFoldersPlaceholder: "ex.: node_modules, .git (uma por linha)",
+            consolidationDepth: "Profundidade da consolidação",
+            consolidationDepthHint: "0 = pasta do projeto, 1 = uma pasta acima, etc.",
+            flattenImportPath: "Importar apenas para a pasta raiz",
+            flattenImportPathDescription: "Quando ativado, os arquivos são importados apenas para a pasta do primeiro nível (ex.: ELEMENTS/IMAGES/file.png -> bin ELEMENTS).",
+            debugMode: "Ativar modo debug",
+            debugModeDescription: "Mostra um painel de logs na parte inferior do plugin com informações de depuração.",
+            showWaveforms: "Mostrar formas de onda de áudio",
+            showWaveformsDescription: "Exibe formas de onda interativas para arquivos de áudio na visualização em lista.",
+            showVideoWaveforms: "Mostrar formas de onda de vídeo",
+            showVideoWaveformsDescription: "Exibe formas de onda de áudio e um botão de reprodução para arquivos de vídeo na visualização em lista.",
+            hoverPreview: "Pré-visualização ao passar o mouse",
+            hoverPreviewDescription: "Reproduz automaticamente vídeo ou áudio ao passar o mouse sobre a miniatura."
+        },
+        empty: {
+            configureDatabase: "Configure o caminho do banco de dados nas configurações",
+            noFilesFound: "Nenhum arquivo encontrado",
+            noFavorites: "Ainda não há favoritos"
+        },
+        modal: {
+            newFolder: "Nova pasta",
+            folderNamePlaceholder: "Nome da pasta",
+            deleteConfirm: "Tem certeza de que deseja excluir isto?"
+        },
+        context: {
+            addFavorite: "Adicionar aos favoritos",
+            removeFavorite: "Remover dos favoritos",
+            openFolder: "Abrir no Finder/Explorer",
+            importFolder: "Importar pasta",
+            delete: "Excluir"
+        },
+        status: {
+            loading: "Carregando...",
+            scanning: "Analisando o banco de dados...",
+            importing: "Importando arquivos...",
+            importSuccess: "arquivos importados com sucesso",
+            importError: "Falha na importação",
+            saved: "Configurações salvas",
+            folderCreated: "Pasta criada",
+            folderDeleted: "Pasta excluída",
+            copied: "Copiado para a área de transferência",
+            moveSuccess: "arquivo(s) movido(s) com sucesso",
+            moveFailed: "Falha ao mover arquivos",
+            movePartial: "movido(s), falhou/falharam",
+            fileExists: "o arquivo já existe",
+            sameFolder: "já está nesta pasta",
+            selectDatabaseFirst: "Abra um banco antes de criar pastas aqui",
+            selectDatabaseForAdd: "Abra um banco antes de adicionar itens do Premiere",
+            crossDatabaseMove: "Mover arquivos entre bancos de dados diferentes ainda não é suportado"
+        }
+    },
+    ja: {
+        labels: {
+            database: "データベース:",
+            notConfigured: "未設定",
+            root: "ルート",
+            files: "ファイル",
+            selected: "選択中"
+        },
+        search: {
+            placeholder: "ファイルを検索..."
+        },
+        filters: {
+            all: "すべて",
+            video: "動画",
+            audio: "音声",
+            image: "画像"
+        },
+        buttons: {
+            import: "読み込み",
+            save: "保存",
+            cancel: "キャンセル",
+            create: "作成",
+            addToDb: "DBに追加"
+        },
+        settings: {
+            title: "設定",
+            databaseRoots: "データベースフォルダー",
+            databaseRootsDescription: "1つ以上のデータベースフォルダーを追加し、プラグインに表示する名前を設定します。",
+            databaseName: "表示名",
+            databaseNamePlaceholder: "例: SOUND FX",
+            databasePath: "フォルダーパス",
+            databasePathPlaceholder: "データベースフォルダーを選択...",
+            addDatabaseRoot: "データベースを追加",
+            removeDatabaseRoot: "削除",
+            language: "言語",
+            consolidateOnImport: "読み込み時にファイルをプロジェクトフォルダーへコピー",
+            consolidateDescription: "有効にすると、読み込み前にファイルがプロジェクトフォルダーへコピーされ、フォルダー構成も保持されます。",
+            bannedExtensions: "除外する拡張子",
+            bannedExtensionsPlaceholder: "例: .txt, .pdf, .zip（1行に1つ）",
+            excludedFolders: "除外するフォルダー名",
+            excludedFoldersPlaceholder: "例: node_modules, .git（1行に1つ）",
+            consolidationDepth: "統合フォルダーの深さ",
+            consolidationDepthHint: "0 = プロジェクトファイルのフォルダー、1 = 1つ上のフォルダー など",
+            flattenImportPath: "ルートフォルダーにのみ読み込む",
+            flattenImportPathDescription: "有効にすると、ファイルは最上位フォルダーのみに読み込まれます（例: ELEMENTS/IMAGES/file.png -> ELEMENTS ビン）。",
+            debugMode: "デバッグモードを有効化",
+            debugModeDescription: "プラグイン下部にデバッグログパネルを表示します。",
+            showWaveforms: "音声波形を表示",
+            showWaveformsDescription: "リスト表示で音声ファイルの波形を表示します。",
+            showVideoWaveforms: "動画波形を表示",
+            showVideoWaveformsDescription: "リスト表示で動画ファイルの音声波形と再生ボタンを表示します。",
+            hoverPreview: "ホバーでプレビュー",
+            hoverPreviewDescription: "サムネイルにマウスを乗せると動画や音声を自動再生します。"
+        },
+        empty: {
+            configureDatabase: "設定でデータベースパスを指定してください",
+            noFilesFound: "ファイルが見つかりません",
+            noFavorites: "お気に入りはまだありません"
+        },
+        modal: {
+            newFolder: "新しいフォルダー",
+            folderNamePlaceholder: "フォルダー名",
+            deleteConfirm: "本当に削除しますか？"
+        },
+        context: {
+            addFavorite: "お気に入りに追加",
+            removeFavorite: "お気に入りから削除",
+            openFolder: "Finder/Explorerで開く",
+            importFolder: "フォルダーを読み込む",
+            delete: "削除"
+        },
+        status: {
+            loading: "読み込み中...",
+            scanning: "データベースをスキャン中...",
+            importing: "ファイルを読み込み中...",
+            importSuccess: "ファイルを正常に読み込みました",
+            importError: "読み込みに失敗しました",
+            saved: "設定を保存しました",
+            folderCreated: "フォルダーを作成しました",
+            folderDeleted: "フォルダーを削除しました",
+            copied: "クリップボードにコピーしました",
+            moveSuccess: "ファイルを移動しました",
+            moveFailed: "ファイルの移動に失敗しました",
+            movePartial: "移動済み、失敗あり",
+            fileExists: "同名ファイルが既に存在します",
+            sameFolder: "このフォルダーに既にあります",
+            selectDatabaseFirst: "ここにフォルダーを作成する前にデータベースを開いてください",
+            selectDatabaseForAdd: "Premiereから追加する前にデータベースを開いてください",
+            crossDatabaseMove: "異なるデータベース間の移動はまだサポートされていません"
+        }
+    },
+    ru: {
+        labels: {
+            database: "База данных:",
+            notConfigured: "Не настроено",
+            root: "Корень",
+            files: "файлов",
+            selected: "выбрано"
+        },
+        search: {
+            placeholder: "Поиск файлов..."
+        },
+        filters: {
+            all: "Все",
+            video: "Видео",
+            audio: "Аудио",
+            image: "Изображение"
+        },
+        buttons: {
+            import: "Импорт",
+            save: "Сохранить",
+            cancel: "Отмена",
+            create: "Создать",
+            addToDb: "Добавить в базу"
+        },
+        settings: {
+            title: "Настройки",
+            databaseRoots: "Папки базы данных",
+            databaseRootsDescription: "Добавьте одну или несколько папок базы данных и задайте имя, которое будет отображаться в панели.",
+            databaseName: "Отображаемое имя",
+            databaseNamePlaceholder: "например: SOUND FX",
+            databasePath: "Путь к папке",
+            databasePathPlaceholder: "Выберите папку базы данных...",
+            addDatabaseRoot: "Добавить базу",
+            removeDatabaseRoot: "Убрать",
+            language: "Язык",
+            consolidateOnImport: "Копировать файлы в папку проекта при импорте",
+            consolidateDescription: "Если включено, файлы будут скопированы в папку проекта перед импортом с сохранением структуры папок.",
+            bannedExtensions: "Исключённые расширения файлов",
+            bannedExtensionsPlaceholder: "например: .txt, .pdf, .zip (по одному на строку)",
+            excludedFolders: "Исключённые имена папок",
+            excludedFoldersPlaceholder: "например: node_modules, .git (по одному на строку)",
+            consolidationDepth: "Глубина консолидации",
+            consolidationDepthHint: "0 = папка проекта, 1 = на одну папку выше и т. д.",
+            flattenImportPath: "Импортировать только в корневую папку",
+            flattenImportPathDescription: "Если включено, файлы импортируются только в папку первого уровня (например: ELEMENTS/IMAGES/file.png -> bin ELEMENTS).",
+            debugMode: "Включить режим отладки",
+            debugModeDescription: "Показывает панель логов внизу плагина с отладочной информацией.",
+            showWaveforms: "Показывать аудиоволны",
+            showWaveformsDescription: "Показывает интерактивные волны для аудиофайлов в режиме списка.",
+            showVideoWaveforms: "Показывать видеоволны",
+            showVideoWaveformsDescription: "Показывает аудиоволны и кнопку воспроизведения для видеофайлов в режиме списка.",
+            hoverPreview: "Предпросмотр при наведении",
+            hoverPreviewDescription: "Автоматически воспроизводит видео или аудио при наведении на миниатюру."
+        },
+        empty: {
+            configureDatabase: "Укажите путь к базе данных в настройках",
+            noFilesFound: "Файлы не найдены",
+            noFavorites: "Избранного пока нет"
+        },
+        modal: {
+            newFolder: "Новая папка",
+            folderNamePlaceholder: "Имя папки",
+            deleteConfirm: "Вы уверены, что хотите это удалить?"
+        },
+        context: {
+            addFavorite: "Добавить в избранное",
+            removeFavorite: "Убрать из избранного",
+            openFolder: "Открыть в Finder/Explorer",
+            importFolder: "Импортировать папку",
+            delete: "Удалить"
+        },
+        status: {
+            loading: "Загрузка...",
+            scanning: "Сканирование базы данных...",
+            importing: "Импорт файлов...",
+            importSuccess: "файлов успешно импортировано",
+            importError: "Ошибка импорта",
+            saved: "Настройки сохранены",
+            folderCreated: "Папка создана",
+            folderDeleted: "Папка удалена",
+            copied: "Скопировано в буфер обмена",
+            moveSuccess: "файл(ы) успешно перемещены",
+            moveFailed: "Не удалось переместить файлы",
+            movePartial: "перемещено, есть ошибки",
+            fileExists: "файл уже существует",
+            sameFolder: "уже в этой папке",
+            selectDatabaseFirst: "Откройте базу данных, прежде чем создавать здесь папки",
+            selectDatabaseForAdd: "Откройте базу данных, прежде чем добавлять элементы из Premiere",
+            crossDatabaseMove: "Перемещение между разными базами данных пока не поддерживается"
+        }
+    },
+    'zh-CN': {
+        labels: {
+            database: "数据库：",
+            notConfigured: "未配置",
+            root: "根目录",
+            files: "文件",
+            selected: "已选择"
+        },
+        search: {
+            placeholder: "搜索文件..."
+        },
+        filters: {
+            all: "全部",
+            video: "视频",
+            audio: "音频",
+            image: "图像"
+        },
+        buttons: {
+            import: "导入",
+            save: "保存",
+            cancel: "取消",
+            create: "创建",
+            addToDb: "添加到数据库"
+        },
+        settings: {
+            title: "设置",
+            databaseRoots: "数据库文件夹",
+            databaseRootsDescription: "添加一个或多个数据库文件夹，并选择插件中显示的名称。",
+            databaseName: "显示名称",
+            databaseNamePlaceholder: "例如：SOUND FX",
+            databasePath: "文件夹路径",
+            databasePathPlaceholder: "选择数据库文件夹...",
+            addDatabaseRoot: "添加数据库",
+            removeDatabaseRoot: "移除",
+            language: "语言",
+            consolidateOnImport: "导入时将文件复制到项目文件夹",
+            consolidateDescription: "启用后，文件会在导入前复制到项目文件夹，并保留文件夹结构。",
+            bannedExtensions: "排除的文件扩展名",
+            bannedExtensionsPlaceholder: "例如：.txt、.pdf、.zip（每行一个）",
+            excludedFolders: "排除的文件夹名称",
+            excludedFoldersPlaceholder: "例如：node_modules、.git（每行一个）",
+            consolidationDepth: "合并深度",
+            consolidationDepthHint: "0 = 项目文件夹，1 = 上一级文件夹，依此类推。",
+            flattenImportPath: "仅导入到根文件夹",
+            flattenImportPathDescription: "启用后，文件只会导入到第一级文件夹（例如：ELEMENTS/IMAGES/file.png -> ELEMENTS bin）。",
+            debugMode: "启用调试模式",
+            debugModeDescription: "在插件底部显示一个带有调试信息的日志面板。",
+            showWaveforms: "显示音频波形",
+            showWaveformsDescription: "在列表视图中显示音频文件的交互式波形。",
+            showVideoWaveforms: "显示视频波形",
+            showVideoWaveformsDescription: "在列表视图中显示视频文件的音频波形和播放按钮。",
+            hoverPreview: "悬停预览",
+            hoverPreviewDescription: "将鼠标悬停在缩略图上时自动播放视频或音频。"
+        },
+        empty: {
+            configureDatabase: "请在设置中配置数据库路径",
+            noFilesFound: "未找到文件",
+            noFavorites: "还没有收藏"
+        },
+        modal: {
+            newFolder: "新建文件夹",
+            folderNamePlaceholder: "文件夹名称",
+            deleteConfirm: "确定要删除吗？"
+        },
+        context: {
+            addFavorite: "添加到收藏",
+            removeFavorite: "从收藏中移除",
+            openFolder: "在 Finder/Explorer 中打开",
+            importFolder: "导入文件夹",
+            delete: "删除"
+        },
+        status: {
+            loading: "加载中...",
+            scanning: "正在扫描数据库...",
+            importing: "正在导入文件...",
+            importSuccess: "个文件已成功导入",
+            importError: "导入失败",
+            saved: "设置已保存",
+            folderCreated: "文件夹已创建",
+            folderDeleted: "文件夹已删除",
+            copied: "已复制到剪贴板",
+            moveSuccess: "文件已成功移动",
+            moveFailed: "移动文件失败",
+            movePartial: "已移动，部分失败",
+            fileExists: "文件已存在",
+            sameFolder: "已在此文件夹中",
+            selectDatabaseFirst: "请先打开一个数据库，再在这里创建文件夹",
+            selectDatabaseForAdd: "请先打开一个数据库，再从 Premiere 添加项目",
+            crossDatabaseMove: "暂不支持在不同数据库之间移动文件"
+        }
+    }
+});
+
 // ============================================================================
 // STATE
 // ============================================================================
@@ -664,6 +1317,19 @@ function updateUILanguage() {
     });
 }
 
+function pdb_renderLanguageSelectOptions() {
+    const languageSelect = document.getElementById('languageSelect');
+    const settingsLanguageSelect = document.getElementById('settingsLanguageSelect');
+    const selects = [languageSelect, settingsLanguageSelect].filter(Boolean);
+
+    // Keep both selectors perfectly aligned with the same native-name ordered options.
+    selects.forEach((select) => {
+        select.innerHTML = LANGUAGE_OPTIONS.map((option) => {
+            return `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`;
+        }).join('');
+    });
+}
+
 function changeLanguage(lang) {
     if (translations[lang]) {
         // Preserve unsaved database root edits before re-rendering translated controls.
@@ -855,7 +1521,7 @@ function loadSettings() {
     const fileSettings = pdb_readSettingsFromFile();
     if (fileSettings) {
         settings = pdb_normalizeSettings(fileSettings);
-        currentLang = settings.language || 'en';
+        currentLang = translations[settings.language] ? settings.language : 'en';
         console.log('Settings loaded from file:', pdb_getSettingsFilePath());
     } else {
         // Fallback: migrate from localStorage (one-time migration)
@@ -864,7 +1530,7 @@ function loadSettings() {
             try {
                 const parsed = JSON.parse(saved);
                 settings = pdb_normalizeSettings(parsed);
-                currentLang = settings.language || 'en';
+                currentLang = translations[settings.language] ? settings.language : 'en';
                 migratedFromLocalStorage = true;
                 console.log('Settings migrated from localStorage');
             } catch (e) {
@@ -3423,6 +4089,7 @@ async function performImport(files) {
 
     try {
         const multipleRootsSelected = new Set(files.map((file) => file.rootId)).size > 1;
+        const shouldPrefixRootBin = multipleRootsSelected && !settings.flattenImportPath;
 
         // Prepare files for import
         const filesToImport = files.map(file => {
@@ -3436,7 +4103,8 @@ async function performImport(files) {
             }
 
             const binParts = [];
-            if (multipleRootsSelected) {
+            // Keep the legacy "root folder only" behavior even when files come from several databases.
+            if (shouldPrefixRootBin) {
                 const rootBinName = pdb_getSafeBinSegment(file.rootName || pdb_getDefaultDatabaseName(file.rootPath));
                 if (rootBinName) {
                     binParts.push(rootBinName);
@@ -3648,6 +4316,9 @@ function generateSafeId(text) {
 // INITIALIZATION
 // ============================================================================
 function init() {
+    // Build both language selectors from the same ordered source before applying saved settings.
+    pdb_renderLanguageSelectOptions();
+
     // Load settings
     loadSettings();
     renderBreadcrumb();
