@@ -1,16 +1,18 @@
 # Data Base - Adobe Premiere Pro Extension
 
-A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from a centralized database folder directly into your Premiere Pro projects.
+A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from one or more database folders directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.6.5-blue)
+![Version](https://img.shields.io/badge/version-1.6.6-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
 ## ✨ Features
 
 ### 📁 Database Browser
-- Configure a root folder as your media database
+- Configure one or more database folders
+- Give each database folder a custom display name
 - Browse files and folders with intuitive navigation
+- Keep each database separated in the home view with its own discrete section
 - Breadcrumb navigation for easy folder traversal
 - Support for video, audio, and image files
 
@@ -80,7 +82,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - Easily extensible for additional languages
 
 ### ⌨️ Spell Book / Excalibur Integration
-- *(Currently disabled by default in v1.6.5; can be re-enabled via feature flags in code/installers.)*
+- *(Currently disabled by default in v1.6.6; can be re-enabled via feature flags in code/installers.)*
 - **Keyboard Shortcuts** via Spell Book extension
 - **Available Commands**:
   - `Refresh Database` - Rescan the database folder
@@ -124,11 +126,14 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 1. Open Premiere Pro
 2. Go to **Window → Extensions → Data Base**
 3. Click the ⚙️ settings button
-4. Click the folder icon to select your database root folder
-5. Click **Save**
+4. Add one or more database folders
+5. Give each one the display name you want to see in the plugin
+6. Click **Save**
 
 ### Browsing & Searching
 
+- On the home view, each database appears in its own section with a subtle separator
+- Click a database title to open that database directly
 - Navigate folders by clicking on them or expanding them (List View)
 - Use the breadcrumb to go back to parent folders
 - Type in the search bar to filter files in real-time
@@ -146,15 +151,16 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 ### Moving Files (Drag & Drop)
 
 1. **Select** one or more files by clicking on them
-2. **Drag** the selected files to a folder
+2. **Drag** the selected files to a folder in the same database
 3. **Drop** on the target folder (highlighted in blue when valid)
 4. Files are moved to the new location
 
 ### Adding to Database (from Premiere)
 
 1. Select one or more items (clips or bins) in the Premiere Pro Project Panel
-2. Click the **Add to DB** button in the extension toolbar
-3. The items will be copied to your database, creating folders that match your bin structure
+2. Open the database you want to receive those items
+3. Click the **Add to DB** button in the extension toolbar
+4. The items will be copied to that database, creating folders that match your bin structure
 
 ### Managing Mdeia
 
@@ -165,7 +171,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 
 | Setting | Description |
 |---------|-------------|
-| **Database Path** | Root folder containing your media files |
+| **Database Folders** | Add one or more root folders, each with its own custom display name |
 | **Language** | UI language (English/French) |
 | **Copy on Import** | Copy files to project folder when importing (preserves structure) |
 | **Consolidation Depth** | How many parent folders to keep when copying (0=none, 1=parent, etc.) |
@@ -205,6 +211,8 @@ PremiereDataBase/
 │   │       └── fr.json
 │   ├── host/
 │   │   └── index.jsx
+│   ├── scripts/
+│   │   └── pdb_validate.js
 │   ├── install_macos.sh
 │   └── install_windows.bat
 ├── Releases/
@@ -222,7 +230,7 @@ PremiereDataBase/
 
 ### Files not appearing in database
 
-1. Check that your database path is correctly set in settings
+1. Check that your database folders are correctly set in settings
 2. Verify file extensions are not in the excluded list
 3. Click the refresh button to rescan
 
@@ -241,6 +249,12 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.6.6 (2026-04-14)
+- **New Feature**: You can now add multiple database folders instead of a single root folder.
+- **New Feature**: Each database can have its own custom display name in the plugin.
+- **Improvement**: The home view now keeps each database in its own separated section for cleaner browsing.
+- **Improvement**: Importing files from multiple databases now keeps their roots separated in Premiere bins when needed.
 
 ### v1.6.5 (2026-02-16)
 - **Change**: Spell Book integration is now disabled by default (kept in code behind feature flags for later reactivation).

@@ -186,9 +186,12 @@ function scanDatabase(rootPath, options = {}) {
     const {
         bannedExtensions = [],
         excludedFolderNames = ['.git', 'node_modules', '__MACOSX', '.DS_Store'],
+        rootId = '',
+        rootName = '',
         currentPath = ''
     } = options;
 
+    const normalizedRootPath = toForwardSlashes(rootPath);
     const results = {
         files: [],
         folders: []
@@ -219,7 +222,10 @@ function scanDatabase(rootPath, options = {}) {
                     results.folders.push({
                         name: item,
                         path: toForwardSlashes(itemPath),
-                        relativePath: toForwardSlashes(relativePath)
+                        relativePath: toForwardSlashes(relativePath),
+                        rootId: rootId,
+                        rootName: rootName,
+                        rootPath: normalizedRootPath
                     });
 
                     // Recursively scan subdirectory
@@ -247,6 +253,9 @@ function scanDatabase(rootPath, options = {}) {
                             path: toForwardSlashes(itemPath),
                             relativePath: toForwardSlashes(relativePath),
                             folderPath: toForwardSlashes(currentPath),
+                            rootId: rootId,
+                            rootName: rootName,
+                            rootPath: normalizedRootPath,
                             type: fileType,
                             size: stats.size,
                             modified: stats.mtime.getTime()

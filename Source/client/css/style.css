@@ -594,6 +594,64 @@ main {
     gap: 2px;
 }
 
+.database-sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.database-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.database-section + .database-section {
+    border-top: 1px solid var(--border);
+    padding-top: var(--spacing-md);
+}
+
+.database-section-header {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.database-section-header:hover {
+    color: var(--text-primary);
+}
+
+.database-section-name {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.database-section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.database-section-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--grid-item-size), 1fr));
+    gap: var(--spacing-sm);
+}
+
+.database-section-empty {
+    padding: var(--spacing-sm) 0;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
 .file-item {
     display: flex;
     align-items: center;
@@ -1058,6 +1116,11 @@ main {
     color: var(--text-primary);
 }
 
+.action-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
 .action-btn svg {
     width: 16px;
     height: 16px;
@@ -1248,6 +1311,13 @@ main {
     gap: var(--spacing-sm);
 }
 
+.setting-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
 .setting-item label {
     font-weight: 500;
     color: var(--text-primary);
@@ -1304,6 +1374,59 @@ main {
 
 .folder-input-group input {
     flex: 1;
+}
+
+.database-roots-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.database-root-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.database-root-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.database-root-name-input,
+.database-root-path-input {
+    width: 100%;
+}
+
+.database-root-open-btn,
+.database-root-remove-btn,
+.mini-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 11px;
+    padding: 6px 10px;
+    transition: all var(--transition-fast);
+}
+
+.database-root-open-btn:hover,
+.database-root-remove-btn:hover,
+.mini-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.database-root-remove-btn:hover {
+    border-color: rgba(244, 67, 54, 0.5);
+    color: var(--error);
 }
 
 /* Depth input */

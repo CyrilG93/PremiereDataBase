@@ -137,6 +137,7 @@ var translations = {
         labels: {
             database: "Database:",
             notConfigured: "Not configured",
+            root: "Root",
             files: "files",
             selected: "selected"
         },
@@ -158,8 +159,15 @@ var translations = {
         },
         settings: {
             title: "Settings",
-            databasePath: "Database Path",
+            databaseRoots: "Database folders",
+            databaseRootsDescription: "Add one or more database folders and choose the name shown in the plugin.",
+            databaseName: "Display name",
+            databaseNamePlaceholder: "e.g. SOUND FX",
+            databasePath: "Folder path",
             databasePathPlaceholder: "Select database folder...",
+            addDatabaseRoot: "Add database",
+            removeDatabaseRoot: "Remove",
+            openDatabaseRoot: "Open this database",
             language: "Language",
             consolidateOnImport: "Copy files to project folder on import",
             consolidateDescription: "When enabled, files will be copied to the project folder before importing, preserving the folder structure.",
@@ -211,13 +219,17 @@ var translations = {
             moveFailed: "Failed to move files",
             movePartial: "moved, failed",
             fileExists: "file already exists",
-            sameFolder: "already in this folder"
+            sameFolder: "already in this folder",
+            selectDatabaseFirst: "Open a database before creating folders here",
+            selectDatabaseForAdd: "Open a database before adding Premiere items to it",
+            crossDatabaseMove: "Moving files between different databases is not supported yet"
         }
     },
     fr: {
         labels: {
             database: "Base de données :",
             notConfigured: "Non configuré",
+            root: "Racine",
             files: "fichiers",
             selected: "sélectionné(s)"
         },
@@ -239,8 +251,15 @@ var translations = {
         },
         settings: {
             title: "Paramètres",
-            databasePath: "Chemin de la base de données",
+            databaseRoots: "Dossiers de base de données",
+            databaseRootsDescription: "Ajoutez un ou plusieurs dossiers de base de données et choisissez le nom affiché dans le plugin.",
+            databaseName: "Nom affiché",
+            databaseNamePlaceholder: "ex : SOUND FX",
+            databasePath: "Chemin du dossier",
             databasePathPlaceholder: "Sélectionner le dossier...",
+            addDatabaseRoot: "Ajouter une base",
+            removeDatabaseRoot: "Retirer",
+            openDatabaseRoot: "Ouvrir cette base",
             language: "Langue",
             consolidateOnImport: "Copier les fichiers dans le dossier projet lors de l'import",
             consolidateDescription: "Lorsque cette option est activée, les fichiers seront copiés dans le dossier du projet avant l'import, en préservant la structure des dossiers.",
@@ -292,7 +311,10 @@ var translations = {
             moveFailed: "Échec du déplacement",
             movePartial: "déplacé(s), échoué(s)",
             fileExists: "fichier déjà existant",
-            sameFolder: "déjà dans ce dossier"
+            sameFolder: "déjà dans ce dossier",
+            selectDatabaseFirst: "Ouvrez une base avant de créer un dossier ici",
+            selectDatabaseForAdd: "Ouvrez une base avant d'y ajouter des éléments depuis Premiere",
+            crossDatabaseMove: "Le déplacement entre deux bases différentes n'est pas encore pris en charge"
         }
     }
 };
@@ -301,7 +323,8 @@ var translations = {
 // STATE
 // ============================================================================
 var currentLang = 'en';
-var settings = {
+var defaultSettings = {
+    databaseRoots: [],
     databasePath: '',
     language: 'en',
     itemSize: 0, // 0-100 slider value
@@ -315,12 +338,14 @@ var settings = {
     showVideoWaveforms: true, // Show video waveforms
     hoverPreview: false // Preview on hover
 };
+var settings = { ...defaultSettings };
 
 var allFiles = [];           // All files from database
 var allFolders = [];         // All folders from database
 var filteredFiles = [];      // Files after applying filters
 var selectedFiles = new Set(); // Selected file paths
 var favorites = new Set();   // Favorite file paths
+var currentDatabaseId = '';  // Current database root being viewed
 var currentPath = '';        // Current folder path being viewed
 var currentViewMode = 'list'; // 'list' or 'grid'
 var activeTypeFilters = ['all']; // Active type filters
@@ -328,6 +353,7 @@ var showFavoritesOnly = false;
 var searchQuery = '';
 var searchDebounceTimer = null;
 var saveSettingsTimer = null;
+var contextMenuFile = '';     // Track the currently opened context menu target
 var currentlyPlayingAudio = null; // Path of currently playing audio file
 var expandedFolders = new Set(); // Folders that are expanded in list view
 var wavesurferInstances = new Map(); // Map of audioPath -> Wavesurfer instance
@@ -343,6 +369,156 @@ var pdb_https = require('https');
 // UPDATE SYSTEM CONSTANTS
 var GITHUB_REPO = 'CyrilG93/PremiereDataBase';
 var CURRENT_VERSION = '1.0.0'; // Will be updated from manifest
+
+// Build a stable unique key for a folder inside one database root.
+function pdb_buildFolderKey(rootId, relativePath) {
+    return (rootId || '') + '::' + (relativePath || '');
+}
+
+// Split a folder key back into its database id and folder path.
+function pdb_parseFolderKey(folderKey) {
+    const separatorIndex = folderKey.indexOf('::');
+    if (separatorIndex === -1) {
+        return {
+            rootId: '',
+            relativePath: folderKey || ''
+        };
+    }
+
+    return {
+        rootId: folderKey.substring(0, separatorIndex),
+        relativePath: folderKey.substring(separatorIndex + 2)
+    };
+}
+
+// Create a lightweight id for stored database roots.
+function pdb_generateDatabaseId() {
+    return 'pdb-root-' + Math.random().toString(36).slice(2, 10);
+}
+
+// Derive a readable default label from a folder path.
+function pdb_getDefaultDatabaseName(databasePath) {
+    if (!databasePath) {
+        return 'Database';
+    }
+
+    const normalizedPath = databasePath.replace(/[\\\/]+$/, '');
+    const pathParts = normalizedPath.split(/[\\\/]/).filter(Boolean);
+    return pathParts[pathParts.length - 1] || normalizedPath || 'Database';
+}
+
+// Clean user-provided database names before using them in UI or bin paths.
+function pdb_getSafeDatabaseName(name, databasePath) {
+    const trimmedName = (name || '').trim();
+    return trimmedName || pdb_getDefaultDatabaseName(databasePath);
+}
+
+// Ensure all saved roots have ids, names, and normalized forward-slash paths.
+function pdb_normalizeDatabaseRoots(rawSettings) {
+    let rawRoots = [];
+    const seenPaths = new Set();
+
+    if (Array.isArray(rawSettings.databaseRoots)) {
+        rawRoots = rawSettings.databaseRoots;
+    } else if (rawSettings.databasePath) {
+        rawRoots = [{
+            id: pdb_generateDatabaseId(),
+            name: pdb_getDefaultDatabaseName(rawSettings.databasePath),
+            path: rawSettings.databasePath
+        }];
+    }
+
+    return rawRoots
+        .map((root) => {
+            const normalizedPath = (root.path || '').trim().replace(/\\/g, '/').replace(/\/+$/, '');
+            if (!normalizedPath) {
+                return null;
+            }
+
+            if (seenPaths.has(normalizedPath)) {
+                return null;
+            }
+
+            seenPaths.add(normalizedPath);
+
+            return {
+                id: root.id || pdb_generateDatabaseId(),
+                name: pdb_getSafeDatabaseName(root.name, normalizedPath),
+                path: normalizedPath
+            };
+        })
+        .filter(Boolean);
+}
+
+// Normalize legacy settings so the extension always works with the new multi-root shape.
+function pdb_normalizeSettings(rawSettings) {
+    const mergedSettings = { ...defaultSettings, ...rawSettings };
+    mergedSettings.databaseRoots = pdb_normalizeDatabaseRoots(mergedSettings);
+    mergedSettings.databasePath = mergedSettings.databaseRoots[0] ? mergedSettings.databaseRoots[0].path : '';
+    return mergedSettings;
+}
+
+// Return true when at least one database root is configured.
+function pdb_hasConfiguredDatabases() {
+    return Array.isArray(settings.databaseRoots) && settings.databaseRoots.length > 0;
+}
+
+// Find a configured database root by id.
+function pdb_getDatabaseRootById(rootId) {
+    if (!rootId) {
+        return null;
+    }
+
+    return settings.databaseRoots.find((root) => root.id === rootId) || null;
+}
+
+// Return the root currently targeted by create/add operations.
+function pdb_getActiveDatabaseRoot() {
+    if (currentDatabaseId) {
+        return pdb_getDatabaseRootById(currentDatabaseId);
+    }
+
+    if (settings.databaseRoots.length === 1) {
+        return settings.databaseRoots[0];
+    }
+
+    return null;
+}
+
+// Sanitize custom root labels before reusing them as Premiere bin segments.
+function pdb_getSafeBinSegment(name) {
+    return (name || '').replace(/[\\\/]+/g, '-').trim();
+}
+
+// Keep navigation stable after settings changes or database rescans.
+function pdb_ensureNavigationIsValid() {
+    if (currentDatabaseId && !pdb_getDatabaseRootById(currentDatabaseId)) {
+        currentDatabaseId = '';
+        currentPath = '';
+        expandedFolders.clear();
+    }
+}
+
+// Resolve a folder record from its compound key.
+function pdb_getFolderByKey(folderKey) {
+    const parsedKey = pdb_parseFolderKey(folderKey);
+    return allFolders.find((folder) => folder.rootId === parsedKey.rootId && folder.relativePath === parsedKey.relativePath) || null;
+}
+
+// Build a visible folder label for search results and mixed-database selections.
+function pdb_getFileLocationLabel(file) {
+    const labelParts = [];
+
+    if (file.rootName) {
+        labelParts.push(file.rootName);
+    }
+
+    if (file.folderPath) {
+        labelParts.push(file.folderPath);
+    }
+
+    return labelParts.join(' / ') || t('labels.root');
+}
 
 /**
  * Get the path to the settings file (cross-platform)
@@ -483,17 +659,23 @@ function updateUILanguage() {
 
 function changeLanguage(lang) {
     if (translations[lang]) {
+        // Preserve unsaved database root edits before re-rendering translated controls.
+        settings.databaseRoots = pdb_collectDatabaseRootsFromSettingsUI();
         currentLang = lang;
         settings.language = lang;
+        settings = pdb_normalizeSettings(settings);
         updateUILanguage();
+        pdb_renderDatabaseRootsSettings();
         saveSettings();
     }
 }
 
 function addToDatabase() {
-    // Verify database path is set
-    if (!settings.databasePath) {
-        showStatus(t('empty.configureDatabase'), 'error');
+    const activeDatabaseRoot = pdb_getActiveDatabaseRoot();
+
+    // Force the user to choose the target database when several roots exist.
+    if (!activeDatabaseRoot) {
+        showStatus(pdb_hasConfiguredDatabases() ? t('status.selectDatabaseForAdd') : t('empty.configureDatabase'), 'error');
         return;
     }
 
@@ -533,7 +715,7 @@ function addToDatabase() {
             const filesToCopy = items.map(item => ({
                 name: item.name,
                 source: item.path,
-                destination: settings.databasePath + '/' + (item.binPath ? item.binPath + '/' : '') + item.name
+                destination: activeDatabaseRoot.path + '/' + (item.binPath ? item.binPath + '/' : '') + item.name
             }));
 
             // Execute copy
@@ -558,13 +740,131 @@ function addToDatabase() {
 // ============================================================================
 // SETTINGS
 // ============================================================================
+// Render the editable list of named database roots in the settings panel.
+function pdb_renderDatabaseRootsSettings() {
+    const databaseRootsList = document.getElementById('databaseRootsList');
+    if (!databaseRootsList) {
+        return;
+    }
+
+    const rootRows = (settings.databaseRoots || []).map((root) => `
+        <div class="database-root-row" data-root-id="${escapeHtml(root.id)}">
+            <div class="database-root-row-header">
+                <button class="database-root-open-btn" type="button" data-root-id="${escapeHtml(root.id)}" title="${escapeHtml(root.path)}">
+                    ${escapeHtml(t('settings.openDatabaseRoot'))}
+                </button>
+                <button class="database-root-remove-btn" type="button" data-root-id="${escapeHtml(root.id)}">
+                    ${escapeHtml(t('settings.removeDatabaseRoot'))}
+                </button>
+            </div>
+            <input type="text" class="database-root-name-input" value="${escapeHtml(root.name)}" placeholder="${escapeHtml(t('settings.databaseNamePlaceholder'))}">
+            <div class="folder-input-group">
+                <input type="text" class="database-root-path-input" value="${escapeHtml(root.path)}" placeholder="${escapeHtml(t('settings.databasePathPlaceholder'))}">
+                <button class="browse-btn database-root-browse-btn" type="button" data-root-id="${escapeHtml(root.id)}" title="${escapeHtml(t('settings.databasePath'))}">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    databaseRootsList.innerHTML = rootRows || `<p class="setting-description">${escapeHtml(t('empty.configureDatabase'))}</p>`;
+}
+
+// Read the database root rows from the settings UI and normalize their values.
+function pdb_collectDatabaseRootsFromSettingsUI() {
+    const rootRows = document.querySelectorAll('#databaseRootsList .database-root-row');
+    const databaseRoots = [];
+
+    rootRows.forEach((row) => {
+        const nameInput = row.querySelector('.database-root-name-input');
+        const pathInput = row.querySelector('.database-root-path-input');
+        const rawPath = pathInput ? pathInput.value.trim() : '';
+
+        if (!rawPath) {
+            return;
+        }
+
+        const normalizedPath = rawPath.replace(/\\/g, '/').replace(/\/+$/, '');
+        databaseRoots.push({
+            id: row.getAttribute('data-root-id') || pdb_generateDatabaseId(),
+            name: pdb_getSafeDatabaseName(nameInput ? nameInput.value : '', normalizedPath),
+            path: normalizedPath
+        });
+    });
+
+    return databaseRoots;
+}
+
+// Add a new editable database root row with a generated id.
+function pdb_addDatabaseRootRow() {
+    settings.databaseRoots = [...pdb_normalizeDatabaseRoots({
+        databaseRoots: pdb_collectDatabaseRootsFromSettingsUI()
+    }), {
+        id: pdb_generateDatabaseId(),
+        name: '',
+        path: ''
+    }];
+    pdb_renderDatabaseRootsSettings();
+}
+
+// Remove one configured root from the settings list.
+function pdb_removeDatabaseRoot(rootId) {
+    settings.databaseRoots = pdb_normalizeDatabaseRoots({
+        databaseRoots: pdb_collectDatabaseRootsFromSettingsUI().filter((root) => root.id !== rootId)
+    });
+    pdb_ensureNavigationIsValid();
+    pdb_renderDatabaseRootsSettings();
+}
+
+// Ask Premiere for a folder and assign it to the targeted database row.
+function pdb_browseForDatabaseRoot(rootId) {
+    csInterface.evalScript('DataBase_selectFolder()', (result) => {
+        if (!result || result === 'null') {
+            return;
+        }
+
+        const targetRow = document.querySelector(`#databaseRootsList .database-root-row[data-root-id="${CSS.escape(rootId)}"]`);
+        if (!targetRow) {
+            return;
+        }
+
+        const pathInput = targetRow.querySelector('.database-root-path-input');
+        const nameInput = targetRow.querySelector('.database-root-name-input');
+
+        if (pathInput) {
+            pathInput.value = result;
+        }
+
+        if (nameInput && !nameInput.value.trim()) {
+            nameInput.value = pdb_getDefaultDatabaseName(result);
+        }
+    });
+}
+
+// Open a database root from the settings panel to make top-level actions available.
+function pdb_openDatabaseRootFromSettings(rootId) {
+    settings.databaseRoots = pdb_normalizeDatabaseRoots({
+        databaseRoots: pdb_collectDatabaseRootsFromSettingsUI()
+    });
+    settings.databasePath = settings.databaseRoots[0] ? settings.databaseRoots[0].path : '';
+    const databaseRoot = pdb_getDatabaseRootById(rootId);
+    if (!databaseRoot) {
+        return;
+    }
+
+    closeSettings();
+    navigateToFolder('', rootId);
+}
+
 function loadSettings() {
     let migratedFromLocalStorage = false;
 
     // First, try to load from JSON file (persistent across Premiere versions)
     const fileSettings = pdb_readSettingsFromFile();
     if (fileSettings) {
-        settings = { ...settings, ...fileSettings };
+        settings = pdb_normalizeSettings(fileSettings);
         currentLang = settings.language || 'en';
         console.log('Settings loaded from file:', pdb_getSettingsFilePath());
     } else {
@@ -573,13 +873,15 @@ function loadSettings() {
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
-                settings = { ...settings, ...parsed };
+                settings = pdb_normalizeSettings(parsed);
                 currentLang = settings.language || 'en';
                 migratedFromLocalStorage = true;
                 console.log('Settings migrated from localStorage');
             } catch (e) {
                 console.error('Error loading settings from localStorage:', e);
             }
+        } else {
+            settings = pdb_normalizeSettings({});
         }
     }
 
@@ -610,7 +912,7 @@ function loadSettings() {
     }
 
     // Update UI with settings
-    document.getElementById('databasePathInput').value = settings.databasePath || '';
+    pdb_renderDatabaseRootsSettings();
     document.getElementById('consolidateOnImport').checked = settings.consolidateOnImport || false;
     document.getElementById('consolidationDepth').value = settings.consolidationDepth || 0;
     document.getElementById('flattenImportPath').checked = settings.flattenImportPath || false;
@@ -679,7 +981,8 @@ function updateItemSize(percent) {
 }
 
 function saveSettings() {
-    settings.databasePath = document.getElementById('databasePathInput').value.trim();
+    settings.databaseRoots = pdb_collectDatabaseRootsFromSettingsUI();
+    settings.databasePath = settings.databaseRoots[0] ? settings.databaseRoots[0].path : '';
     settings.consolidateOnImport = document.getElementById('consolidateOnImport').checked;
     settings.consolidationDepth = parseInt(document.getElementById('consolidationDepth').value) || 0;
     settings.flattenImportPath = document.getElementById('flattenImportPath').checked;
@@ -698,6 +1001,8 @@ function saveSettings() {
         .filter(f => f !== '');
 
     settings.language = currentLang;
+    settings = pdb_normalizeSettings(settings);
+    pdb_ensureNavigationIsValid();
 
     // Debug mode
     settings.debugMode = document.getElementById('debugMode').checked;
@@ -799,11 +1104,14 @@ function clearDebugLogs() {
 
 function updateDatabasePathDisplay() {
     const pathEl = document.getElementById('databasePath');
-    if (settings.databasePath) {
-        // Show only the last part of the path
-        const parts = settings.databasePath.split(/[\/\\]/);
-        pathEl.textContent = '.../' + parts.slice(-2).join('/');
-        pathEl.title = settings.databasePath;
+    if (pdb_hasConfiguredDatabases()) {
+        const databaseCount = settings.databaseRoots.length;
+        const summaryLabel = databaseCount === 1
+            ? settings.databaseRoots[0].name
+            : databaseCount + ' databases';
+
+        pathEl.textContent = summaryLabel;
+        pathEl.title = settings.databaseRoots.map((root) => `${root.name}: ${root.path}`).join('\n');
     } else {
         pathEl.textContent = t('labels.notConfigured');
         pathEl.title = '';
@@ -954,6 +1262,11 @@ function closeSettings() {
 }
 
 function openNewFolderModal() {
+    if (!pdb_getActiveDatabaseRoot()) {
+        showStatus(t('status.selectDatabaseFirst'), 'warning');
+        return;
+    }
+
     document.getElementById('newFolderModal').classList.add('visible');
     document.getElementById('newFolderName').value = '';
     document.getElementById('newFolderName').focus();
@@ -967,7 +1280,7 @@ function closeNewFolderModal() {
 // DATABASE SCANNING
 // ============================================================================
 function scanDatabaseFiles() {
-    if (!settings.databasePath) {
+    if (!pdb_hasConfiguredDatabases()) {
         showStatus(t('empty.configureDatabase'), 'warning');
         openSettings();
         return;
@@ -977,13 +1290,27 @@ function scanDatabaseFiles() {
     updateProgress(0);
 
     try {
-        const result = performDatabaseScan(settings.databasePath, {
-            bannedExtensions: settings.bannedExtensions,
-            excludedFolderNames: settings.excludedFolderNames
+        const combinedResults = {
+            files: [],
+            folders: []
+        };
+
+        settings.databaseRoots.forEach((root, index) => {
+            const result = performDatabaseScan(root.path, {
+                bannedExtensions: settings.bannedExtensions,
+                excludedFolderNames: settings.excludedFolderNames,
+                rootId: root.id,
+                rootName: root.name
+            });
+
+            combinedResults.files.push(...(result.files || []));
+            combinedResults.folders.push(...(result.folders || []));
+            updateProgress(Math.round(((index + 1) / settings.databaseRoots.length) * 100));
         });
 
-        allFiles = result.files || [];
-        allFolders = result.folders || [];
+        allFiles = combinedResults.files;
+        allFolders = combinedResults.folders;
+        pdb_ensureNavigationIsValid();
 
         hideProgress();
         applyFilters();
@@ -1015,7 +1342,9 @@ function scanDatabaseDirect(rootPath, options = {}) {
 
     const {
         bannedExtensions = [],
-        excludedFolderNames = ['.git', 'node_modules', '__MACOSX', '.DS_Store']
+        excludedFolderNames = ['.git', 'node_modules', '__MACOSX', '.DS_Store'],
+        rootId = '',
+        rootName = ''
     } = options;
 
     const FILE_TYPES = {
@@ -1036,6 +1365,7 @@ function scanDatabaseDirect(rootPath, options = {}) {
         return p ? p.replace(/\\/g, '/') : '';
     }
 
+    const normalizedRootPath = toForwardSlashes(rootPath);
     const results = { files: [], folders: [] };
 
     function scan(currentPath, relativePath) {
@@ -1058,7 +1388,10 @@ function scanDatabaseDirect(rootPath, options = {}) {
                         results.folders.push({
                             name: item,
                             path: toForwardSlashes(itemPath),
-                            relativePath: toForwardSlashes(itemRelative)
+                            relativePath: toForwardSlashes(itemRelative),
+                            rootId: rootId,
+                            rootName: rootName,
+                            rootPath: normalizedRootPath
                         });
                         scan(itemPath, itemRelative);
                     } else if (stats.isFile()) {
@@ -1072,6 +1405,9 @@ function scanDatabaseDirect(rootPath, options = {}) {
                                 path: toForwardSlashes(itemPath),
                                 relativePath: toForwardSlashes(itemRelative),
                                 folderPath: toForwardSlashes(relativePath || ''),
+                                rootId: rootId,
+                                rootName: rootName,
+                                rootPath: normalizedRootPath,
                                 type: fileType,
                                 size: stats.size,
                                 modified: stats.mtime.getTime()
@@ -1097,6 +1433,11 @@ function scanDatabaseDirect(rootPath, options = {}) {
 function applyFilters() {
     let result = [...allFiles];
 
+    // Filter by active database root when browsing inside one database.
+    if (currentDatabaseId) {
+        result = result.filter((file) => file.rootId === currentDatabaseId);
+    }
+
     // Filter by current path
     if (currentPath) {
         result = result.filter(file => {
@@ -1110,7 +1451,8 @@ function applyFilters() {
         const query = searchQuery.toLowerCase();
         result = result.filter(file =>
             file.name.toLowerCase().includes(query) ||
-            file.folderPath.toLowerCase().includes(query)
+            file.folderPath.toLowerCase().includes(query) ||
+            (file.rootName || '').toLowerCase().includes(query)
         );
     }
 
@@ -1187,19 +1529,146 @@ function clearSearch() {
 // ============================================================================
 // RENDERING
 // ============================================================================
-function renderFiles() {
-    const browser = document.getElementById('fileBrowser');
+// Return only the folders directly inside the requested parent path for one database root.
+function pdb_getDirectFolders(rootId, parentPath) {
+    return allFolders.filter((folder) => {
+        if (folder.rootId !== rootId) {
+            return false;
+        }
 
-    // Get folders in current path (direct children only for navigation)
-    const currentFolders = allFolders.filter(folder => {
-        if (!currentPath) {
-            // Root level: show folders without path separator in relativePath
+        if (!parentPath) {
             return !folder.relativePath.includes('/');
         }
-        // Show direct children of current path
-        const parentPath = folder.relativePath.substring(0, folder.relativePath.lastIndexOf('/'));
-        return parentPath === currentPath;
+
+        const folderParentPath = folder.relativePath.substring(0, folder.relativePath.lastIndexOf('/'));
+        return folderParentPath === parentPath;
     });
+}
+
+// Return the folders currently visible on the grouped home screen.
+function pdb_getHomeFolders() {
+    return allFolders.filter((folder) => !folder.relativePath.includes('/'));
+}
+
+// Recreate the inline expanded folder blocks after a full re-render.
+function pdb_restoreExpandedFolderState(visibleFolders) {
+    if (searchQuery || currentViewMode !== 'list') {
+        return;
+    }
+
+    visibleFolders.forEach((folder) => {
+        const folderKey = pdb_buildFolderKey(folder.rootId, folder.relativePath);
+        if (!expandedFolders.has(folderKey)) {
+            return;
+        }
+
+        const folderEl = document.querySelector(`.file-item.folder[data-path="${CSS.escape(folderKey)}"]`);
+        if (!folderEl) {
+            return;
+        }
+
+        const expandIcon = folderEl.querySelector('.folder-expand');
+        if (expandIcon) {
+            expandIcon.textContent = '▼';
+        }
+
+        const contentHtml = renderExpandedFolderContents(folderKey);
+        if (!contentHtml) {
+            return;
+        }
+
+        const contentContainer = document.createElement('div');
+        contentContainer.className = 'expanded-folder-content';
+        contentContainer.setAttribute('data-parent-folder', folderKey);
+        contentContainer.innerHTML = contentHtml;
+
+        folderEl.insertAdjacentElement('afterend', contentContainer);
+        attachEventListenersToElement(contentContainer);
+        restoreNestedExpandedFolders(folderKey);
+    });
+}
+
+// Attach click handlers to the database headers shown on the grouped home screen.
+function attachDatabaseSectionEventListeners() {
+    document.querySelectorAll('.database-section-header').forEach((button) => {
+        button.addEventListener('click', () => {
+            const rootId = button.getAttribute('data-root-id');
+            navigateToFolder('', rootId);
+        });
+    });
+}
+
+// Render the grouped root view where each configured database keeps its own visual section.
+function pdb_renderDatabaseSections(browser) {
+    const sectionHtml = settings.databaseRoots.map((root) => {
+        const topFolders = pdb_getDirectFolders(root.id, '');
+        const topFiles = filteredFiles.filter((file) => file.rootId === root.id && file.folderPath === '');
+        const contentPieces = [];
+
+        topFolders.forEach((folder) => {
+            contentPieces.push(renderFolderItem(folder));
+        });
+
+        topFiles.forEach((file) => {
+            contentPieces.push(renderFileItem(file, false));
+        });
+
+        if (contentPieces.length === 0) {
+            contentPieces.push(`<div class="database-section-empty">${escapeHtml(showFavoritesOnly ? t('empty.noFavorites') : t('empty.noFilesFound'))}</div>`);
+        }
+
+        const contentClassName = currentViewMode === 'grid'
+            ? 'database-section-content database-section-grid'
+            : 'database-section-content file-list';
+
+        return `
+            <section class="database-section" data-root-id="${escapeHtml(root.id)}">
+                <button class="database-section-header" type="button" data-root-id="${escapeHtml(root.id)}" title="${escapeHtml(root.path)}">
+                    <span class="database-section-name">${escapeHtml(root.name)}</span>
+                </button>
+                <div class="${contentClassName}">
+                    ${contentPieces.join('')}
+                </div>
+            </section>
+        `;
+    }).join('');
+
+    browser.innerHTML = `<div class="database-sections">${sectionHtml}</div>`;
+
+    attachFileEventListeners();
+    attachDatabaseSectionEventListeners();
+    pdb_restoreExpandedFolderState(pdb_getHomeFolders());
+}
+
+function renderFiles() {
+    const browser = document.getElementById('fileBrowser');
+    const hasConfiguredDatabases = pdb_hasConfiguredDatabases();
+
+    if (!hasConfiguredDatabases) {
+        browser.innerHTML = `
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p>${escapeHtml(t('empty.configureDatabase'))}</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Show the grouped home screen only when we are not inside a specific database or a search result view.
+    if (!searchQuery && !currentDatabaseId) {
+        pdb_renderDatabaseSections(browser);
+
+        if (settings.showWaveforms !== false) {
+            if (typeof debugLog === 'function') debugLog('Scheduling waveform initialization (50ms delay)...', 'info');
+            setTimeout(initWaveforms, 50);
+        }
+        return;
+    }
+
+    const currentFolders = pdb_getDirectFolders(currentDatabaseId, currentPath);
 
     // When searching, show all matching files from all subfolders
     // When not searching, show only files in current folder OR expanded folders
@@ -1210,12 +1679,19 @@ function renderFiles() {
     } else {
         // Show files in current folder + files in expanded folders
         filesToShow = filteredFiles.filter(file => {
+            if (file.rootId !== currentDatabaseId) {
+                return false;
+            }
+
             // In current folder
             if (file.folderPath === currentPath) return true;
 
             // In an expanded folder
-            for (const expandedPath of expandedFolders) {
-                if (file.folderPath === expandedPath) return true;
+            for (const expandedKey of expandedFolders) {
+                const expandedFolder = pdb_getFolderByKey(expandedKey);
+                if (expandedFolder && expandedFolder.rootId === currentDatabaseId && file.folderPath === expandedFolder.relativePath) {
+                    return true;
+                }
             }
             return false;
         });
@@ -1224,7 +1700,7 @@ function renderFiles() {
     if (filesToShow.length === 0 && currentFolders.length === 0) {
         // Show empty state
         let emptyMessage = t('empty.noFilesFound');
-        if (!settings.databasePath) {
+        if (!hasConfiguredDatabases) {
             emptyMessage = t('empty.configureDatabase');
         } else if (showFavoritesOnly) {
             emptyMessage = t('empty.noFavorites');
@@ -1271,40 +1747,7 @@ function renderFiles() {
 
     // Attach event listeners
     attachFileEventListeners();
-
-    // Restore expanded folders by programmatically inserting their content
-    // This uses the optimized incremental approach
-    if (!searchQuery && currentViewMode === 'list') {
-        for (const folderPath of expandedFolders) {
-            // Only expand if this folder is visible (direct child of current path)
-            const isDirectChild = currentFolders.some(f => f.relativePath === folderPath);
-            if (isDirectChild) {
-                const folderEl = document.querySelector(`.file-item.folder[data-path="${CSS.escape(folderPath)}"]`);
-                if (folderEl) {
-                    // Update the expand icon
-                    const expandIcon = folderEl.querySelector('.folder-expand');
-                    if (expandIcon) {
-                        expandIcon.textContent = '▼';
-                    }
-
-                    // Get the content HTML
-                    const contentHtml = renderExpandedFolderContents(folderPath);
-                    if (contentHtml) {
-                        const contentContainer = document.createElement('div');
-                        contentContainer.className = 'expanded-folder-content';
-                        contentContainer.setAttribute('data-parent-folder', folderPath);
-                        contentContainer.innerHTML = contentHtml;
-
-                        folderEl.insertAdjacentElement('afterend', contentContainer);
-                        attachEventListenersToElement(contentContainer);
-
-                        // Restore any nested expanded folders
-                        restoreNestedExpandedFolders(folderPath);
-                    }
-                }
-            }
-        }
-    }
+    pdb_restoreExpandedFolderState(currentFolders);
 
     // Initialize waveforms for audio files
     // List view: uses regular waveform-wrapper
@@ -1317,15 +1760,24 @@ function renderFiles() {
 
 // Render contents of an expanded folder (non-recursive for inline content)
 // Nested expanded folders are handled separately by expandFolder calls
-function renderExpandedFolderContents(folderPath) {
+function renderExpandedFolderContents(folderKey) {
+    const folder = pdb_getFolderByKey(folderKey);
+    if (!folder) {
+        return '';
+    }
+
     let html = '';
-    const depth = folderPath.split('/').length - (currentPath ? currentPath.split('/').length : 0);
+    const depth = folder.relativePath.split('/').length - (currentPath ? currentPath.split('/').length : 0);
     const indent = depth * 20; // 20px per level
 
     // Get subfolders of this folder
     const subFolders = allFolders.filter(f => {
+        if (f.rootId !== folder.rootId) {
+            return false;
+        }
+
         const parentPath = f.relativePath.substring(0, f.relativePath.lastIndexOf('/'));
-        return parentPath === folderPath;
+        return parentPath === folder.relativePath;
     });
 
     // Render subfolders (but NOT their nested content - that's handled by expandFolder)
@@ -1335,7 +1787,7 @@ function renderExpandedFolderContents(folderPath) {
     }
 
     // Render files in this folder
-    const files = filteredFiles.filter(f => f.folderPath === folderPath);
+    const files = filteredFiles.filter(f => f.rootId === folder.rootId && f.folderPath === folder.relativePath);
     for (const file of files) {
         html += renderFileItem(file, false, indent);
     }
@@ -1344,15 +1796,25 @@ function renderExpandedFolderContents(folderPath) {
 }
 
 // After inserting expanded content, also expand any nested folders that were previously expanded
-function restoreNestedExpandedFolders(parentFolderPath) {
+function restoreNestedExpandedFolders(parentFolderKey) {
+    const parentFolder = pdb_getFolderByKey(parentFolderKey);
+    if (!parentFolder) {
+        return;
+    }
+
     // Find all expanded folders that are direct children of this parent
-    for (const folderPath of expandedFolders) {
+    for (const folderKey of expandedFolders) {
+        const folder = pdb_getFolderByKey(folderKey);
+        if (!folder || folder.rootId !== parentFolder.rootId) {
+            continue;
+        }
+
         // Check if this is a direct child of the parent
-        if (folderPath.startsWith(parentFolderPath + '/')) {
-            const remainingPath = folderPath.substring(parentFolderPath.length + 1);
+        if (folder.relativePath.startsWith(parentFolder.relativePath + '/')) {
+            const remainingPath = folder.relativePath.substring(parentFolder.relativePath.length + 1);
             // If there's no more slashes, it's a direct child
             if (!remainingPath.includes('/')) {
-                const folderEl = document.querySelector(`.file-item.folder[data-path="${CSS.escape(folderPath)}"]`);
+                const folderEl = document.querySelector(`.file-item.folder[data-path="${CSS.escape(folderKey)}"]`);
                 if (folderEl) {
                     // Update the expand icon
                     const expandIcon = folderEl.querySelector('.folder-expand');
@@ -1361,11 +1823,11 @@ function restoreNestedExpandedFolders(parentFolderPath) {
                     }
 
                     // Get the content HTML for this subfolder
-                    const contentHtml = renderExpandedFolderContents(folderPath);
+                    const contentHtml = renderExpandedFolderContents(folderKey);
                     if (contentHtml) {
                         const contentContainer = document.createElement('div');
                         contentContainer.className = 'expanded-folder-content';
-                        contentContainer.setAttribute('data-parent-folder', folderPath);
+                        contentContainer.setAttribute('data-parent-folder', folderKey);
                         contentContainer.innerHTML = contentHtml;
 
                         folderEl.insertAdjacentElement('afterend', contentContainer);
@@ -1377,7 +1839,7 @@ function restoreNestedExpandedFolders(parentFolderPath) {
                         }
 
                         // Recursively restore nested expanded folders
-                        restoreNestedExpandedFolders(folderPath);
+                        restoreNestedExpandedFolders(folderKey);
                     }
                 }
             }
@@ -1386,17 +1848,18 @@ function restoreNestedExpandedFolders(parentFolderPath) {
 }
 
 function renderFolderItem(folder, indent = 0) {
-    const isExpanded = expandedFolders.has(folder.relativePath);
+    const folderKey = pdb_buildFolderKey(folder.rootId, folder.relativePath);
+    const isExpanded = expandedFolders.has(folderKey);
     const expandIcon = isExpanded ? '▼' : '▶';
     // Hide expand icon in Grid view
     const expandIconHtml = currentViewMode === 'list'
-        ? `<span class="folder-expand" data-folder="${escapeHtml(folder.relativePath)}">${expandIcon}</span>`
+        ? `<span class="folder-expand" data-folder="${escapeHtml(folderKey)}">${expandIcon}</span>`
         : '';
 
     const indentStyle = indent > 0 ? `style="margin-left: ${indent}px"` : '';
 
     return `
-        <div class="file-item folder" data-path="${escapeHtml(folder.relativePath)}" data-type="folder" ${indentStyle}>
+        <div class="file-item folder" data-path="${escapeHtml(folderKey)}" data-type="folder" data-root-id="${escapeHtml(folder.rootId)}" data-relative-path="${escapeHtml(folder.relativePath)}" data-absolute-path="${escapeHtml(folder.path)}" ${indentStyle}>
             ${expandIconHtml}
             <div class="file-icon">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1417,10 +1880,10 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
     const iconHtml = getFileIcon(file.type, file.path);
 
     // Get folder display
-    let folderDisplay = file.folderPath || 'Root';
+    let folderDisplay = file.folderPath || t('labels.root');
     if (showFullPath) {
         // Show full path when searching
-        folderDisplay = file.folderPath || 'Root';
+        folderDisplay = pdb_getFileLocationLabel(file);
     }
 
     const indentStyle = indent > 0 ? `style="margin-left: ${indent}px"` : '';
@@ -1467,7 +1930,7 @@ function renderFileItem(file, showFullPath = false, indent = 0) {
     ` : '';
 
     return `
-        <div class="file-item ${file.type} ${isSelected ? 'selected' : ''}" data-path="${escapeHtml(file.path)}" data-type="file" ${indentStyle}>
+        <div class="file-item ${file.type} ${isSelected ? 'selected' : ''}" data-path="${escapeHtml(file.path)}" data-type="file" data-root-id="${escapeHtml(file.rootId || '')}" ${indentStyle}>
             <input type="checkbox" class="file-checkbox" ${isSelected ? 'checked' : ''}>
             <div class="file-icon ${file.type}">
                 ${iconHtml}
@@ -1567,21 +2030,24 @@ function attachFileEventListeners() {
             // Ignore if clicking on expand icon (handled above)
             if (e.target.closest('.folder-expand')) return;
 
-            const path = el.getAttribute('data-path');
+            const relativePath = el.getAttribute('data-relative-path') || '';
+            const rootId = el.getAttribute('data-root-id') || '';
+            const folderKey = el.getAttribute('data-path');
 
             if (currentViewMode === 'grid') {
                 // In Grid View, single click navigates into folder
-                navigateToFolder(path);
+                navigateToFolder(relativePath, rootId);
             } else {
                 // In List View, single click toggles expand
-                toggleFolderExpand(path);
+                toggleFolderExpand(folderKey);
             }
         });
 
         // Double click - navigate into folder
         el.addEventListener('dblclick', () => {
-            const path = el.getAttribute('data-path');
-            navigateToFolder(path);
+            const relativePath = el.getAttribute('data-relative-path') || '';
+            const rootId = el.getAttribute('data-root-id') || '';
+            navigateToFolder(relativePath, rootId);
         });
     });
 
@@ -1660,7 +2126,15 @@ function attachFileEventListeners() {
     document.querySelectorAll('.file-item').forEach(el => {
         el.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            showContextMenu(e, el.getAttribute('data-path'), el.getAttribute('data-type'));
+            showContextMenu(e, {
+                itemPath: el.getAttribute('data-path') || '',
+                type: el.getAttribute('data-type') || '',
+                rootId: el.getAttribute('data-root-id') || '',
+                relativePath: el.getAttribute('data-relative-path') || '',
+                absolutePath: el.getAttribute('data-type') === 'folder'
+                    ? (el.getAttribute('data-absolute-path') || '')
+                    : (el.getAttribute('data-path') || '')
+            });
         });
     });
 
@@ -1890,16 +2364,22 @@ function pdb_removeDragGhost() {
     pdb_dragGhostElement = null;
 }
 
-function pdb_moveFilesToFolder(filePaths, destFolderRelativePath) {
+function pdb_moveFilesToFolder(filePaths, destFolderKey) {
     if (!filePaths || filePaths.length === 0) {
         console.warn('No files to move');
         return;
     }
 
     const path = require('path');
+    const destinationFolder = pdb_getFolderByKey(destFolderKey);
+    if (!destinationFolder) {
+        showStatus(t('status.moveFailed'), 'error');
+        return;
+    }
 
-    // Get the absolute destination folder path
-    const destFolderAbsolute = path.join(settings.databasePath, destFolderRelativePath);
+    // Use the resolved folder record so moving files always targets the correct database root.
+    const destFolderAbsolute = destinationFolder.path;
+    const destinationRootId = destinationFolder.rootId;
 
     let successCount = 0;
     let errorCount = 0;
@@ -1917,6 +2397,19 @@ function pdb_moveFilesToFolder(filePaths, destFolderRelativePath) {
 
     // Move each file
     for (const sourcePath of filePaths) {
+        const sourceFile = allFiles.find((file) => file.path === sourcePath);
+        if (!sourceFile) {
+            errors.push(`${path.basename(sourcePath)}: ${t('status.moveFailed')}`);
+            errorCount++;
+            continue;
+        }
+
+        if (sourceFile.rootId !== destinationRootId) {
+            errors.push(`${sourceFile.name}: ${t('status.crossDatabaseMove')}`);
+            errorCount++;
+            continue;
+        }
+
         const fileName = path.basename(sourcePath);
         const destPath = path.join(destFolderAbsolute, fileName);
 
@@ -2301,7 +2794,8 @@ function toggleFavorite(path) {
 // ============================================================================
 // NAVIGATION
 // ============================================================================
-function navigateToFolder(path) {
+function navigateToFolder(path, rootId = '') {
+    currentDatabaseId = rootId || '';
     currentPath = path;
     selectedFiles.clear();
     expandedFolders.clear(); // Clear expanded state when navigating
@@ -2311,7 +2805,18 @@ function navigateToFolder(path) {
 }
 
 function navigateBack() {
-    if (!currentPath) return; // Already at root
+    if (!currentPath) {
+        if (!currentDatabaseId) {
+            return; // Already at grouped home
+        }
+
+        currentDatabaseId = '';
+        selectedFiles.clear();
+        updateSelectionUI();
+        applyFilters();
+        renderBreadcrumb();
+        return;
+    }
 
     const lastSlash = currentPath.lastIndexOf('/');
     if (lastSlash > 0) {
@@ -2379,6 +2884,7 @@ function expandFolder(folderPath) {
 
 // Collapse a folder by removing its expanded content from DOM
 function collapseFolder(folderPath) {
+    const parentFolder = pdb_getFolderByKey(folderPath);
     const folderEl = document.querySelector(`.file-item.folder[data-path="${CSS.escape(folderPath)}"]`);
     if (folderEl) {
         // Update the expand icon
@@ -2413,9 +2919,10 @@ function collapseFolder(folderPath) {
 
     // Remove this and all nested paths from expandedFolders
     const pathsToRemove = [];
-    for (const path of expandedFolders) {
-        if (path.startsWith(folderPath + '/')) {
-            pathsToRemove.push(path);
+    for (const expandedKey of expandedFolders) {
+        const expandedFolder = pdb_getFolderByKey(expandedKey);
+        if (parentFolder && expandedFolder && expandedFolder.rootId === parentFolder.rootId && expandedFolder.relativePath.startsWith(parentFolder.relativePath + '/')) {
+            pathsToRemove.push(expandedKey);
         }
     }
     pathsToRemove.forEach(p => expandedFolders.delete(p));
@@ -2436,17 +2943,20 @@ function attachEventListenersToElement(container) {
     container.querySelectorAll('.file-item.folder').forEach(el => {
         el.addEventListener('click', (e) => {
             if (e.target.closest('.folder-expand')) return;
-            const path = el.getAttribute('data-path');
+            const relativePath = el.getAttribute('data-relative-path') || '';
+            const rootId = el.getAttribute('data-root-id') || '';
+            const folderKey = el.getAttribute('data-path');
             if (currentViewMode === 'grid') {
-                navigateToFolder(path);
+                navigateToFolder(relativePath, rootId);
             } else {
-                toggleFolderExpand(path);
+                toggleFolderExpand(folderKey);
             }
         });
 
         el.addEventListener('dblclick', () => {
-            const path = el.getAttribute('data-path');
-            navigateToFolder(path);
+            const relativePath = el.getAttribute('data-relative-path') || '';
+            const rootId = el.getAttribute('data-root-id') || '';
+            navigateToFolder(relativePath, rootId);
         });
     });
 
@@ -2504,7 +3014,15 @@ function attachEventListenersToElement(container) {
     container.querySelectorAll('.file-item').forEach(el => {
         el.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            showContextMenu(e, el.getAttribute('data-path'), el.getAttribute('data-type'));
+            showContextMenu(e, {
+                itemPath: el.getAttribute('data-path') || '',
+                type: el.getAttribute('data-type') || '',
+                rootId: el.getAttribute('data-root-id') || '',
+                relativePath: el.getAttribute('data-relative-path') || '',
+                absolutePath: el.getAttribute('data-type') === 'folder'
+                    ? (el.getAttribute('data-absolute-path') || '')
+                    : (el.getAttribute('data-path') || '')
+            });
         });
     });
 
@@ -2800,15 +3318,30 @@ function renderBreadcrumb() {
     // The home button is now in toolbar-center, attach click handler by ID
     const homeBtn = document.getElementById('homeBtn');
     if (homeBtn) {
-        homeBtn.onclick = () => navigateToFolder('');
+        homeBtn.onclick = () => navigateToFolder('', '');
     }
 
     // Back button
     const backBtn = document.getElementById('backBtn');
     if (backBtn) {
         backBtn.onclick = () => navigateBack();
-        backBtn.disabled = !currentPath;
-        backBtn.classList.toggle('disabled', !currentPath);
+        const canGoBack = Boolean(currentPath || currentDatabaseId);
+        backBtn.disabled = !canGoBack;
+        backBtn.classList.toggle('disabled', !canGoBack);
+    }
+
+    // Enable write actions only when a target database is clearly selected.
+    const activeDatabaseRoot = pdb_getActiveDatabaseRoot();
+    const newFolderBtn = document.getElementById('newFolderBtn');
+    const addToDbBtn = document.getElementById('addToDbBtn');
+
+    if (newFolderBtn) {
+        newFolderBtn.disabled = !activeDatabaseRoot;
+        newFolderBtn.classList.toggle('disabled', !activeDatabaseRoot);
+    }
+
+    if (addToDbBtn) {
+        addToDbBtn.disabled = !activeDatabaseRoot;
     }
 }
 
@@ -2840,9 +3373,15 @@ function createFolder() {
     const name = document.getElementById('newFolderName').value.trim();
     if (!name) return;
 
+    const activeDatabaseRoot = pdb_getActiveDatabaseRoot();
+    if (!activeDatabaseRoot) {
+        showStatus(t('status.selectDatabaseFirst'), 'warning');
+        return;
+    }
+
     const basePath = currentPath
-        ? settings.databasePath + '/' + currentPath
-        : settings.databasePath;
+        ? activeDatabaseRoot.path + '/' + currentPath
+        : activeDatabaseRoot.path;
     const newPath = basePath + '/' + name;
 
     const result = createDirectory(newPath);
@@ -2872,12 +3411,20 @@ async function importSelectedFiles() {
     }
 }
 
-async function importFolder(folderPath) {
+async function importFolder(folderKey) {
+    const folder = pdb_getFolderByKey(folderKey);
+    if (!folder) {
+        showStatus(t('empty.noFilesFound'), 'warning');
+        return;
+    }
+
     // Determine target files (recursive)
     // Match exact folder path or subfolders
     const files = allFiles.filter(f =>
-        f.folderPath === folderPath ||
-        (f.folderPath && f.folderPath.startsWith(folderPath + '/'))
+        f.rootId === folder.rootId && (
+            f.folderPath === folder.relativePath ||
+            (f.folderPath && f.folderPath.startsWith(folder.relativePath + '/'))
+        )
     );
 
     if (files.length === 0) {
@@ -2893,21 +3440,35 @@ async function performImport(files) {
     updateProgress(0);
 
     try {
+        const multipleRootsSelected = new Set(files.map((file) => file.rootId)).size > 1;
+
         // Prepare files for import
         const filesToImport = files.map(file => {
             // Calculate bin path (excluding database root folder name)
-            let binPath = file.folderPath || '';
+            let folderBinPath = file.folderPath || '';
 
             // If flatten option is enabled, only keep first folder segment
-            if (settings.flattenImportPath && binPath) {
-                const parts = binPath.split('/');
-                binPath = parts[0] || '';
+            if (settings.flattenImportPath && folderBinPath) {
+                const parts = folderBinPath.split('/');
+                folderBinPath = parts[0] || '';
+            }
+
+            const binParts = [];
+            if (multipleRootsSelected) {
+                const rootBinName = pdb_getSafeBinSegment(file.rootName || pdb_getDefaultDatabaseName(file.rootPath));
+                if (rootBinName) {
+                    binParts.push(rootBinName);
+                }
+            }
+
+            if (folderBinPath) {
+                binParts.push(folderBinPath);
             }
 
             return {
                 name: file.name,
                 path: file.path,
-                binPath: binPath
+                binPath: binParts.join('/')
             };
         });
 
@@ -3009,6 +3570,12 @@ function getProjectPath() {
 // ============================================================================
 // ============================================================================
 function showContextMenu(event, filePath, type) {
+    const contextData = typeof filePath === 'object'
+        ? filePath
+        : {
+            itemPath: filePath,
+            type: type
+        };
     const menu = document.getElementById('contextMenu');
 
     // Manage Favorites options
@@ -3016,13 +3583,13 @@ function showContextMenu(event, filePath, type) {
     const removeFavBtn = document.getElementById('contextRemoveFavorite');
     const importFolderBtn = document.getElementById('contextImportFolder');
 
-    if (type === 'folder') {
+    if (contextData.type === 'folder') {
         // Folders cannot be favorited currently
         addFavBtn.classList.add('hidden');
         removeFavBtn.classList.add('hidden');
         importFolderBtn.classList.remove('hidden');
     } else {
-        const isFavorite = favorites.has(filePath);
+        const isFavorite = favorites.has(contextData.itemPath);
         addFavBtn.classList.toggle('hidden', isFavorite);
         removeFavBtn.classList.toggle('hidden', !isFavorite);
         importFolderBtn.classList.add('hidden');
@@ -3034,9 +3601,12 @@ function showContextMenu(event, filePath, type) {
     menu.classList.add('visible');
 
     // Store current file path for actions
-    contextMenuFile = filePath;
-    menu.dataset.filePath = filePath;
-    menu.dataset.type = type;
+    contextMenuFile = contextData.itemPath || '';
+    menu.dataset.filePath = contextData.itemPath || '';
+    menu.dataset.type = contextData.type || '';
+    menu.dataset.rootId = contextData.rootId || '';
+    menu.dataset.relativePath = contextData.relativePath || '';
+    menu.dataset.absolutePath = contextData.absolutePath || '';
 }
 
 function hideContextMenu() {
@@ -3093,22 +3663,12 @@ function generateSafeId(text) {
 }
 
 // ============================================================================
-// BROWSE FOR FOLDER
-// ============================================================================
-function browseForDatabase() {
-    csInterface.evalScript('DataBase_selectFolder()', (result) => {
-        if (result && result !== 'null') {
-            document.getElementById('databasePathInput').value = result;
-        }
-    });
-}
-
-// ============================================================================
 // INITIALIZATION
 // ============================================================================
 function init() {
     // Load settings
     loadSettings();
+    renderBreadcrumb();
 
     // SpellBook is now initialized at module load time (top of file)
 
@@ -3121,7 +3681,25 @@ function init() {
         closeSettings();
         scanDatabaseFiles();
     });
-    document.getElementById('browseDatabaseBtn').addEventListener('click', browseForDatabase);
+    document.getElementById('addDatabaseRootBtn').addEventListener('click', pdb_addDatabaseRootRow);
+    document.getElementById('databaseRootsList').addEventListener('click', (event) => {
+        const browseButton = event.target.closest('.database-root-browse-btn');
+        if (browseButton) {
+            pdb_browseForDatabaseRoot(browseButton.getAttribute('data-root-id') || '');
+            return;
+        }
+
+        const removeButton = event.target.closest('.database-root-remove-btn');
+        if (removeButton) {
+            pdb_removeDatabaseRoot(removeButton.getAttribute('data-root-id') || '');
+            return;
+        }
+
+        const openButton = event.target.closest('.database-root-open-btn');
+        if (openButton) {
+            pdb_openDatabaseRootFromSettings(openButton.getAttribute('data-root-id') || '');
+        }
+    });
 
     // Language selectors
     document.getElementById('languageSelect').addEventListener('change', (e) => {
@@ -3223,15 +3801,13 @@ function init() {
         hideContextMenu();
     });
     document.getElementById('contextOpenFolder').addEventListener('click', () => {
-        let path = document.getElementById('contextMenu').dataset.filePath;
+        const menu = document.getElementById('contextMenu');
+        let path = menu.dataset.absolutePath;
         const type = document.getElementById('contextMenu').dataset.type;
 
         if (type !== 'folder') {
             // If file, get parent folder
             path = path.substring(0, path.lastIndexOf('/'));
-        } else if (!path.includes(settings.databasePath)) {
-            // If relative folder path, make absolute
-            path = settings.databasePath + '/' + path;
         }
 
         openInExplorer(path);
@@ -3239,19 +3815,12 @@ function init() {
     });
 
     document.getElementById('contextImportFolder').addEventListener('click', () => {
-        let path = document.getElementById('contextMenu').dataset.filePath;
-        // path is relative for folders (e.g. "ELEMENTS/Test")
-        importFolder(path);
+        const folderKey = document.getElementById('contextMenu').dataset.filePath;
+        importFolder(folderKey);
         hideContextMenu();
     });
     document.getElementById('contextDelete').addEventListener('click', () => {
-        let path = document.getElementById('contextMenu').dataset.filePath;
-        const type = document.getElementById('contextMenu').dataset.type;
-
-        // Resolve folder path if relative
-        if (type === 'folder' && path && !path.includes(settings.databasePath)) {
-            path = settings.databasePath + '/' + path;
-        }
+        const path = document.getElementById('contextMenu').dataset.absolutePath;
 
         if (confirm(t('modal.deleteConfirm'))) {
             const result = deletePath(path);
@@ -3272,8 +3841,8 @@ function init() {
         }
     });
 
-    // Initial scan if database path is set
-    if (settings.databasePath) {
+    // Initial scan if at least one database root is configured
+    if (pdb_hasConfiguredDatabases()) {
         setTimeout(scanDatabaseFiles, 100);
     }
 

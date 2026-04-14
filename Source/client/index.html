@@ -290,21 +290,17 @@
                 </button>
             </div>
             <div class="settings-content">
-                <!-- Database Path -->
+                <!-- Database Roots -->
                 <div class="setting-item">
-                    <label for="databasePathInput" data-i18n="settings.databasePath">Database Path</label>
-                    <div class="folder-input-group">
-                        <input type="text" id="databasePathInput"
-                            data-i18n-placeholder="settings.databasePathPlaceholder"
-                            placeholder="Select database folder...">
-                        <button class="browse-btn" id="browseDatabaseBtn">
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                            </svg>
-                        </button>
+                    <div class="setting-item-header">
+                        <label data-i18n="settings.databaseRoots">Database folders</label>
+                        <button class="mini-btn" id="addDatabaseRootBtn" type="button"
+                            data-i18n="settings.addDatabaseRoot">Add database</button>
                     </div>
+                    <div id="databaseRootsList" class="database-roots-list"></div>
+                    <p class="setting-description" data-i18n="settings.databaseRootsDescription">
+                        Add one or more database folders and choose the name shown in the plugin.
+                    </p>
                 </div>
 
                 <!-- Language -->
