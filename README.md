@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from one or more database folders directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.6.9-blue)
+![Version](https://img.shields.io/badge/version-1.7.0-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -89,7 +89,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - 🇨🇳 简体中文
 
 ### ⌨️ Spell Book / Excalibur Integration
-- *(Currently disabled by default in v1.6.9; can be re-enabled via feature flags in code/installers.)*
+- *(Currently disabled by default in v1.7.0; can be re-enabled via feature flags in code/installers.)*
 - **Keyboard Shortcuts** via Spell Book extension
 - **Available Commands**:
   - `Refresh Database` - Rescan the database folder
@@ -256,6 +256,14 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.7.0 (2026-04-14)
+- **New Feature**: You can now configure multiple database folders with a custom display name for each one.
+- **Improvement**: The home view now shows all configured databases directly in separate sections for easier browsing.
+- **Fix**: `Import to root folder only` now keeps the direct first-level import behavior even when multiple databases are configured.
+- **New Feature**: Added Deutsch, Español, Italiano, Português (Brasil), Русский, 日本語, and 简体中文, with flag-based language selectors.
+- **Fix**: After removing extra databases and keeping only one, the root view now shows that remaining database correctly again.
+- **Change**: The debug log panel is now disabled by default for new installations.
 
 ### v1.6.9 (2026-04-14)
 - **Fix**: After removing extra databases and keeping only one, the root view now shows that remaining database correctly again.

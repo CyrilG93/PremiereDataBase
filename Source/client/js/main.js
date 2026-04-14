@@ -984,7 +984,7 @@ var defaultSettings = {
     flattenImportPath: false, // Only use first-level folder for bin path
     bannedExtensions: ['.txt', '.pdf', '.zip', '.rar', '.exe', '.doc', '.docx', '.prproj'],
     excludedFolderNames: ['.git', 'node_modules', '__MACOSX', 'Adobe Premiere Pro Auto-Save'],
-    debugMode: true, // Show debug log panel
+    debugMode: false, // Keep the debug log panel hidden by default on new installs
     showWaveforms: true, // Show audio waveforms
     showVideoWaveforms: true, // Show video waveforms
     hoverPreview: false // Preview on hover
