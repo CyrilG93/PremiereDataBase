@@ -190,35 +190,6 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 ### Image
 `.jpg`, `.jpeg`, `.png`, `.gif`, `.tiff`, `.tif`, `.psd`, `.ai`, `.eps`, `.bmp`, `.webp`, `.svg`
 
-## 📁 Project Structure
-
-```
-PremiereDataBase/
-├── README.md
-├── Source/
-│   ├── CSXS/
-│   │   └── manifest.xml
-│   ├── client/
-│   │   ├── index.html
-│   │   ├── css/
-│   │   │   └── style.css
-│   │   ├── js/
-│   │   │   ├── CSInterface.js
-│   │   │   ├── main.js
-│   │   │   └── fileOperations.js
-│   │   └── lang/
-│   │       ├── en.json
-│   │       └── fr.json
-│   ├── host/
-│   │   └── index.jsx
-│   ├── scripts/
-│   │   └── pdb_validate.js
-│   ├── install_macos.sh
-│   └── install_windows.bat
-├── Releases/
-└── .gitignore
-```
-
 ## 🔧 Troubleshooting
 
 ### Extension doesn't appear in Premiere Pro
