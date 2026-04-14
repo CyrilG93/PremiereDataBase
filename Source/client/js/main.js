@@ -319,15 +319,15 @@ var translations = {
 
 // Keep all supported UI languages in one native-name ordered list for both selectors.
 var LANGUAGE_OPTIONS = [
-    { value: 'de', label: 'Deutsch' },
-    { value: 'en', label: 'English' },
-    { value: 'es', label: 'Español' },
-    { value: 'fr', label: 'Français' },
-    { value: 'it', label: 'Italiano' },
-    { value: 'pt-BR', label: 'Português (Brasil)' },
-    { value: 'ru', label: 'Русский' },
-    { value: 'ja', label: '日本語' },
-    { value: 'zh-CN', label: '简体中文' }
+    { value: 'de', flag: '🇩🇪', label: 'Deutsch' },
+    { value: 'en', flag: '🇬🇧', label: 'English' },
+    { value: 'es', flag: '🇪🇸', label: 'Español' },
+    { value: 'fr', flag: '🇫🇷', label: 'Français' },
+    { value: 'it', flag: '🇮🇹', label: 'Italiano' },
+    { value: 'pt-BR', flag: '🇧🇷', label: 'Português (Brasil)' },
+    { value: 'ru', flag: '🇷🇺', label: 'Русский' },
+    { value: 'ja', flag: '🇯🇵', label: '日本語' },
+    { value: 'zh-CN', flag: '🇨🇳', label: '简体中文' }
 ];
 
 Object.assign(translations, {
@@ -1145,6 +1145,19 @@ function pdb_getActiveDatabaseRoot() {
     return null;
 }
 
+// Resolve the root that should be displayed when only one database is configured.
+function pdb_getVisibleDatabaseId() {
+    if (currentDatabaseId) {
+        return currentDatabaseId;
+    }
+
+    if (settings.databaseRoots.length === 1) {
+        return settings.databaseRoots[0].id;
+    }
+
+    return '';
+}
+
 // Sanitize custom root labels before reusing them as Premiere bin segments.
 function pdb_getSafeBinSegment(name) {
     return (name || '').replace(/[\\\/]+/g, '-').trim();
@@ -1317,17 +1330,39 @@ function updateUILanguage() {
     });
 }
 
+function pdb_updateLanguageSelectTitles() {
+    const activeLanguage = LANGUAGE_OPTIONS.find((option) => option.value === currentLang) || LANGUAGE_OPTIONS[0];
+    const languageSelect = document.getElementById('languageSelect');
+    const settingsLanguageSelect = document.getElementById('settingsLanguageSelect');
+
+    // Keep a readable tooltip even when the compact header selector uses flag-only labels.
+    if (languageSelect && activeLanguage) {
+        languageSelect.title = activeLanguage.label;
+    }
+
+    if (settingsLanguageSelect) {
+        settingsLanguageSelect.title = t('settings.language');
+    }
+}
+
 function pdb_renderLanguageSelectOptions() {
     const languageSelect = document.getElementById('languageSelect');
     const settingsLanguageSelect = document.getElementById('settingsLanguageSelect');
     const selects = [languageSelect, settingsLanguageSelect].filter(Boolean);
 
-    // Keep both selectors perfectly aligned with the same native-name ordered options.
+    // Keep both selectors aligned while preserving a compact flag selector in the header.
     selects.forEach((select) => {
+        const isHeaderSelect = select.id === 'languageSelect';
         select.innerHTML = LANGUAGE_OPTIONS.map((option) => {
-            return `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`;
+            const optionLabel = isHeaderSelect
+                ? option.flag
+                : `${option.flag} ${option.label}`;
+
+            return `<option value="${escapeHtml(option.value)}">${escapeHtml(optionLabel)}</option>`;
         }).join('');
     });
+
+    pdb_updateLanguageSelectTitles();
 }
 
 function changeLanguage(lang) {
@@ -1339,6 +1374,7 @@ function changeLanguage(lang) {
         settings = pdb_normalizeSettings(settings);
         updateUILanguage();
         pdb_renderDatabaseRootsSettings();
+        pdb_updateLanguageSelectTitles();
         saveSettings();
     }
 }
@@ -1578,6 +1614,7 @@ function loadSettings() {
     // Language selectors
     document.getElementById('languageSelect').value = currentLang;
     document.getElementById('settingsLanguageSelect').value = currentLang;
+    pdb_updateLanguageSelectTitles();
 
     // Update database path display
     updateDatabasePathDisplay();
@@ -2288,6 +2325,7 @@ function pdb_renderDatabaseSections(browser) {
 function renderFiles() {
     const browser = document.getElementById('fileBrowser');
     const hasConfiguredDatabases = pdb_hasConfiguredDatabases();
+    const visibleDatabaseId = pdb_getVisibleDatabaseId();
 
     if (!hasConfiguredDatabases) {
         browser.innerHTML = `
@@ -2313,7 +2351,7 @@ function renderFiles() {
         return;
     }
 
-    const currentFolders = pdb_getDirectFolders(currentDatabaseId, currentPath);
+    const currentFolders = pdb_getDirectFolders(visibleDatabaseId, currentPath);
 
     // When searching, show all matching files from all subfolders
     // When not searching, show only files in current folder OR expanded folders
@@ -2324,7 +2362,7 @@ function renderFiles() {
     } else {
         // Show files in current folder + files in expanded folders
         filesToShow = filteredFiles.filter(file => {
-            if (file.rootId !== currentDatabaseId) {
+            if (file.rootId !== visibleDatabaseId) {
                 return false;
             }
 
@@ -2334,7 +2372,7 @@ function renderFiles() {
             // In an expanded folder
             for (const expandedKey of expandedFolders) {
                 const expandedFolder = pdb_getFolderByKey(expandedKey);
-                if (expandedFolder && expandedFolder.rootId === currentDatabaseId && file.folderPath === expandedFolder.relativePath) {
+                if (expandedFolder && expandedFolder.rootId === visibleDatabaseId && file.folderPath === expandedFolder.relativePath) {
                     return true;
                 }
             }
