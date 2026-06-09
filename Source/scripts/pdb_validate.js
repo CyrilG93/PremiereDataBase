@@ -82,10 +82,85 @@ function validateHtmlHooks() {
     });
 }
 
+// Execute the host import bridge with a percent-bearing filename to prevent URI regressions.
+function validatePercentPathImport() {
+    const hostPath = path.join(sourceRoot, 'host', 'index.jsx');
+    const encodedPaths = [];
+    const importedPaths = [];
+
+    // Mimic ExtendScript URI handling closely enough to verify encoding and native path recovery.
+    function MockFile(uriPath) {
+        encodedPaths.push(uriPath);
+        this.exists = uriPath.includes('%25');
+        const decodedPath = decodeURI(uriPath);
+        this.fsName = /^[A-Za-z]:\//.test(decodedPath)
+            ? decodedPath.replace(/\//g, '\\')
+            : decodedPath;
+    }
+
+    // Match the ExtendScript File.encode contract used by the host bridge.
+    MockFile.encode = function encodeFilePath(filePath) {
+        return encodeURI(filePath).replace(/#/g, '%23');
+    };
+
+    const sandbox = {
+        $: {
+            os: 'Macintosh',
+            writeln: function writeln() {}
+        },
+        File: MockFile,
+        app: {
+            project: {
+                rootItem: {},
+                importFiles: function importFiles(filePaths) {
+                    importedPaths.push(...filePaths);
+                    return true;
+                }
+            }
+        },
+        JSON,
+        ProjectItemType: {
+            BIN: 2
+        }
+    };
+
+    try {
+        vm.createContext(sandbox);
+        vm.runInContext(readText(hostPath), sandbox, { filename: hostPath });
+
+        const macSourcePath = '/tmp/50% mix.mov';
+        const windowsSourcePath = 'C:/Media/50% mix.mov';
+        const result = JSON.parse(sandbox.DataBase_importFilesToProject(JSON.stringify([
+            {
+                name: '50% mix.mov',
+                path: macSourcePath,
+                binPath: ''
+            },
+            {
+                name: '50% mix.mov',
+                path: windowsSourcePath,
+                binPath: ''
+            }
+        ])));
+
+        const pathsArePreserved = importedPaths[0] === macSourcePath
+            && importedPaths[1] === 'C:\\Media\\50% mix.mov';
+        const urisAreEncoded = encodedPaths[0] === '/tmp/50%25%20mix.mov'
+            && encodedPaths[1] === 'C:/Media/50%25%20mix.mov';
+
+        if (result.totalImported !== 2 || !pathsArePreserved || !urisAreEncoded) {
+            failures.push('Percent-bearing paths are not preserved by the host import bridge.');
+        }
+    } catch (error) {
+        failures.push(`Percent path import validation failed: ${error.message}`);
+    }
+}
+
 // Run all local validations and exit with a CI-friendly status code.
 filesToParse.forEach(validateScriptSyntax);
 validateVersionConsistency();
 validateHtmlHooks();
+validatePercentPathImport();
 
 if (failures.length > 0) {
     console.error('PDB validation failed:');

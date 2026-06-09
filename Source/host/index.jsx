@@ -29,6 +29,17 @@ function normalizePath(path) {
     return path.replace(/\\/g, '/');
 }
 
+// Encode native paths as ExtendScript URIs so literal percent signs remain part of the filename.
+function createFileFromNativePath(filePath) {
+    var normalizedFilePath = normalizePath(filePath);
+    var encodedFilePath = File.encode(normalizedFilePath);
+
+    // Preserve the Windows drive separator because File.encode converts the colon to %3A.
+    encodedFilePath = encodedFilePath.replace(/^([A-Za-z])%3A\//i, '$1:/');
+
+    return new File(encodedFilePath);
+}
+
 // Get current project path
 function DataBase_getProjectPath() {
     try {
@@ -122,11 +133,7 @@ function DataBase_importFilesToProject(filesJson) {
             try {
                 // Verify file exists before attempting import
                 var filePath = file.path;
-
-                // Adobe ExtendScript prefers forward slashes on all platforms
-                // No manual backslash conversion needed here as File() handles it correctly
-
-                var fileObj = new File(filePath);
+                var fileObj = createFileFromNativePath(filePath);
                 if (!fileObj.exists) {
                     results.push({
                         name: file.name,
@@ -144,8 +151,8 @@ function DataBase_importFilesToProject(filesJson) {
                 var importError = null;
 
                 try {
-                    // importFiles expects an array of paths
-                    importedItems = app.project.importFiles([filePath], true, targetBin, false);
+                    // Pass Premiere the native path resolved from the safely encoded File object.
+                    importedItems = app.project.importFiles([fileObj.fsName], true, targetBin, false);
                 } catch (importEx) {
                     importError = importEx;
                 }
