@@ -222,6 +222,9 @@ Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
 
+### v1.7.1 (2026-06-09)
+- **Fix**: Files containing `%` in their name can now be imported into Premiere Pro without being renamed.
+
 ### v1.7.0 (2026-04-14)
 - **New Feature**: You can now configure multiple database folders with a custom display name for each one.
 - **Improvement**: The home view now shows all configured databases directly in separate sections for easier browsing.
