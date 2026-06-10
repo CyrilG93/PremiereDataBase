@@ -89,12 +89,13 @@ function validatePercentPathImport() {
     const encodedPaths = [];
     const importedPaths = [];
     const payloadContents = new Map();
+    const existingMediaPaths = new Set();
 
     // Mimic ExtendScript URI handling closely enough to verify encoding and native path recovery.
     function MockFile(uriPath) {
         encodedPaths.push(uriPath);
         const decodedPath = decodeURI(uriPath);
-        this.exists = uriPath.includes('%25') || payloadContents.has(decodedPath);
+        this.exists = existingMediaPaths.has(decodedPath) || payloadContents.has(decodedPath);
         this.fsName = /^[A-Za-z]:\//.test(decodedPath)
             ? decodedPath.replace(/\//g, '\\')
             : decodedPath;
@@ -106,11 +107,6 @@ function validatePercentPathImport() {
         };
         this.close = function closeFile() {};
     }
-
-    // Match the ExtendScript File.encode contract used by the host bridge.
-    MockFile.encode = function encodeFilePath(filePath) {
-        return encodeURI(filePath).replace(/#/g, '%23');
-    };
 
     const sandbox = {
         $: {
@@ -139,7 +135,11 @@ function validatePercentPathImport() {
 
         const macSourcePath = '/tmp/50% mix.mov';
         const windowsSourcePath = 'C:/Media/50% mix.mov';
+        const ordinaryWindowsPath = 'D:/E/_Assets/Sound Effects/Awkward Name.mp3';
         const payloadPath = '/tmp/premiere-database-import.json';
+        existingMediaPaths.add(macSourcePath);
+        existingMediaPaths.add(windowsSourcePath);
+        existingMediaPaths.add(ordinaryWindowsPath);
         payloadContents.set(payloadPath, JSON.stringify([
             {
                 name: '50% mix.mov',
@@ -150,6 +150,11 @@ function validatePercentPathImport() {
                 name: '50% mix.mov',
                 path: windowsSourcePath,
                 binPath: ''
+            },
+            {
+                name: 'Awkward Name.mp3',
+                path: ordinaryWindowsPath,
+                binPath: ''
             }
         ]));
 
@@ -157,12 +162,14 @@ function validatePercentPathImport() {
         const result = JSON.parse(sandbox.DataBase_importFilesFromPayloadFileBase64(encodedPayloadPath));
 
         const pathsArePreserved = importedPaths[0] === macSourcePath
-            && importedPaths[1] === 'C:\\Media\\50% mix.mov';
-        const urisAreEncoded = encodedPaths.includes('/tmp/50%25%20mix.mov')
-            && encodedPaths.includes('C:/Media/50%25%20mix.mov');
+            && importedPaths[1] === 'C:\\Media\\50% mix.mov'
+            && importedPaths[2] === 'D:\\E\\_Assets\\Sound Effects\\Awkward Name.mp3';
+        const percentSignsAreEscaped = encodedPaths.includes('/tmp/50%25 mix.mov')
+            && encodedPaths.includes('C:/Media/50%25 mix.mov');
+        const ordinaryPathStaysNative = encodedPaths.includes(ordinaryWindowsPath);
 
-        if (result.totalImported !== 2 || !pathsArePreserved || !urisAreEncoded) {
-            failures.push('File-backed imports do not preserve percent-bearing paths.');
+        if (result.totalImported !== 3 || !pathsArePreserved || !percentSignsAreEscaped || !ordinaryPathStaysNative) {
+            failures.push('File-backed imports do not preserve native paths and literal percent signs.');
         }
     } catch (error) {
         failures.push(`File-backed import validation failed: ${error.message}`);

@@ -29,13 +29,10 @@ function normalizePath(path) {
     return path.replace(/\\/g, '/');
 }
 
-// Encode native paths as ExtendScript URIs so literal percent signs remain part of the filename.
+// Preserve native paths and escape only literal percent signs interpreted as URI sequences by ExtendScript.
 function createFileFromNativePath(filePath) {
     var normalizedFilePath = normalizePath(filePath);
-    var encodedFilePath = File.encode(normalizedFilePath);
-
-    // Preserve the Windows drive separator because File.encode converts the colon to %3A.
-    encodedFilePath = encodedFilePath.replace(/^([A-Za-z])%3A\//i, '$1:/');
+    var encodedFilePath = normalizedFilePath.replace(/%/g, '%25');
 
     return new File(encodedFilePath);
 }
