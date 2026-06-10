@@ -233,18 +233,32 @@ function createMissingTimelineTracks(sequence, createVideoTrack, createAudioTrac
             return false;
         }
 
+        var lastVideoTrackIndex = Math.max(0, beforeVideoTracks - 1);
+        var lastAudioTrackIndex = Math.max(0, beforeAudioTracks - 1);
+
         if (createVideoTrack && createAudioTrack) {
-            // QE's single-argument form appends one video and one audio track.
-            qeSequence.addTracks(1);
-            attempted = true;
+            try {
+                // Append Vn+1 above the current top video track and An+1 below the current bottom audio track.
+                qeSequence.addTracks(1, lastVideoTrackIndex, 1, 1, lastAudioTrackIndex);
+                attempted = true;
+            } catch (combinedSignatureError) {
+                // Keep the older QE signature as a compatibility fallback.
+                qeSequence.addTracks(1);
+                attempted = true;
+            }
         } else if (createAudioTrack) {
-            // Passing zero appends one audio track without adding video.
-            qeSequence.addTracks(0);
-            attempted = true;
+            try {
+                // Append the new audio track below the existing audio tracks.
+                qeSequence.addTracks(0, 0, 1, 1, lastAudioTrackIndex);
+                attempted = true;
+            } catch (audioSignatureError) {
+                qeSequence.addTracks(0);
+                attempted = true;
+            }
         } else if (createVideoTrack) {
             try {
-                // Append one video track without adding an unnecessary audio track.
-                qeSequence.addTracks(1, beforeVideoTracks, 0, 0, 0);
+                // Append the new video track above the existing video tracks.
+                qeSequence.addTracks(1, lastVideoTrackIndex, 0, 0, 0);
                 attempted = true;
             } catch (videoOnlySignatureError) {
                 // Older QE signatures may only support adding video and audio together.

@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from one or more database folders directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.7.3-blue)
+![Version](https://img.shields.io/badge/version-1.7.4-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -35,6 +35,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - **Import to root folder only** still imports directly into the first visible folder level, even when multiple databases are configured
 - Optional automatic timeline placement for a single imported file at the playhead
 - Uses the first track with enough free space and creates a compatible track when needed
+- New timeline tracks follow Premiere's normal order: video above, audio below
 - Supports filenames containing special characters such as `%`
 - Progress indicator during import
 
@@ -180,6 +181,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 | **Copy on Import** | Copy files to project folder when importing (preserves structure) |
 | **Consolidation Depth** | How many parent folders to keep when copying (0=none, 1=parent, etc.) |
 | **Add single imports to timeline** | Place one imported file at the playhead on the first available track, creating a track when needed |
+| **Debug Mode** | Show logs below the main interface without covering controls |
 | **Excluded Extensions** | File extensions to skip during scanning |
 | **Excluded Folders** | Folder names to skip (e.g., .git, node_modules) |
 | **Flatten Import Path** | Import files to root folder only (ignores subfolders) |

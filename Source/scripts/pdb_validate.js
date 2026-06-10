@@ -191,6 +191,7 @@ function validateImportBridgeRecovery() {
 function validateTimelineInsertion() {
     const hostPath = path.join(sourceRoot, 'host', 'index.jsx');
     const insertions = [];
+    const addTrackCalls = [];
 
     function MockFile(uriPath) {
         this.exists = true;
@@ -219,9 +220,17 @@ function validateTimelineInsertion() {
         };
     }
 
-    const videoTracks = [createTrack([createClip(9, 13)])];
+    const videoTracks = [
+        createTrack([createClip(9, 13)]),
+        createTrack([createClip(9, 13)]),
+        createTrack([createClip(9, 13)])
+    ];
     videoTracks.numTracks = videoTracks.length;
-    const audioTracks = [createTrack([createClip(9, 13)])];
+    const audioTracks = [
+        createTrack([createClip(9, 13)]),
+        createTrack([createClip(9, 13)]),
+        createTrack([createClip(9, 13)])
+    ];
     audioTracks.numTracks = audioTracks.length;
 
     const sandbox = {
@@ -251,13 +260,22 @@ function validateTimelineInsertion() {
             project: {
                 getActiveSequence: function getActiveSequence() {
                     return {
-                        addTracks: function addTracks(videoTrackCount) {
+                        addTracks: function addTracks(videoTrackCount, afterVideoTrackIndex, audioTrackCount, audioTrackType, afterAudioTrackIndex) {
+                            addTrackCalls.push([
+                                videoTrackCount,
+                                afterVideoTrackIndex,
+                                audioTrackCount,
+                                audioTrackType,
+                                afterAudioTrackIndex
+                            ]);
                             if (videoTrackCount > 0) {
                                 videoTracks.push(createTrack([]));
                                 videoTracks.numTracks = videoTracks.length;
                             }
-                            audioTracks.push(createTrack([]));
-                            audioTracks.numTracks = audioTracks.length;
+                            if (audioTrackCount > 0) {
+                                audioTracks.push(createTrack([]));
+                                audioTracks.numTracks = audioTracks.length;
+                            }
                         }
                     };
                 }
@@ -284,13 +302,27 @@ function validateTimelineInsertion() {
 
         const result = sandbox.DataBase_addProjectItemToTimeline(projectItem, 'video');
         const insertion = insertions[0];
+        const addTrackCall = addTrackCalls[0];
 
-        if (!result.added || !result.createdTrack || result.videoTrack !== 1 || result.audioTrack !== 1
-            || !insertion || insertion.videoTrackIndex !== 1 || insertion.audioTrackIndex !== 1) {
+        if (!result.added || !result.createdTrack || result.videoTrack !== 3 || result.audioTrack !== 3
+            || !insertion || insertion.videoTrackIndex !== 3 || insertion.audioTrackIndex !== 3
+            || !addTrackCall || addTrackCall.join(',') !== '1,2,1,1,2') {
             failures.push('Timeline insertion did not create and use free video/audio tracks.');
         }
     } catch (error) {
         failures.push(`Timeline insertion validation failed: ${error.message}`);
+    }
+}
+
+// Keep the debug panel inside the flex layout so it never covers interface controls.
+function validateDebugPanelLayout() {
+    const styles = readText(path.join(sourceRoot, 'client', 'css', 'style.css'));
+    const debugPanelBlock = styles.match(/\.debug-panel\s*\{([\s\S]*?)\}/);
+
+    if (!debugPanelBlock
+        || !debugPanelBlock[1].includes('position: static')
+        || !debugPanelBlock[1].includes('flex: 0 0 auto')) {
+        failures.push('Debug panel must remain in the normal flex layout.');
     }
 }
 
@@ -301,6 +333,7 @@ validateHtmlHooks();
 validatePercentPathImport();
 validateImportBridgeRecovery();
 validateTimelineInsertion();
+validateDebugPanelLayout();
 
 if (failures.length > 0) {
     console.error('PDB validation failed:');

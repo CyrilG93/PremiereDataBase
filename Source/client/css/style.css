@@ -226,6 +226,7 @@ header h1 {
 /* Main */
 main {
     flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     padding: var(--spacing-md);
@@ -1663,15 +1664,14 @@ main {
    ============================================ */
 .debug-panel {
     display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 150px;
+    position: static;
+    width: 100%;
+    height: min(150px, 35vh);
+    min-height: 80px;
+    max-height: 35vh;
+    flex: 0 0 auto;
     background: #1a1a1a;
     border-top: 2px solid var(--accent-primary);
-    z-index: 100;
-    /* Lower than settings panel */
     flex-direction: column;
 }
 
