@@ -154,7 +154,9 @@ function validatePercentPathImport() {
             {
                 name: 'Awkward Name.mp3',
                 path: ordinaryWindowsPath,
-                binPath: ''
+                binPath: '',
+                mediaType: 'audio',
+                addToTimeline: true
             }
         ]));
 
@@ -163,12 +165,15 @@ function validatePercentPathImport() {
 
         const pathsArePreserved = importedPaths[0] === macSourcePath
             && importedPaths[1] === 'C:\\Media\\50% mix.mov'
-            && importedPaths[2] === 'D:\\E\\_Assets\\Sound Effects\\Awkward Name.mp3';
+            && importedPaths[2] === ordinaryWindowsPath;
         const percentSignsAreEscaped = encodedPaths.includes('/tmp/50%25 mix.mov')
             && encodedPaths.includes('C:/Media/50%25 mix.mov');
         const ordinaryPathStaysNative = encodedPaths.includes(ordinaryWindowsPath);
+        const timelineIsDeferred = result.results[2].timelineRequested === true
+            && typeof result.results[2].timeline === 'undefined';
 
-        if (result.totalImported !== 3 || !pathsArePreserved || !percentSignsAreEscaped || !ordinaryPathStaysNative) {
+        if (result.totalImported !== 3 || !pathsArePreserved || !percentSignsAreEscaped
+            || !ordinaryPathStaysNative || !timelineIsDeferred) {
             failures.push('File-backed imports do not preserve native paths and literal percent signs.');
         }
     } catch (error) {
@@ -183,11 +188,15 @@ function validateImportBridgeRecovery() {
         "var PDB_EVALSCRIPT_ERROR = 'EvalScript error.'",
         'var PDB_DIRECT_IMPORT_MAX_COMMAND_LENGTH = 12000;',
         'function pdb_ensureHostBridgeReady()',
+        'function pdb_getLastHostStage()',
         'function pdb_encodeUtf8Base64(value)',
+        'function pdb_addImportedMediaToTimeline(importedResult)',
         'function pdb_createImportPayloadFile(filesJson)',
         'function pdb_importPayloadThroughHost(payloadPath, filesJson)',
         "transport = 'direct-base64';",
         'DataBase_importFilesToProjectBase64',
+        'DataBase_addImportedMediaToTimelineBase64',
+        "'Host stage:', hostStage",
         'Import response was not valid JSON.'
     ];
 

@@ -7,10 +7,21 @@ var IS_MAC = !IS_WINDOWS;
 
 // Platform-specific path separator
 var PATH_SEPARATOR = IS_WINDOWS ? '\\' : '/';
+var DataBase_lastHostStage = 'idle';
 
 // Helper function to log with platform info
 function logPlatform(message) {
     $.writeln('[' + (IS_WINDOWS ? 'WIN' : 'MAC') + '] ' + message);
+}
+
+// Keep the latest host operation stage available after a raw CEP failure.
+function DataBase_setLastHostStage(stage) {
+    DataBase_lastHostStage = stage || 'unknown';
+}
+
+// Return the latest host stage without invoking any Premiere API.
+function DataBase_getLastHostStage() {
+    return DataBase_lastHostStage;
 }
 
 // Helper function to decode URI-encoded paths (e.g., %20 -> space)
@@ -364,6 +375,7 @@ function DataBase_addProjectItemToTimeline(projectItem, mediaType) {
 // filesJson: JSON string with array of {name, path, binPath, mediaType, addToTimeline}
 function DataBase_importFilesToProject(filesJson) {
     try {
+        DataBase_setLastHostStage('import:parse-payload');
         var files = JSON.parse(filesJson);
         var results = [];
 
@@ -372,6 +384,7 @@ function DataBase_importFilesToProject(filesJson) {
 
             try {
                 // Verify file exists before attempting import
+                DataBase_setLastHostStage('import:file-' + i + ':resolve-path');
                 var filePath = file.path;
                 var fileObj = createFileFromNativePath(filePath);
                 if (!fileObj.exists) {
@@ -384,15 +397,19 @@ function DataBase_importFilesToProject(filesJson) {
                 }
 
                 // Get or create target bin
+                DataBase_setLastHostStage('import:file-' + i + ':resolve-bin');
                 var targetBin = getOrCreateBin(file.binPath);
 
                 // Import file
                 var importedItems = null;
                 var importError = null;
+                var premiereImportPath = filePath.indexOf('%') >= 0 ? fileObj.fsName : filePath;
 
                 try {
-                    // Pass Premiere the native path resolved from the safely encoded File object.
-                    importedItems = app.project.importFiles([fileObj.fsName], true, targetBin, false);
+                    // Keep ordinary paths exactly as scanned; use fsName only to preserve literal percent signs.
+                    DataBase_setLastHostStage('import:file-' + i + ':premiere-import');
+                    importedItems = app.project.importFiles([premiereImportPath], true, targetBin, false);
+                    DataBase_setLastHostStage('import:file-' + i + ':premiere-import-returned');
                 } catch (importEx) {
                     importError = importEx;
                 }
@@ -405,29 +422,14 @@ function DataBase_importFilesToProject(filesJson) {
                     });
                     logPlatform('Import failed: ' + file.name + ' - ' + importError.toString());
                 } else {
-                    var timelineResult = {
-                        requested: file.addToTimeline === true,
-                        added: false,
-                        createdTrack: false,
-                        videoTrack: -1,
-                        audioTrack: -1,
-                        error: ''
-                    };
-
-                    if (file.addToTimeline === true) {
-                        var importedProjectItem = findProjectItemByMediaPath(fileObj.fsName);
-                        if (importedProjectItem) {
-                            timelineResult = DataBase_addProjectItemToTimeline(importedProjectItem, file.mediaType || 'video');
-                        } else {
-                            timelineResult.error = 'Imported project item not found';
-                        }
-                    }
-
+                    // Timeline placement runs separately so it cannot invalidate a successful project import.
                     results.push({
                         name: file.name,
                         success: true,
                         binPath: file.binPath,
-                        timeline: timelineResult
+                        mediaPath: premiereImportPath,
+                        mediaType: file.mediaType || 'video',
+                        timelineRequested: file.addToTimeline === true
                     });
                     logPlatform('Imported: ' + file.name + ' -> ' + (file.binPath || 'Root'));
                 }
@@ -447,6 +449,7 @@ function DataBase_importFilesToProject(filesJson) {
             if (results[k].success) successCount++;
         }
 
+        DataBase_setLastHostStage('import:complete');
         return JSON.stringify({
             results: results,
             totalImported: successCount
@@ -454,6 +457,35 @@ function DataBase_importFilesToProject(filesJson) {
 
     } catch (e) {
         return JSON.stringify({ error: e.toString() });
+    }
+}
+
+// Add an already imported media path to the timeline in an isolated host call.
+function DataBase_addImportedMediaToTimelineBase64(base64Payload) {
+    try {
+        DataBase_setLastHostStage('timeline:parse-payload');
+        var payload = JSON.parse(base64Decode(base64Payload));
+        DataBase_setLastHostStage('timeline:find-project-item');
+        var projectItem = findProjectItemByMediaPath(payload.path);
+
+        if (!projectItem) {
+            return JSON.stringify({
+                requested: true,
+                added: false,
+                error: 'Imported project item not found'
+            });
+        }
+
+        DataBase_setLastHostStage('timeline:add-to-sequence');
+        var result = DataBase_addProjectItemToTimeline(projectItem, payload.mediaType || 'video');
+        DataBase_setLastHostStage('timeline:complete');
+        return JSON.stringify(result);
+    } catch (e) {
+        return JSON.stringify({
+            requested: true,
+            added: false,
+            error: e.toString()
+        });
     }
 }
 

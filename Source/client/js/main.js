@@ -1074,9 +1074,46 @@ function pdb_isEvalScriptError(result) {
     return String(result || '').trim() === PDB_EVALSCRIPT_ERROR;
 }
 
+// Read the last stage reached by the host after a raw evalScript failure.
+async function pdb_getLastHostStage() {
+    const stage = await pdb_evalScript(
+        `typeof DataBase_getLastHostStage === 'function' ? DataBase_getLastHostStage() : 'stage-unavailable'`
+    );
+    return pdb_isEvalScriptError(stage) ? 'stage-query-failed' : stage;
+}
+
 // Encode UTF-8 text for an ExtendScript-safe Base64 function argument.
 function pdb_encodeUtf8Base64(value) {
     return btoa(unescape(encodeURIComponent(value)));
+}
+
+// Place one successfully imported project item on the timeline in an isolated host call.
+async function pdb_addImportedMediaToTimeline(importedResult) {
+    const payload = JSON.stringify({
+        path: importedResult.mediaPath,
+        mediaType: importedResult.mediaType || 'video'
+    });
+    const encodedPayload = pdb_encodeUtf8Base64(payload);
+    const script = `DataBase_addImportedMediaToTimelineBase64('${encodedPayload}')`;
+    const rawResult = await pdb_evalScript(script);
+
+    if (pdb_isEvalScriptError(rawResult)) {
+        return {
+            requested: true,
+            added: false,
+            error: `EvalScript error at ${await pdb_getLastHostStage()}`
+        };
+    }
+
+    try {
+        return JSON.parse(rawResult);
+    } catch (error) {
+        return {
+            requested: true,
+            added: false,
+            error: `Invalid timeline response: ${String(rawResult).slice(0, 200)}`
+        };
+    }
 }
 
 // Reload the installed JSX file when Premiere's host engine has lost the bridge functions.
@@ -4386,10 +4423,12 @@ async function performImport(files) {
             hideProgress();
 
             if (pdb_isEvalScriptError(bridgeResponse.result)) {
+                const hostStage = await pdb_getLastHostStage();
                 showStatus(t('status.importError'), 'error');
                 console.error(
                     'Premiere host import failed.',
                     'Raw response:', bridgeResponse.result,
+                    'Host stage:', hostStage,
                     'Transport:', bridgeResponse.transport,
                     'Command length:', bridgeResponse.commandLength,
                     'Fallback command length:', bridgeResponse.fallbackCommandLength,
@@ -4412,8 +4451,11 @@ async function performImport(files) {
                     // Keep a visible diagnostic when Premiere required the compatibility transport.
                     console.warn('Import completed through direct Base64 fallback.');
                 }
-                const timelineResult = response.results && response.results.length === 1
-                    ? response.results[0].timeline
+                const importedResult = response.results && response.results.length === 1
+                    ? response.results[0]
+                    : null;
+                const timelineResult = importedResult && importedResult.success && importedResult.timelineRequested
+                    ? await pdb_addImportedMediaToTimeline(importedResult)
                     : null;
 
                 if (timelineResult && timelineResult.requested && timelineResult.added) {
