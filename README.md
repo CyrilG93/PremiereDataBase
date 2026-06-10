@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from one or more database folders directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.7.1-blue)
+![Version](https://img.shields.io/badge/version-1.7.2-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -209,8 +209,9 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 ### Import fails
 
 1. Verify the files exist and are accessible
-2. Check Premiere Pro console for error messages
+2. Enable Debug Mode in the extension settings and retry the import
 3. Ensure you have write permissions to the project folder (if consolidate is enabled)
+4. Restart Premiere Pro and reinstall the extension if the debug log reports that the Premiere host bridge is unavailable
 
 ## 📜 License
 
@@ -221,6 +222,10 @@ MIT License - Feel free to use and modify as needed.
 Contributions are welcome! Feel free to submit issues or pull requests.
 
 ## 📝 Changelog
+
+### v1.7.2 (2026-06-10)
+- **Fix**: Imports now recover when Premiere temporarily fails to load the host script, and large folder imports no longer send oversized commands to Premiere.
+- **Improvement**: Import errors now include useful host diagnostics in Debug Mode instead of a JSON parsing message.
 
 ### v1.7.1 (2026-06-09)
 - **Fix**: Files containing `%` in their name can now be imported into Premiere Pro without being renamed.

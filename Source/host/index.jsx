@@ -262,6 +262,40 @@ function DataBase_importFilesToProjectBase64(base64Json) {
     }
 }
 
+// Read large import payloads from disk so CEP only sends a short path through evalScript.
+function DataBase_importFilesFromPayloadFileBase64(base64Path) {
+    var payloadFile = null;
+
+    try {
+        var payloadPath = base64Decode(base64Path);
+        payloadFile = createFileFromNativePath(payloadPath);
+
+        if (!payloadFile.exists) {
+            return JSON.stringify({ error: 'Import payload file not found: ' + payloadPath });
+        }
+
+        if (!payloadFile.open('r')) {
+            return JSON.stringify({ error: 'Unable to open import payload file: ' + payloadPath });
+        }
+
+        var filesJson = payloadFile.read();
+        payloadFile.close();
+        payloadFile = null;
+
+        return DataBase_importFilesToProject(filesJson);
+    } catch (e) {
+        if (payloadFile) {
+            try {
+                payloadFile.close();
+            } catch (closeError) {
+                logPlatform('Unable to close import payload file: ' + closeError.toString());
+            }
+        }
+
+        return JSON.stringify({ error: 'Import payload error: ' + e.toString() });
+    }
+}
+
 // Get project info
 function DataBase_getProjectInfo() {
     try {

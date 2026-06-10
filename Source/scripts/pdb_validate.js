@@ -87,15 +87,23 @@ function validatePercentPathImport() {
     const hostPath = path.join(sourceRoot, 'host', 'index.jsx');
     const encodedPaths = [];
     const importedPaths = [];
+    const payloadContents = new Map();
 
     // Mimic ExtendScript URI handling closely enough to verify encoding and native path recovery.
     function MockFile(uriPath) {
         encodedPaths.push(uriPath);
-        this.exists = uriPath.includes('%25');
         const decodedPath = decodeURI(uriPath);
+        this.exists = uriPath.includes('%25') || payloadContents.has(decodedPath);
         this.fsName = /^[A-Za-z]:\//.test(decodedPath)
             ? decodedPath.replace(/\//g, '\\')
             : decodedPath;
+        this.open = function openFile() {
+            return payloadContents.has(decodedPath);
+        };
+        this.read = function readFile() {
+            return payloadContents.get(decodedPath) || '';
+        };
+        this.close = function closeFile() {};
     }
 
     // Match the ExtendScript File.encode contract used by the host bridge.
@@ -130,7 +138,8 @@ function validatePercentPathImport() {
 
         const macSourcePath = '/tmp/50% mix.mov';
         const windowsSourcePath = 'C:/Media/50% mix.mov';
-        const result = JSON.parse(sandbox.DataBase_importFilesToProject(JSON.stringify([
+        const payloadPath = '/tmp/premiere-database-import.json';
+        payloadContents.set(payloadPath, JSON.stringify([
             {
                 name: '50% mix.mov',
                 path: macSourcePath,
@@ -141,19 +150,40 @@ function validatePercentPathImport() {
                 path: windowsSourcePath,
                 binPath: ''
             }
-        ])));
+        ]));
+
+        const encodedPayloadPath = Buffer.from(payloadPath, 'utf8').toString('base64');
+        const result = JSON.parse(sandbox.DataBase_importFilesFromPayloadFileBase64(encodedPayloadPath));
 
         const pathsArePreserved = importedPaths[0] === macSourcePath
             && importedPaths[1] === 'C:\\Media\\50% mix.mov';
-        const urisAreEncoded = encodedPaths[0] === '/tmp/50%25%20mix.mov'
-            && encodedPaths[1] === 'C:/Media/50%25%20mix.mov';
+        const urisAreEncoded = encodedPaths.includes('/tmp/50%25%20mix.mov')
+            && encodedPaths.includes('C:/Media/50%25%20mix.mov');
 
         if (result.totalImported !== 2 || !pathsArePreserved || !urisAreEncoded) {
-            failures.push('Percent-bearing paths are not preserved by the host import bridge.');
+            failures.push('File-backed imports do not preserve percent-bearing paths.');
         }
     } catch (error) {
-        failures.push(`Percent path import validation failed: ${error.message}`);
+        failures.push(`File-backed import validation failed: ${error.message}`);
     }
+}
+
+// Keep the client-side recovery path present so raw CEP failures are not parsed as JSON.
+function validateImportBridgeRecovery() {
+    const clientSource = readText(path.join(sourceRoot, 'client', 'js', 'main.js'));
+    const requiredMarkers = [
+        "var PDB_EVALSCRIPT_ERROR = 'EvalScript error.'",
+        'function pdb_ensureHostBridgeReady()',
+        'function pdb_createImportPayloadFile(filesJson)',
+        'function pdb_importPayloadThroughHost(payloadPath)',
+        'Import response was not valid JSON.'
+    ];
+
+    requiredMarkers.forEach((marker) => {
+        if (!clientSource.includes(marker)) {
+            failures.push(`Missing import bridge recovery marker: ${marker}`);
+        }
+    });
 }
 
 // Run all local validations and exit with a CI-friendly status code.
@@ -161,6 +191,7 @@ filesToParse.forEach(validateScriptSyntax);
 validateVersionConsistency();
 validateHtmlHooks();
 validatePercentPathImport();
+validateImportBridgeRecovery();
 
 if (failures.length > 0) {
     console.error('PDB validation failed:');

@@ -1020,6 +1020,106 @@ var pdb_https = require('https');
 // UPDATE SYSTEM CONSTANTS
 var GITHUB_REPO = 'CyrilG93/PremiereDataBase';
 var CURRENT_VERSION = '1.0.0'; // Will be updated from manifest
+var PDB_EVALSCRIPT_ERROR = 'EvalScript error.';
+
+// Wrap CEP evalScript calls so host checks and retries can use promises.
+function pdb_evalScript(script) {
+    return new Promise((resolve) => {
+        csInterface.evalScript(script, (result) => {
+            resolve(typeof result === 'string' ? result : String(result || ''));
+        });
+    });
+}
+
+// Detect the standard CEP response returned when Premiere rejects an ExtendScript call.
+function pdb_isEvalScriptError(result) {
+    return String(result || '').trim() === PDB_EVALSCRIPT_ERROR;
+}
+
+// Reload the installed JSX file when Premiere's host engine has lost the bridge functions.
+async function pdb_reloadHostScript() {
+    try {
+        const extensionPath = csInterface.getSystemPath(SystemPath.EXTENSION);
+        const hostScriptPath = pdb_path.join(extensionPath, 'host', 'index.jsx');
+        const hostPathLiteral = JSON.stringify(hostScriptPath);
+        const reloadScript = `(function () {
+            try {
+                $.evalFile(new File(${hostPathLiteral}));
+                return typeof DataBase_importFilesFromPayloadFileBase64 === 'function' ? 'ready' : 'missing';
+            } catch (e) {
+                return 'reload-error: ' + e.toString();
+            }
+        }())`;
+
+        return await pdb_evalScript(reloadScript);
+    } catch (error) {
+        return 'reload-error: ' + error.message;
+    }
+}
+
+// Verify the import bridge and make one recovery attempt if the JSX was not loaded.
+async function pdb_ensureHostBridgeReady() {
+    const probeScript = `typeof DataBase_importFilesFromPayloadFileBase64 === 'function' ? 'ready' : 'missing'`;
+    const probeResult = await pdb_evalScript(probeScript);
+
+    if (probeResult === 'ready') {
+        return {
+            ready: true,
+            probeResult: probeResult,
+            reloadResult: 'not-needed'
+        };
+    }
+
+    const reloadResult = await pdb_reloadHostScript();
+    return {
+        ready: reloadResult === 'ready',
+        probeResult: probeResult,
+        reloadResult: reloadResult
+    };
+}
+
+// Store import JSON outside evalScript to avoid command-length failures on folder imports.
+function pdb_createImportPayloadFile(filesJson) {
+    const payloadDirectory = pdb_path.join(pdb_os.tmpdir(), 'PremiereDataBase');
+    const payloadName = `import-${Date.now()}-${Math.random().toString(36).slice(2)}.json`;
+    const payloadPath = pdb_path.join(payloadDirectory, payloadName);
+
+    pdb_fs.mkdirSync(payloadDirectory, { recursive: true });
+    pdb_fs.writeFileSync(payloadPath, filesJson, 'utf8');
+    return payloadPath;
+}
+
+// Remove a temporary import payload after Premiere has consumed it.
+function pdb_removeImportPayloadFile(payloadPath) {
+    try {
+        if (payloadPath && pdb_fs.existsSync(payloadPath)) {
+            pdb_fs.unlinkSync(payloadPath);
+        }
+    } catch (error) {
+        console.warn('Unable to remove temporary import payload:', error.message);
+    }
+}
+
+// Invoke the host import function and retry once after reloading the JSX bridge.
+async function pdb_importPayloadThroughHost(payloadPath) {
+    const encodedPayloadPath = btoa(unescape(encodeURIComponent(payloadPath)));
+    const importScript = `DataBase_importFilesFromPayloadFileBase64('${encodedPayloadPath}')`;
+    let result = await pdb_evalScript(importScript);
+    let recovery = null;
+
+    if (pdb_isEvalScriptError(result)) {
+        recovery = await pdb_ensureHostBridgeReady();
+        if (recovery.ready) {
+            result = await pdb_evalScript(importScript);
+        }
+    }
+
+    return {
+        result: result,
+        commandLength: importScript.length,
+        recovery: recovery
+    };
+}
 
 // Build a stable unique key for a folder inside one database root.
 function pdb_buildFolderKey(rootId, relativePath) {
@@ -4215,30 +4315,48 @@ async function performImport(files) {
         updateProgress(50, t('status.importing'));
 
         const filesJson = JSON.stringify(filesToImport);
-        const base64Json = btoa(unescape(encodeURIComponent(filesJson)));
+        const payloadPath = pdb_createImportPayloadFile(filesJson);
 
-        return new Promise((resolve) => {
-            csInterface.evalScript(`DataBase_importFilesToProjectBase64('${base64Json}')`, (result) => {
-                hideProgress();
+        try {
+            const bridgeResponse = await pdb_importPayloadThroughHost(payloadPath);
+            hideProgress();
 
-                try {
-                    const response = JSON.parse(result);
+            if (pdb_isEvalScriptError(bridgeResponse.result)) {
+                showStatus(t('status.importError'), 'error');
+                console.error(
+                    'Import host bridge unavailable.',
+                    'Raw response:', bridgeResponse.result,
+                    'Command length:', bridgeResponse.commandLength,
+                    'Recovery:', JSON.stringify(bridgeResponse.recovery)
+                );
+                return 0;
+            }
 
-                    if (response.error) {
-                        showStatus(t('status.importError') + ': ' + response.error, 'error');
-                        resolve(0);
-                    } else {
-                        const count = response.totalImported || 0;
-                        showStatus(`${count} ${t('status.importSuccess')}`, 'success');
-                        resolve(count);
-                    }
-                } catch (e) {
-                    showStatus(t('status.importError'), 'error');
-                    console.error('Import error:', e);
-                    resolve(0);
+            try {
+                const response = JSON.parse(bridgeResponse.result);
+
+                if (response.error) {
+                    showStatus(t('status.importError') + ': ' + response.error, 'error');
+                    console.error('Import host error:', response.error);
+                    return 0;
                 }
-            });
-        });
+
+                const count = response.totalImported || 0;
+                showStatus(`${count} ${t('status.importSuccess')}`, 'success');
+                return count;
+            } catch (parseError) {
+                showStatus(t('status.importError'), 'error');
+                console.error(
+                    'Import response was not valid JSON.',
+                    'Raw response:', String(bridgeResponse.result).slice(0, 500),
+                    'Command length:', bridgeResponse.commandLength,
+                    'Parse error:', parseError.message
+                );
+                return 0;
+            }
+        } finally {
+            pdb_removeImportPayloadFile(payloadPath);
+        }
     } catch (e) {
         hideProgress();
         showStatus(t('status.importError'), 'error');
@@ -4362,6 +4480,15 @@ function init() {
     // Load settings
     loadSettings();
     renderBreadcrumb();
+
+    // Check the JSX bridge early so an installation or host-loading issue is visible in debug logs.
+    pdb_ensureHostBridgeReady().then((hostStatus) => {
+        if (hostStatus.ready) {
+            console.log('Premiere host bridge ready');
+        } else {
+            console.error('Premiere host bridge unavailable:', JSON.stringify(hostStatus));
+        }
+    });
 
     // SpellBook is now initialized at module load time (top of file)
 
