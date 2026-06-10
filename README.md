@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from one or more database folders directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.7.5-blue)
+![Version](https://img.shields.io/badge/version-1.7.6-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -34,6 +34,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
   - Example: `DATABASE/ELEMENTS/TEST/clip.mp4` → Creates `ELEMENTS/TEST` bin in Premiere
 - **Import to root folder only** still imports directly into the first visible folder level, even when multiple databases are configured
 - Optional automatic timeline placement for a single imported file at the playhead
+- Compatibility fallback for single-file imports rejected by the Premiere host bridge
 - Uses the first track with enough free space and creates a compatible track when needed
 - New timeline tracks follow Premiere's normal order: video above, audio below
 - Supports filenames containing special characters such as `%`

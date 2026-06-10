@@ -174,9 +174,13 @@ function validateImportBridgeRecovery() {
     const clientSource = readText(path.join(sourceRoot, 'client', 'js', 'main.js'));
     const requiredMarkers = [
         "var PDB_EVALSCRIPT_ERROR = 'EvalScript error.'",
+        'var PDB_DIRECT_IMPORT_MAX_COMMAND_LENGTH = 12000;',
         'function pdb_ensureHostBridgeReady()',
+        'function pdb_encodeUtf8Base64(value)',
         'function pdb_createImportPayloadFile(filesJson)',
-        'function pdb_importPayloadThroughHost(payloadPath)',
+        'function pdb_importPayloadThroughHost(payloadPath, filesJson)',
+        "transport = 'direct-base64';",
+        'DataBase_importFilesToProjectBase64',
         'Import response was not valid JSON.'
     ];
 

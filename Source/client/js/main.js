@@ -1058,6 +1058,7 @@ var pdb_https = require('https');
 var GITHUB_REPO = 'CyrilG93/PremiereDataBase';
 var CURRENT_VERSION = '1.0.0'; // Will be updated from manifest
 var PDB_EVALSCRIPT_ERROR = 'EvalScript error.';
+var PDB_DIRECT_IMPORT_MAX_COMMAND_LENGTH = 12000;
 
 // Wrap CEP evalScript calls so host checks and retries can use promises.
 function pdb_evalScript(script) {
@@ -1071,6 +1072,11 @@ function pdb_evalScript(script) {
 // Detect the standard CEP response returned when Premiere rejects an ExtendScript call.
 function pdb_isEvalScriptError(result) {
     return String(result || '').trim() === PDB_EVALSCRIPT_ERROR;
+}
+
+// Encode UTF-8 text for an ExtendScript-safe Base64 function argument.
+function pdb_encodeUtf8Base64(value) {
+    return btoa(unescape(encodeURIComponent(value)));
 }
 
 // Reload the installed JSX file when Premiere's host engine has lost the bridge functions.
@@ -1137,24 +1143,41 @@ function pdb_removeImportPayloadFile(payloadPath) {
     }
 }
 
-// Invoke the host import function and retry once after reloading the JSX bridge.
-async function pdb_importPayloadThroughHost(payloadPath) {
-    const encodedPayloadPath = btoa(unescape(encodeURIComponent(payloadPath)));
+// Invoke the host import function and use a direct transport when CEP rejects a short file-backed call.
+async function pdb_importPayloadThroughHost(payloadPath, filesJson) {
+    const encodedPayloadPath = pdb_encodeUtf8Base64(payloadPath);
     const importScript = `DataBase_importFilesFromPayloadFileBase64('${encodedPayloadPath}')`;
     let result = await pdb_evalScript(importScript);
     let recovery = null;
+    let transport = 'payload-file';
+    let fallbackCommandLength = 0;
 
     if (pdb_isEvalScriptError(result)) {
         recovery = await pdb_ensureHostBridgeReady();
-        if (recovery.ready) {
+        if (recovery.ready && recovery.reloadResult !== 'not-needed') {
+            // Retry the file transport only when the host script was actually reloaded.
             result = await pdb_evalScript(importScript);
+        }
+    }
+
+    if (pdb_isEvalScriptError(result) && recovery && recovery.ready && filesJson) {
+        const encodedFilesJson = pdb_encodeUtf8Base64(filesJson);
+        const fallbackScript = `DataBase_importFilesToProjectBase64('${encodedFilesJson}')`;
+        fallbackCommandLength = fallbackScript.length;
+
+        if (fallbackCommandLength <= PDB_DIRECT_IMPORT_MAX_COMMAND_LENGTH) {
+            // Short imports can bypass temporary-file access issues without risking CEP command truncation.
+            transport = 'direct-base64';
+            result = await pdb_evalScript(fallbackScript);
         }
     }
 
     return {
         result: result,
         commandLength: importScript.length,
-        recovery: recovery
+        fallbackCommandLength: fallbackCommandLength,
+        recovery: recovery,
+        transport: transport
     };
 }
 
@@ -4359,15 +4382,17 @@ async function performImport(files) {
         const payloadPath = pdb_createImportPayloadFile(filesJson);
 
         try {
-            const bridgeResponse = await pdb_importPayloadThroughHost(payloadPath);
+            const bridgeResponse = await pdb_importPayloadThroughHost(payloadPath, filesJson);
             hideProgress();
 
             if (pdb_isEvalScriptError(bridgeResponse.result)) {
                 showStatus(t('status.importError'), 'error');
                 console.error(
-                    'Import host bridge unavailable.',
+                    'Premiere host import failed.',
                     'Raw response:', bridgeResponse.result,
+                    'Transport:', bridgeResponse.transport,
                     'Command length:', bridgeResponse.commandLength,
+                    'Fallback command length:', bridgeResponse.fallbackCommandLength,
                     'Recovery:', JSON.stringify(bridgeResponse.recovery)
                 );
                 return 0;
@@ -4383,6 +4408,10 @@ async function performImport(files) {
                 }
 
                 const count = response.totalImported || 0;
+                if (bridgeResponse.transport === 'direct-base64') {
+                    // Keep a visible diagnostic when Premiere required the compatibility transport.
+                    console.warn('Import completed through direct Base64 fallback.');
+                }
                 const timelineResult = response.results && response.results.length === 1
                     ? response.results[0].timeline
                     : null;
@@ -4401,7 +4430,9 @@ async function performImport(files) {
                 console.error(
                     'Import response was not valid JSON.',
                     'Raw response:', String(bridgeResponse.result).slice(0, 500),
+                    'Transport:', bridgeResponse.transport,
                     'Command length:', bridgeResponse.commandLength,
+                    'Fallback command length:', bridgeResponse.fallbackCommandLength,
                     'Parse error:', parseError.message
                 );
                 return 0;
