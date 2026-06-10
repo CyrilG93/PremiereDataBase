@@ -128,8 +128,54 @@ function getOrCreateBin(binPath) {
     return currentBin;
 }
 
+// Normalize media paths before comparing values returned by different Premiere APIs.
+function normalizeMediaPathForComparison(mediaPath) {
+    return normalizePath(String(mediaPath || '')).toLowerCase();
+}
+
+// Walk the project tree to find a recently imported item by path, then by matching name.
+function findProjectItemRecursively(parentItem, nativePath, mediaName) {
+    if (!parentItem || !parentItem.children) return null;
+
+    var targetPath = normalizeMediaPathForComparison(nativePath);
+    var targetName = String(mediaName || '').toLowerCase();
+    for (var i = 0; i < parentItem.children.numItems; i++) {
+        var child = parentItem.children[i];
+        if (!child) continue;
+
+        var childPath = '';
+        try {
+            childPath = typeof child.getMediaPath === 'function' ? child.getMediaPath() : '';
+        } catch (pathError) {
+            childPath = '';
+        }
+
+        var normalizedChildPath = normalizeMediaPathForComparison(childPath);
+        if (targetPath && normalizedChildPath === targetPath) {
+            return child;
+        }
+
+        var childName = '';
+        try {
+            childName = String(child.name || '').toLowerCase();
+        } catch (nameError) {
+            childName = '';
+        }
+        if (targetName && childName === targetName && (!normalizedChildPath || normalizedChildPath === targetPath)) {
+            return child;
+        }
+
+        var nestedMatch = findProjectItemRecursively(child, nativePath, mediaName);
+        if (nestedMatch) {
+            return nestedMatch;
+        }
+    }
+
+    return null;
+}
+
 // Find a project item that references the imported native media path.
-function findProjectItemByMediaPath(nativePath) {
+function findProjectItemByMediaPath(nativePath, mediaName) {
     try {
         var matches = app.project.rootItem.findItemsMatchingMediaPath(nativePath, 1);
         if (matches && matches.length > 0) {
@@ -139,7 +185,7 @@ function findProjectItemByMediaPath(nativePath) {
         logPlatform('Unable to find imported project item: ' + e.toString());
     }
 
-    return null;
+    return findProjectItemRecursively(app.project.rootItem, nativePath, mediaName);
 }
 
 // Convert a Premiere Time value to seconds while tolerating missing streams.
@@ -428,6 +474,7 @@ function DataBase_importFilesToProject(filesJson) {
                         success: true,
                         binPath: file.binPath,
                         mediaPath: premiereImportPath,
+                        mediaName: file.name,
                         mediaType: file.mediaType || 'video',
                         timelineRequested: file.addToTimeline === true
                     });
@@ -466,7 +513,7 @@ function DataBase_addImportedMediaToTimelineBase64(base64Payload) {
         DataBase_setLastHostStage('timeline:parse-payload');
         var payload = JSON.parse(base64Decode(base64Payload));
         DataBase_setLastHostStage('timeline:find-project-item');
-        var projectItem = findProjectItemByMediaPath(payload.path);
+        var projectItem = findProjectItemByMediaPath(payload.path, payload.name);
 
         if (!projectItem) {
             return JSON.stringify({

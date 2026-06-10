@@ -1091,29 +1091,44 @@ function pdb_encodeUtf8Base64(value) {
 async function pdb_addImportedMediaToTimeline(importedResult) {
     const payload = JSON.stringify({
         path: importedResult.mediaPath,
+        name: importedResult.mediaName,
         mediaType: importedResult.mediaType || 'video'
     });
     const encodedPayload = pdb_encodeUtf8Base64(payload);
     const script = `DataBase_addImportedMediaToTimelineBase64('${encodedPayload}')`;
-    const rawResult = await pdb_evalScript(script);
+    let timelineResult = null;
 
-    if (pdb_isEvalScriptError(rawResult)) {
-        return {
-            requested: true,
-            added: false,
-            error: `EvalScript error at ${await pdb_getLastHostStage()}`
-        };
+    for (let attempt = 0; attempt < 4; attempt++) {
+        // Premiere can expose the imported ProjectItem a few frames after importFiles returns.
+        if (attempt > 0) {
+            await new Promise((resolve) => setTimeout(resolve, 200));
+        }
+
+        const rawResult = await pdb_evalScript(script);
+        if (pdb_isEvalScriptError(rawResult)) {
+            return {
+                requested: true,
+                added: false,
+                error: `EvalScript error at ${await pdb_getLastHostStage()}`
+            };
+        }
+
+        try {
+            timelineResult = JSON.parse(rawResult);
+        } catch (error) {
+            return {
+                requested: true,
+                added: false,
+                error: `Invalid timeline response: ${String(rawResult).slice(0, 200)}`
+            };
+        }
+
+        if (timelineResult.added || timelineResult.error !== 'Imported project item not found') {
+            return timelineResult;
+        }
     }
 
-    try {
-        return JSON.parse(rawResult);
-    } catch (error) {
-        return {
-            requested: true,
-            added: false,
-            error: `Invalid timeline response: ${String(rawResult).slice(0, 200)}`
-        };
-    }
+    return timelineResult;
 }
 
 // Reload the installed JSX file when Premiere's host engine has lost the bridge functions.

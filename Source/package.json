@@ -1,6 +1,6 @@
 {
   "name": "source",
-  "version": "1.7.8",
+  "version": "1.7.9",
   "description": "Data Base - Premiere Pro Extension",
   "main": "index.js",
   "scripts": {

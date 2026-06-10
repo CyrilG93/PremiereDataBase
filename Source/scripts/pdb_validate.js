@@ -184,6 +184,7 @@ function validatePercentPathImport() {
 // Keep the client-side recovery path present so raw CEP failures are not parsed as JSON.
 function validateImportBridgeRecovery() {
     const clientSource = readText(path.join(sourceRoot, 'client', 'js', 'main.js'));
+    const hostSource = readText(path.join(sourceRoot, 'host', 'index.jsx'));
     const requiredMarkers = [
         "var PDB_EVALSCRIPT_ERROR = 'EvalScript error.'",
         'var PDB_DIRECT_IMPORT_MAX_COMMAND_LENGTH = 12000;',
@@ -191,6 +192,7 @@ function validateImportBridgeRecovery() {
         'function pdb_getLastHostStage()',
         'function pdb_encodeUtf8Base64(value)',
         'function pdb_addImportedMediaToTimeline(importedResult)',
+        'for (let attempt = 0; attempt < 4; attempt++)',
         'function pdb_createImportPayloadFile(filesJson)',
         'function pdb_importPayloadThroughHost(payloadPath, filesJson)',
         "transport = 'direct-base64';",
@@ -205,6 +207,10 @@ function validateImportBridgeRecovery() {
             failures.push(`Missing import bridge recovery marker: ${marker}`);
         }
     });
+
+    if (!hostSource.includes('function findProjectItemRecursively(parentItem, nativePath, mediaName)')) {
+        failures.push('Missing recursive ProjectItem lookup for deferred timeline placement.');
+    }
 }
 
 // Verify timeline insertion creates tracks when every compatible interval is occupied.
