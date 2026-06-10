@@ -19,7 +19,8 @@ const requiredHtmlHooks = [
     'databaseRootsList',
     'addDatabaseRootBtn',
     'newFolderBtn',
-    'addToDbBtn'
+    'addToDbBtn',
+    'addSingleImportToTimeline'
 ];
 const failures = [];
 
@@ -186,12 +187,120 @@ function validateImportBridgeRecovery() {
     });
 }
 
+// Verify timeline insertion creates tracks when every compatible interval is occupied.
+function validateTimelineInsertion() {
+    const hostPath = path.join(sourceRoot, 'host', 'index.jsx');
+    const insertions = [];
+
+    function MockFile(uriPath) {
+        this.exists = true;
+        this.fsName = uriPath;
+    }
+
+    MockFile.encode = function encodeFilePath(filePath) {
+        return filePath;
+    };
+
+    function createClip(start, end) {
+        return {
+            start: { seconds: start },
+            end: { seconds: end }
+        };
+    }
+
+    function createTrack(clips) {
+        const collection = clips.slice();
+        collection.numItems = collection.length;
+        return {
+            clips: collection,
+            isLocked: function isLocked() {
+                return false;
+            }
+        };
+    }
+
+    const videoTracks = [createTrack([createClip(9, 13)])];
+    videoTracks.numTracks = videoTracks.length;
+    const audioTracks = [createTrack([createClip(9, 13)])];
+    audioTracks.numTracks = audioTracks.length;
+
+    const sandbox = {
+        $: {
+            os: 'Macintosh',
+            writeln: function writeln() {}
+        },
+        File: MockFile,
+        app: {
+            enableQE: function enableQE() {},
+            project: {
+                rootItem: {},
+                activeSequence: {
+                    videoTracks,
+                    audioTracks,
+                    getPlayerPosition: function getPlayerPosition() {
+                        return { seconds: 10 };
+                    },
+                    overwriteClip: function overwriteClip(projectItem, startSeconds, videoTrackIndex, audioTrackIndex) {
+                        insertions.push({ projectItem, startSeconds, videoTrackIndex, audioTrackIndex });
+                        return true;
+                    }
+                }
+            }
+        },
+        qe: {
+            project: {
+                getActiveSequence: function getActiveSequence() {
+                    return {
+                        addTracks: function addTracks(videoTrackCount) {
+                            if (videoTrackCount > 0) {
+                                videoTracks.push(createTrack([]));
+                                videoTracks.numTracks = videoTracks.length;
+                            }
+                            audioTracks.push(createTrack([]));
+                            audioTracks.numTracks = audioTracks.length;
+                        }
+                    };
+                }
+            }
+        },
+        JSON,
+        ProjectItemType: {
+            BIN: 2
+        }
+    };
+
+    const projectItem = {
+        getInPoint: function getInPoint() {
+            return { seconds: 0 };
+        },
+        getOutPoint: function getOutPoint() {
+            return { seconds: 2 };
+        }
+    };
+
+    try {
+        vm.createContext(sandbox);
+        vm.runInContext(readText(hostPath), sandbox, { filename: hostPath });
+
+        const result = sandbox.DataBase_addProjectItemToTimeline(projectItem, 'video');
+        const insertion = insertions[0];
+
+        if (!result.added || !result.createdTrack || result.videoTrack !== 1 || result.audioTrack !== 1
+            || !insertion || insertion.videoTrackIndex !== 1 || insertion.audioTrackIndex !== 1) {
+            failures.push('Timeline insertion did not create and use free video/audio tracks.');
+        }
+    } catch (error) {
+        failures.push(`Timeline insertion validation failed: ${error.message}`);
+    }
+}
+
 // Run all local validations and exit with a CI-friendly status code.
 filesToParse.forEach(validateScriptSyntax);
 validateVersionConsistency();
 validateHtmlHooks();
 validatePercentPathImport();
 validateImportBridgeRecovery();
+validateTimelineInsertion();
 
 if (failures.length > 0) {
     console.error('PDB validation failed:');

@@ -178,6 +178,8 @@ var translations = {
             consolidationDepthHint: "0 = project file folder, 1 = one folder up, etc.",
             flattenImportPath: "Import to root folder only",
             flattenImportPathDescription: "When enabled, files are imported into the first-level folder only (e.g., ELEMENTS/IMAGES/file.png → ELEMENTS bin).",
+            addSingleImportToTimeline: "Add single imports to the timeline",
+            addSingleImportToTimelineDescription: "Place one imported file at the playhead on the first available track. A new track is created when needed.",
             debugMode: "Enable Debug Mode",
             debugModeDescription: "Shows a log panel at the bottom of the extension with debug information.",
             showWaveforms: "Show audio waveforms",
@@ -210,6 +212,8 @@ var translations = {
             importing: "Importing files...",
             importSuccess: "files imported successfully",
             importError: "Import failed",
+            timelineAdded: "and added to the timeline",
+            timelineNotAdded: "The file was imported but could not be added to the timeline",
             saved: "Settings saved",
             folderCreated: "Folder created",
             folderDeleted: "Folder deleted",
@@ -269,6 +273,8 @@ var translations = {
             consolidationDepthHint: "0 = dossier du projet, 1 = un dossier au-dessus, etc.",
             flattenImportPath: "Importer dans le dossier racine uniquement",
             flattenImportPathDescription: "Lorsque cette option est activée, les fichiers sont importés uniquement dans le dossier de premier niveau (ex: ELEMENTS/IMAGES/fichier.png → bin ELEMENTS).",
+            addSingleImportToTimeline: "Ajouter les imports uniques à la timeline",
+            addSingleImportToTimelineDescription: "Place le fichier importé au niveau du curseur sur la première piste disponible. Une nouvelle piste est créée si nécessaire.",
             debugMode: "Activer le mode Debug",
             debugModeDescription: "Affiche un panneau de log en bas de l'extension avec des informations de débogage.",
             showWaveforms: "Afficher les formes d'onde audio",
@@ -301,6 +307,8 @@ var translations = {
             importing: "Import des fichiers...",
             importSuccess: "fichiers importés avec succès",
             importError: "Échec de l'import",
+            timelineAdded: "et ajouté à la timeline",
+            timelineNotAdded: "Le fichier a été importé mais n'a pas pu être ajouté à la timeline",
             saved: "Paramètres enregistrés",
             folderCreated: "Dossier créé",
             folderDeleted: "Dossier supprimé",
@@ -376,6 +384,8 @@ Object.assign(translations, {
             consolidationDepthHint: "0 = Projektordner, 1 = ein Ordner höher usw.",
             flattenImportPath: "Nur in den Stammordner importieren",
             flattenImportPathDescription: "Wenn aktiviert, werden Dateien nur in den Ordner der ersten Ebene importiert (z. B. ELEMENTS/IMAGES/file.png -> Bin ELEMENTS).",
+            addSingleImportToTimeline: "Einzelimporte zur Timeline hinzufügen",
+            addSingleImportToTimelineDescription: "Platziert eine importierte Datei am Abspielkopf auf der ersten freien Spur. Bei Bedarf wird eine neue Spur erstellt.",
             debugMode: "Debug-Modus aktivieren",
             debugModeDescription: "Zeigt unten im Plugin ein Log-Panel mit Debug-Informationen an.",
             showWaveforms: "Audio-Wellenformen anzeigen",
@@ -408,6 +418,8 @@ Object.assign(translations, {
             importing: "Dateien werden importiert...",
             importSuccess: "Dateien erfolgreich importiert",
             importError: "Import fehlgeschlagen",
+            timelineAdded: "und zur Timeline hinzugefügt",
+            timelineNotAdded: "Die Datei wurde importiert, konnte aber nicht zur Timeline hinzugefügt werden",
             saved: "Einstellungen gespeichert",
             folderCreated: "Ordner erstellt",
             folderDeleted: "Ordner gelöscht",
@@ -467,6 +479,8 @@ Object.assign(translations, {
             consolidationDepthHint: "0 = carpeta del proyecto, 1 = una carpeta arriba, etc.",
             flattenImportPath: "Importar solo a la carpeta raíz",
             flattenImportPathDescription: "Cuando está activado, los archivos se importan solo a la carpeta del primer nivel (p. ej. ELEMENTS/IMAGES/file.png -> bin ELEMENTS).",
+            addSingleImportToTimeline: "Añadir importaciones únicas a la línea de tiempo",
+            addSingleImportToTimelineDescription: "Coloca un archivo importado en el cabezal de reproducción sobre la primera pista disponible. Se crea una pista nueva cuando es necesario.",
             debugMode: "Activar modo debug",
             debugModeDescription: "Muestra un panel de logs en la parte inferior del plugin con información de depuración.",
             showWaveforms: "Mostrar formas de onda de audio",
@@ -499,6 +513,8 @@ Object.assign(translations, {
             importing: "Importando archivos...",
             importSuccess: "archivos importados correctamente",
             importError: "Error de importación",
+            timelineAdded: "y añadido a la línea de tiempo",
+            timelineNotAdded: "El archivo se importó, pero no pudo añadirse a la línea de tiempo",
             saved: "Ajustes guardados",
             folderCreated: "Carpeta creada",
             folderDeleted: "Carpeta eliminada",
@@ -558,6 +574,8 @@ Object.assign(translations, {
             consolidationDepthHint: "0 = cartella del progetto, 1 = una cartella sopra, ecc.",
             flattenImportPath: "Importa solo nella cartella radice",
             flattenImportPathDescription: "Se attivato, i file vengono importati solo nella cartella di primo livello (es. ELEMENTS/IMAGES/file.png -> bin ELEMENTS).",
+            addSingleImportToTimeline: "Aggiungi le importazioni singole alla timeline",
+            addSingleImportToTimelineDescription: "Posiziona un file importato sulla testina di riproduzione nella prima traccia disponibile. Se necessario viene creata una nuova traccia.",
             debugMode: "Attiva modalità debug",
             debugModeDescription: "Mostra un pannello log nella parte inferiore del plugin con informazioni di debug.",
             showWaveforms: "Mostra forme d'onda audio",
@@ -590,6 +608,8 @@ Object.assign(translations, {
             importing: "Importazione dei file...",
             importSuccess: "file importati con successo",
             importError: "Importazione non riuscita",
+            timelineAdded: "e aggiunto alla timeline",
+            timelineNotAdded: "Il file è stato importato ma non è stato possibile aggiungerlo alla timeline",
             saved: "Impostazioni salvate",
             folderCreated: "Cartella creata",
             folderDeleted: "Cartella eliminata",
@@ -649,6 +669,8 @@ Object.assign(translations, {
             consolidationDepthHint: "0 = pasta do projeto, 1 = uma pasta acima, etc.",
             flattenImportPath: "Importar apenas para a pasta raiz",
             flattenImportPathDescription: "Quando ativado, os arquivos são importados apenas para a pasta do primeiro nível (ex.: ELEMENTS/IMAGES/file.png -> bin ELEMENTS).",
+            addSingleImportToTimeline: "Adicionar importações únicas à timeline",
+            addSingleImportToTimelineDescription: "Coloca um arquivo importado no cursor na primeira faixa disponível. Uma nova faixa é criada quando necessário.",
             debugMode: "Ativar modo debug",
             debugModeDescription: "Mostra um painel de logs na parte inferior do plugin com informações de depuração.",
             showWaveforms: "Mostrar formas de onda de áudio",
@@ -681,6 +703,8 @@ Object.assign(translations, {
             importing: "Importando arquivos...",
             importSuccess: "arquivos importados com sucesso",
             importError: "Falha na importação",
+            timelineAdded: "e adicionado à timeline",
+            timelineNotAdded: "O arquivo foi importado, mas não pôde ser adicionado à timeline",
             saved: "Configurações salvas",
             folderCreated: "Pasta criada",
             folderDeleted: "Pasta excluída",
@@ -740,6 +764,8 @@ Object.assign(translations, {
             consolidationDepthHint: "0 = プロジェクトファイルのフォルダー、1 = 1つ上のフォルダー など",
             flattenImportPath: "ルートフォルダーにのみ読み込む",
             flattenImportPathDescription: "有効にすると、ファイルは最上位フォルダーのみに読み込まれます（例: ELEMENTS/IMAGES/file.png -> ELEMENTS ビン）。",
+            addSingleImportToTimeline: "単一の読み込みをタイムラインに追加",
+            addSingleImportToTimelineDescription: "読み込んだファイルを再生ヘッド位置の最初の空きトラックに配置します。必要に応じて新しいトラックを作成します。",
             debugMode: "デバッグモードを有効化",
             debugModeDescription: "プラグイン下部にデバッグログパネルを表示します。",
             showWaveforms: "音声波形を表示",
@@ -772,6 +798,8 @@ Object.assign(translations, {
             importing: "ファイルを読み込み中...",
             importSuccess: "ファイルを正常に読み込みました",
             importError: "読み込みに失敗しました",
+            timelineAdded: "タイムラインにも追加しました",
+            timelineNotAdded: "ファイルは読み込まれましたが、タイムラインには追加できませんでした",
             saved: "設定を保存しました",
             folderCreated: "フォルダーを作成しました",
             folderDeleted: "フォルダーを削除しました",
@@ -831,6 +859,8 @@ Object.assign(translations, {
             consolidationDepthHint: "0 = папка проекта, 1 = на одну папку выше и т. д.",
             flattenImportPath: "Импортировать только в корневую папку",
             flattenImportPathDescription: "Если включено, файлы импортируются только в папку первого уровня (например: ELEMENTS/IMAGES/file.png -> bin ELEMENTS).",
+            addSingleImportToTimeline: "Добавлять одиночный импорт на таймлайн",
+            addSingleImportToTimelineDescription: "Помещает импортированный файл в позицию курсора на первую свободную дорожку. При необходимости создается новая дорожка.",
             debugMode: "Включить режим отладки",
             debugModeDescription: "Показывает панель логов внизу плагина с отладочной информацией.",
             showWaveforms: "Показывать аудиоволны",
@@ -863,6 +893,8 @@ Object.assign(translations, {
             importing: "Импорт файлов...",
             importSuccess: "файлов успешно импортировано",
             importError: "Ошибка импорта",
+            timelineAdded: "и добавлен на таймлайн",
+            timelineNotAdded: "Файл импортирован, но его не удалось добавить на таймлайн",
             saved: "Настройки сохранены",
             folderCreated: "Папка создана",
             folderDeleted: "Папка удалена",
@@ -922,6 +954,8 @@ Object.assign(translations, {
             consolidationDepthHint: "0 = 项目文件夹，1 = 上一级文件夹，依此类推。",
             flattenImportPath: "仅导入到根文件夹",
             flattenImportPathDescription: "启用后，文件只会导入到第一级文件夹（例如：ELEMENTS/IMAGES/file.png -> ELEMENTS bin）。",
+            addSingleImportToTimeline: "将单个导入添加到时间线",
+            addSingleImportToTimelineDescription: "将导入的文件放置在播放头位置的第一个可用轨道上。需要时会创建新轨道。",
             debugMode: "启用调试模式",
             debugModeDescription: "在插件底部显示一个带有调试信息的日志面板。",
             showWaveforms: "显示音频波形",
@@ -954,6 +988,8 @@ Object.assign(translations, {
             importing: "正在导入文件...",
             importSuccess: "个文件已成功导入",
             importError: "导入失败",
+            timelineAdded: "并已添加到时间线",
+            timelineNotAdded: "文件已导入，但无法添加到时间线",
             saved: "设置已保存",
             folderCreated: "文件夹已创建",
             folderDeleted: "文件夹已删除",
@@ -982,6 +1018,7 @@ var defaultSettings = {
     consolidateOnImport: false,
     consolidationDepth: 0,  // 0 = next to project file, 1 = one folder up, etc.
     flattenImportPath: false, // Only use first-level folder for bin path
+    addSingleImportToTimeline: false, // Add one imported file at the playhead
     bannedExtensions: ['.txt', '.pdf', '.zip', '.rar', '.exe', '.doc', '.docx', '.prproj'],
     excludedFolderNames: ['.git', 'node_modules', '__MACOSX', 'Adobe Premiere Pro Auto-Save'],
     debugMode: false, // Keep the debug log panel hidden by default on new installs
@@ -1708,6 +1745,7 @@ function loadSettings() {
     document.getElementById('consolidateOnImport').checked = settings.consolidateOnImport || false;
     document.getElementById('consolidationDepth').value = settings.consolidationDepth || 0;
     document.getElementById('flattenImportPath').checked = settings.flattenImportPath || false;
+    document.getElementById('addSingleImportToTimeline').checked = settings.addSingleImportToTimeline === true;
     document.getElementById('bannedExtensions').value = (settings.bannedExtensions || []).join('\n');
     document.getElementById('excludedFolders').value = (settings.excludedFolderNames || []).join('\n');
 
@@ -1779,6 +1817,7 @@ function saveSettings() {
     settings.consolidateOnImport = document.getElementById('consolidateOnImport').checked;
     settings.consolidationDepth = parseInt(document.getElementById('consolidationDepth').value) || 0;
     settings.flattenImportPath = document.getElementById('flattenImportPath').checked;
+    settings.addSingleImportToTimeline = document.getElementById('addSingleImportToTimeline').checked;
 
     const bannedText = document.getElementById('bannedExtensions').value;
     settings.bannedExtensions = bannedText
@@ -4258,7 +4297,9 @@ async function performImport(files) {
             return {
                 name: file.name,
                 path: file.path,
-                binPath: binParts.join('/')
+                binPath: binParts.join('/'),
+                mediaType: file.type || 'other',
+                addToTimeline: settings.addSingleImportToTimeline === true && files.length === 1
             };
         });
 
@@ -4342,7 +4383,18 @@ async function performImport(files) {
                 }
 
                 const count = response.totalImported || 0;
-                showStatus(`${count} ${t('status.importSuccess')}`, 'success');
+                const timelineResult = response.results && response.results.length === 1
+                    ? response.results[0].timeline
+                    : null;
+
+                if (timelineResult && timelineResult.requested && timelineResult.added) {
+                    showStatus(`${count} ${t('status.importSuccess')} ${t('status.timelineAdded')}`, 'success');
+                } else if (timelineResult && timelineResult.requested && !timelineResult.added) {
+                    showStatus(t('status.timelineNotAdded'), 'warning');
+                    console.warn('Timeline insertion skipped:', timelineResult.error || 'Unknown timeline error');
+                } else {
+                    showStatus(`${count} ${t('status.importSuccess')}`, 'success');
+                }
                 return count;
             } catch (parseError) {
                 showStatus(t('status.importError'), 'error');

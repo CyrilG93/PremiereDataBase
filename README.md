@@ -2,7 +2,7 @@
 
 A powerful media database browser extension for Adobe Premiere Pro. Organize, search, and import media files from one or more database folders directly into your Premiere Pro projects.
 
-![Version](https://img.shields.io/badge/version-1.7.2-blue)
+![Version](https://img.shields.io/badge/version-1.7.3-blue)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2023%2B-purple)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)
 
@@ -33,6 +33,8 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - **Automatic bin creation** matching your database folder structure
   - Example: `DATABASE/ELEMENTS/TEST/clip.mp4` → Creates `ELEMENTS/TEST` bin in Premiere
 - **Import to root folder only** still imports directly into the first visible folder level, even when multiple databases are configured
+- Optional automatic timeline placement for a single imported file at the playhead
+- Uses the first track with enough free space and creates a compatible track when needed
 - Supports filenames containing special characters such as `%`
 - Progress indicator during import
 
@@ -148,6 +150,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 - **Import Files**: Select files and click **Import**, or double-click a file
 - **Import Folder**: Right-click a folder in the browser and select **Import Folder** to recursively import all its content
 - **Smart Bins**: Files are imported into bins that match their folder structure
+- **Timeline option**: Enable it in Settings to place single-file imports at the playhead automatically
 
 ### Moving Files (Drag & Drop)
 
@@ -176,6 +179,7 @@ A powerful media database browser extension for Adobe Premiere Pro. Organize, se
 | **Language** | UI language (English/French) |
 | **Copy on Import** | Copy files to project folder when importing (preserves structure) |
 | **Consolidation Depth** | How many parent folders to keep when copying (0=none, 1=parent, etc.) |
+| **Add single imports to timeline** | Place one imported file at the playhead on the first available track, creating a track when needed |
 | **Excluded Extensions** | File extensions to skip during scanning |
 | **Excluded Folders** | Folder names to skip (e.g., .git, node_modules) |
 | **Flatten Import Path** | Import files to root folder only (ignores subfolders) |

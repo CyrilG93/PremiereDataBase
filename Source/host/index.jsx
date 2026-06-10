@@ -120,8 +120,222 @@ function getOrCreateBin(binPath) {
     return currentBin;
 }
 
+// Find a project item that references the imported native media path.
+function findProjectItemByMediaPath(nativePath) {
+    try {
+        var matches = app.project.rootItem.findItemsMatchingMediaPath(nativePath, 1);
+        if (matches && matches.length > 0) {
+            return matches[0];
+        }
+    } catch (e) {
+        logPlatform('Unable to find imported project item: ' + e.toString());
+    }
+
+    return null;
+}
+
+// Convert a Premiere Time value to seconds while tolerating missing streams.
+function getTimeSeconds(timeValue) {
+    if (!timeValue) return null;
+
+    var seconds = Number(timeValue.seconds);
+    return isNaN(seconds) ? null : seconds;
+}
+
+// Read the source duration used to reserve an empty timeline interval.
+function getProjectItemDurationSeconds(projectItem, mediaType) {
+    var mediaCode = mediaType === 'audio' ? 2 : 1;
+
+    try {
+        var inPoint = projectItem.getInPoint(mediaCode);
+        var outPoint = projectItem.getOutPoint(mediaCode);
+        var inSeconds = getTimeSeconds(inPoint);
+        var outSeconds = getTimeSeconds(outPoint);
+
+        if (inSeconds !== null && outSeconds !== null && outSeconds > inSeconds) {
+            return outSeconds - inSeconds;
+        }
+    } catch (typedDurationError) {
+        logPlatform('Unable to read typed media duration: ' + typedDurationError.toString());
+    }
+
+    try {
+        var fallbackInPoint = projectItem.getInPoint();
+        var fallbackOutPoint = projectItem.getOutPoint();
+        var fallbackInSeconds = getTimeSeconds(fallbackInPoint);
+        var fallbackOutSeconds = getTimeSeconds(fallbackOutPoint);
+
+        if (fallbackInSeconds !== null && fallbackOutSeconds !== null && fallbackOutSeconds > fallbackInSeconds) {
+            return fallbackOutSeconds - fallbackInSeconds;
+        }
+    } catch (fallbackDurationError) {
+        logPlatform('Unable to read fallback media duration: ' + fallbackDurationError.toString());
+    }
+
+    return null;
+}
+
+// Return whether a track has no clip overlapping the requested interval.
+function isTrackRangeAvailable(track, startSeconds, endSeconds) {
+    if (!track || !track.clips) return false;
+
+    if (typeof track.isLocked === 'function' && track.isLocked()) {
+        return false;
+    }
+
+    for (var i = 0; i < track.clips.numItems; i++) {
+        var clipStart = getTimeSeconds(track.clips[i].start);
+        var clipEnd = getTimeSeconds(track.clips[i].end);
+
+        if (clipStart === null || clipEnd === null) {
+            return false;
+        }
+
+        if (clipStart < endSeconds && clipEnd > startSeconds) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Find the first existing track with enough free space for the imported media.
+function findAvailableTrackIndex(trackCollection, startSeconds, endSeconds) {
+    if (!trackCollection) return -1;
+
+    for (var i = 0; i < trackCollection.numTracks; i++) {
+        if (isTrackRangeAvailable(trackCollection[i], startSeconds, endSeconds)) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+// Add missing video or audio tracks through Premiere's internal QE API.
+function createMissingTimelineTracks(sequence, createVideoTrack, createAudioTrack) {
+    var beforeVideoTracks = sequence && sequence.videoTracks ? Number(sequence.videoTracks.numTracks || 0) : 0;
+    var beforeAudioTracks = sequence && sequence.audioTracks ? Number(sequence.audioTracks.numTracks || 0) : 0;
+    var attempted = false;
+
+    try {
+        if (typeof app.enableQE !== 'function') {
+            return false;
+        }
+
+        app.enableQE();
+        if (typeof qe === 'undefined' || !qe.project || typeof qe.project.getActiveSequence !== 'function') {
+            return false;
+        }
+
+        var qeSequence = qe.project.getActiveSequence();
+        if (!qeSequence || typeof qeSequence.addTracks !== 'function') {
+            return false;
+        }
+
+        if (createVideoTrack && createAudioTrack) {
+            // QE's single-argument form appends one video and one audio track.
+            qeSequence.addTracks(1);
+            attempted = true;
+        } else if (createAudioTrack) {
+            // Passing zero appends one audio track without adding video.
+            qeSequence.addTracks(0);
+            attempted = true;
+        } else if (createVideoTrack) {
+            try {
+                // Append one video track without adding an unnecessary audio track.
+                qeSequence.addTracks(1, beforeVideoTracks, 0, 0, 0);
+                attempted = true;
+            } catch (videoOnlySignatureError) {
+                // Older QE signatures may only support adding video and audio together.
+                qeSequence.addTracks(1);
+                attempted = true;
+            }
+        }
+    } catch (e) {
+        logPlatform('Unable to create timeline track through QE: ' + e.toString());
+        return false;
+    }
+
+    var afterVideoTracks = sequence && sequence.videoTracks ? Number(sequence.videoTracks.numTracks || 0) : 0;
+    var afterAudioTracks = sequence && sequence.audioTracks ? Number(sequence.audioTracks.numTracks || 0) : 0;
+    var videoCreated = !createVideoTrack || afterVideoTracks > beforeVideoTracks;
+    var audioCreated = !createAudioTrack || afterAudioTracks > beforeAudioTracks;
+
+    return attempted && videoCreated && audioCreated;
+}
+
+// Place one imported project item at the playhead without overwriting existing clips.
+function DataBase_addProjectItemToTimeline(projectItem, mediaType) {
+    var result = {
+        requested: true,
+        added: false,
+        createdTrack: false,
+        videoTrack: -1,
+        audioTrack: -1,
+        error: ''
+    };
+
+    try {
+        var sequence = app.project.activeSequence;
+        if (!sequence) {
+            result.error = 'No active sequence';
+            return result;
+        }
+
+        var playhead = sequence.getPlayerPosition();
+        var startSeconds = getTimeSeconds(playhead);
+        var durationSeconds = getProjectItemDurationSeconds(projectItem, mediaType);
+        if (startSeconds === null || durationSeconds === null || durationSeconds <= 0) {
+            result.error = 'Unable to determine playhead or media duration';
+            return result;
+        }
+
+        var endSeconds = startSeconds + durationSeconds;
+        var needsVideo = mediaType !== 'audio';
+        var needsAudio = mediaType === 'audio' || mediaType === 'video';
+        var videoTrackIndex = needsVideo
+            ? findAvailableTrackIndex(sequence.videoTracks, startSeconds, endSeconds)
+            : 0;
+        var audioTrackIndex = needsAudio
+            ? findAvailableTrackIndex(sequence.audioTracks, startSeconds, endSeconds)
+            : 0;
+        var missingVideoTrack = needsVideo && videoTrackIndex < 0;
+        var missingAudioTrack = needsAudio && audioTrackIndex < 0;
+
+        if (missingVideoTrack || missingAudioTrack) {
+            result.createdTrack = createMissingTimelineTracks(sequence, missingVideoTrack, missingAudioTrack);
+            videoTrackIndex = needsVideo
+                ? findAvailableTrackIndex(sequence.videoTracks, startSeconds, endSeconds)
+                : 0;
+            audioTrackIndex = needsAudio
+                ? findAvailableTrackIndex(sequence.audioTracks, startSeconds, endSeconds)
+                : 0;
+        }
+
+        if ((needsVideo && videoTrackIndex < 0) || (needsAudio && audioTrackIndex < 0)) {
+            result.error = 'No free compatible track and track creation failed';
+            return result;
+        }
+
+        var inserted = sequence.overwriteClip(projectItem, startSeconds, videoTrackIndex, audioTrackIndex);
+        if (inserted === false) {
+            result.error = 'Premiere rejected the timeline insertion';
+            return result;
+        }
+
+        result.added = true;
+        result.videoTrack = needsVideo ? videoTrackIndex : -1;
+        result.audioTrack = needsAudio ? audioTrackIndex : -1;
+        return result;
+    } catch (e) {
+        result.error = e.toString();
+        return result;
+    }
+}
+
 // Import files to project
-// filesJson: JSON string with array of {name, path, binPath}
+// filesJson: JSON string with array of {name, path, binPath, mediaType, addToTimeline}
 function DataBase_importFilesToProject(filesJson) {
     try {
         var files = JSON.parse(filesJson);
@@ -165,10 +379,29 @@ function DataBase_importFilesToProject(filesJson) {
                     });
                     logPlatform('Import failed: ' + file.name + ' - ' + importError.toString());
                 } else {
+                    var timelineResult = {
+                        requested: file.addToTimeline === true,
+                        added: false,
+                        createdTrack: false,
+                        videoTrack: -1,
+                        audioTrack: -1,
+                        error: ''
+                    };
+
+                    if (file.addToTimeline === true) {
+                        var importedProjectItem = findProjectItemByMediaPath(fileObj.fsName);
+                        if (importedProjectItem) {
+                            timelineResult = DataBase_addProjectItemToTimeline(importedProjectItem, file.mediaType || 'video');
+                        } else {
+                            timelineResult.error = 'Imported project item not found';
+                        }
+                    }
+
                     results.push({
                         name: file.name,
                         success: true,
-                        binPath: file.binPath
+                        binPath: file.binPath,
+                        timeline: timelineResult
                     });
                     logPlatform('Imported: ' + file.name + ' -> ' + (file.binPath || 'Root'));
                 }
