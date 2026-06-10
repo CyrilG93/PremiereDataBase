@@ -306,8 +306,8 @@ function validateTimelineInsertion() {
 
         if (!result.added || !result.createdTrack || result.videoTrack !== 3 || result.audioTrack !== 3
             || !insertion || insertion.videoTrackIndex !== 3 || insertion.audioTrackIndex !== 3
-            || !addTrackCall || addTrackCall.join(',') !== '1,2,1,1,2') {
-            failures.push('Timeline insertion did not create and use free video/audio tracks.');
+            || !addTrackCall || addTrackCall.join(',') !== '1,3,1,1,3') {
+            failures.push('Timeline insertion did not append and use V4/A4 without shifting existing tracks.');
         }
     } catch (error) {
         failures.push(`Timeline insertion validation failed: ${error.message}`);

@@ -217,29 +217,31 @@ function createMissingTimelineTracks(sequence, createVideoTrack, createAudioTrac
     var beforeVideoTracks = sequence && sequence.videoTracks ? Number(sequence.videoTracks.numTracks || 0) : 0;
     var beforeAudioTracks = sequence && sequence.audioTracks ? Number(sequence.audioTracks.numTracks || 0) : 0;
     var attempted = false;
+    var creationResult = {
+        created: false,
+        videoTrackIndex: -1,
+        audioTrackIndex: -1
+    };
 
     try {
         if (typeof app.enableQE !== 'function') {
-            return false;
+            return creationResult;
         }
 
         app.enableQE();
         if (typeof qe === 'undefined' || !qe.project || typeof qe.project.getActiveSequence !== 'function') {
-            return false;
+            return creationResult;
         }
 
         var qeSequence = qe.project.getActiveSequence();
         if (!qeSequence || typeof qeSequence.addTracks !== 'function') {
-            return false;
+            return creationResult;
         }
-
-        var lastVideoTrackIndex = Math.max(0, beforeVideoTracks - 1);
-        var lastAudioTrackIndex = Math.max(0, beforeAudioTracks - 1);
 
         if (createVideoTrack && createAudioTrack) {
             try {
-                // Append Vn+1 above the current top video track and An+1 below the current bottom audio track.
-                qeSequence.addTracks(1, lastVideoTrackIndex, 1, 1, lastAudioTrackIndex);
+                // Use the track counts as outer insertion positions so existing V1/A1 tracks keep their indexes.
+                qeSequence.addTracks(1, beforeVideoTracks, 1, 1, beforeAudioTracks);
                 attempted = true;
             } catch (combinedSignatureError) {
                 // Keep the older QE signature as a compatibility fallback.
@@ -248,8 +250,8 @@ function createMissingTimelineTracks(sequence, createVideoTrack, createAudioTrac
             }
         } else if (createAudioTrack) {
             try {
-                // Append the new audio track below the existing audio tracks.
-                qeSequence.addTracks(0, 0, 1, 1, lastAudioTrackIndex);
+                // Append the new audio track after the existing audio collection.
+                qeSequence.addTracks(0, 0, 1, 1, beforeAudioTracks);
                 attempted = true;
             } catch (audioSignatureError) {
                 qeSequence.addTracks(0);
@@ -257,8 +259,8 @@ function createMissingTimelineTracks(sequence, createVideoTrack, createAudioTrac
             }
         } else if (createVideoTrack) {
             try {
-                // Append the new video track above the existing video tracks.
-                qeSequence.addTracks(1, lastVideoTrackIndex, 0, 0, 0);
+                // Append the new video track after the existing video collection.
+                qeSequence.addTracks(1, beforeVideoTracks, 0, 0, 0);
                 attempted = true;
             } catch (videoOnlySignatureError) {
                 // Older QE signatures may only support adding video and audio together.
@@ -268,7 +270,7 @@ function createMissingTimelineTracks(sequence, createVideoTrack, createAudioTrac
         }
     } catch (e) {
         logPlatform('Unable to create timeline track through QE: ' + e.toString());
-        return false;
+        return creationResult;
     }
 
     var afterVideoTracks = sequence && sequence.videoTracks ? Number(sequence.videoTracks.numTracks || 0) : 0;
@@ -276,7 +278,17 @@ function createMissingTimelineTracks(sequence, createVideoTrack, createAudioTrac
     var videoCreated = !createVideoTrack || afterVideoTracks > beforeVideoTracks;
     var audioCreated = !createAudioTrack || afterAudioTracks > beforeAudioTracks;
 
-    return attempted && videoCreated && audioCreated;
+    creationResult.created = attempted && videoCreated && audioCreated;
+    if (creationResult.created && createVideoTrack) {
+        // The appended standard-DOM track is the last item in the expanded collection.
+        creationResult.videoTrackIndex = afterVideoTracks - 1;
+    }
+    if (creationResult.created && createAudioTrack) {
+        // Keep audio insertion on the newly appended track instead of rescanning from A1.
+        creationResult.audioTrackIndex = afterAudioTracks - 1;
+    }
+
+    return creationResult;
 }
 
 // Place one imported project item at the playhead without overwriting existing clips.
@@ -318,13 +330,16 @@ function DataBase_addProjectItemToTimeline(projectItem, mediaType) {
         var missingAudioTrack = needsAudio && audioTrackIndex < 0;
 
         if (missingVideoTrack || missingAudioTrack) {
-            result.createdTrack = createMissingTimelineTracks(sequence, missingVideoTrack, missingAudioTrack);
-            videoTrackIndex = needsVideo
-                ? findAvailableTrackIndex(sequence.videoTracks, startSeconds, endSeconds)
-                : 0;
-            audioTrackIndex = needsAudio
-                ? findAvailableTrackIndex(sequence.audioTracks, startSeconds, endSeconds)
-                : 0;
+            var createdTracks = createMissingTimelineTracks(sequence, missingVideoTrack, missingAudioTrack);
+            result.createdTrack = createdTracks.created;
+            if (missingVideoTrack) {
+                // Target the appended Vn+1 track directly so Premiere cannot redirect the clip to V1.
+                videoTrackIndex = createdTracks.videoTrackIndex;
+            }
+            if (missingAudioTrack) {
+                // Target the appended An+1 track directly so Premiere cannot redirect the clip to A1.
+                audioTrackIndex = createdTracks.audioTrackIndex;
+            }
         }
 
         if ((needsVideo && videoTrackIndex < 0) || (needsAudio && audioTrackIndex < 0)) {
